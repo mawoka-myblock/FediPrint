@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: FediPrint
+  version: 0.0.1
+  description: FediPrint API
+
+servers:
+  - url: http://127.0.0.1:3000/api/v1
+    description: Local Dev-Server
+
+paths:
+  /auth/create:
+    post:
+      summary: Create a new user account
+      responses:
+        '200':
+          description: "User created successfully"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                username:
+                  type: string
+                display_name:
+                  type: string
+              required:
+                - password
+                - email
+                - display_name
+                - username
+  /auth/login:
+    post:
+      summary: Log in
+      responses:
+        '200':
+          description: "Logged in successfully"
+        '401':
+          description: "Credentials are wrong"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
