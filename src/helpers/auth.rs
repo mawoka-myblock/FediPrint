@@ -1,4 +1,4 @@
-use std::env;
+use std::{env};
 
 use argon2::{password_hash::{rand_core::OsRng, SaltString}, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use chrono::{Duration, Local, Utc};
@@ -8,7 +8,7 @@ use jsonwebtoken::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: Uuid,
     pub email: String,
@@ -56,7 +56,7 @@ pub fn read_jwt(jwt: String) -> Result<TokenData<Claims>, errors::Error> {
     )
 }
 
-pub fn check_if_token_was_valid(jwt: String) -> bool {
+pub fn check_if_token_was_valid(jwt: String) -> Result<Claims, ()> {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = false;
     let jwt_data = match decode::<Claims>(
@@ -64,16 +64,20 @@ pub fn check_if_token_was_valid(jwt: String) -> bool {
         &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
         &validation,
     ) {
-        Err(_) => return false,
+        Err(_) => return Err(()),
         Ok(d) => d,
     };
     let expiration_timestamp = jwt_data.claims.exp;
     let six_months_ago = Utc::now() - Duration::days(30);
     let exp_ts: i64 = match expiration_timestamp.try_into() {
         Ok(d) => d,
-        Err(_) => return false
+        Err(_) => return Err(()),
     };
-    exp_ts >= six_months_ago.timestamp()
+    return if exp_ts >= six_months_ago.timestamp() {
+        Ok(jwt_data.claims)
+    } else {
+        Err(())
+    }
 }
 
 

@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod middleware;
 
 use std::sync::Arc;
 

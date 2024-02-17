@@ -1,25 +1,23 @@
-use axum::debug_handler;
+use axum::{debug_handler, Extension};
 use axum::{extract::Json, http::StatusCode, Form};
 use axum_extra::extract::CookieJar;
 use openssl::rsa::Rsa;
 use serde::Deserialize;
 use std::str;
+use std::sync::Arc;
+use axum::extract::State;
 use uuid::Uuid;
 use axum_extra::extract::cookie::Cookie;
 
-use crate::{
-    helpers::auth::{generate_jwt, get_password_hash},
-    helpers::{
-        auth::{check_password_hash, InputClaims},
-        AppResult, Database,
-    },
-    models::users::CreateUserInput,
-    prisma,
-};
+use crate::{helpers::auth::{generate_jwt, get_password_hash}, helpers::{
+    auth::{check_password_hash, InputClaims},
+    AppResult,
+}, models::users::CreateUserInput, prisma, AppState};
+use crate::helpers::auth::Claims;
 
 #[debug_handler]
 pub async fn create_user(
-    db: Database,
+    State(state): State<Arc<AppState>>,
     Json(input): Json<CreateUserInput>,
 ) -> AppResult<StatusCode> {
     let pw_hash = get_password_hash(input.password);
@@ -31,12 +29,12 @@ pub async fn create_user(
         .unwrap()
         .to_string();
     // https://github.com/Brendonovich/prisma-client-rust/issues/44
-    let profile = db
+    let profile = state.db
         .profile()
         .create(input.username, input.display_name, public_key, vec![])
         .exec()
         .await?;
-    db.account()
+    state.db.account()
         .create(
             pw_hash,
             input.email,
@@ -56,8 +54,8 @@ pub struct LogIn {
 }
 
 #[debug_handler]
-pub async fn login(db: Database, jar: CookieJar, Form(data): Form<LogIn>) -> AppResult<(CookieJar, StatusCode)> {
-    let user = match db
+pub async fn login(State(state): State<Arc<AppState>>, jar: CookieJar, Form(data): Form<LogIn>) -> AppResult<(CookieJar, StatusCode)> {
+    let user = match state.db
         .account()
         .find_unique(prisma::account::email::equals(data.email))
         .with(prisma::account::profile::fetch())
@@ -87,4 +85,18 @@ pub async fn login(db: Database, jar: CookieJar, Form(data): Form<LogIn>) -> App
         .http_only(true);
 
     Ok((jar.add(auth_cookie), StatusCode::OK))
+}
+
+#[debug_handler]
+pub async fn get_me_handler(
+    Extension(claims): Extension<Claims>,
+) -> AppResult<(StatusCode, Json<serde_json::Value>)> {
+    let json_response = serde_json::json!({
+        "status":  "success",
+        "data": serde_json::json!({
+            "user": claims.sub
+        })
+    });
+
+    Ok((StatusCode::OK, Json(json_response)))
 }
