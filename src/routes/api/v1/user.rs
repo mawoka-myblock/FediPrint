@@ -1,10 +1,8 @@
 use crate::helpers::{ensure_ap_header, AppResult};
 use crate::models::activitypub::{
-    AlsoKnownAs, Claim, Context, Devices, Endpoints, Featured, FeaturedTags, FingerprintKey,
-    FocalPoint, IdentityKey, MovedTo, PeopleData, PeopleDataPage, Profile, PublicKey,
+    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey,
+    IdentityKey, PeopleData, PeopleDataPage, Profile, PublicKey,
 };
-use crate::prisma::profile;
-use crate::routes::well_known::webfinger::WebfingerQuery;
 use crate::{prisma, AppState};
 use axum::body::Body;
 use axum::debug_handler;
