@@ -5,11 +5,11 @@ info:
   description: FediPrint API
 
 servers:
-  - url: http://127.0.0.1:3000/api/v1
+  - url: http://127.0.0.1:3000
     description: Local Dev-Server
 
 paths:
-  /auth/create:
+  /api/v1/auth/create:
     post:
       summary: Create a new user account
       responses:
@@ -35,7 +35,7 @@ paths:
                 - email
                 - display_name
                 - username
-  /auth/login:
+  /api/v1/auth/login:
     post:
       summary: Log in
       responses:
@@ -57,3 +57,69 @@ paths:
               required:
                 - email
                 - password
+  /.well-known/webfinger:
+    get:
+      summary: Look up by handle
+      responses:
+        '200':
+          description: "Success"
+          content:
+            "application/jrd+json; charset=utf-8":
+              schema:
+                type: object
+                properties:
+                  subject:
+                    type: string
+                  aliases:
+                    type: array
+                    items:
+                      type: string
+                  links:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rel:
+                          type: string
+                        type:
+                          type: string
+                        href:
+                          type: string
+                        template:
+                          type: string
+                      required:
+                        - rel
+                    required:
+                      - subject
+                      - aliases
+                      - links
+        '400':
+          description: "Request invalid"
+        '404':
+          description: Handle not found
+      parameters:
+        - name: resource
+          in: query
+          description: "user to look up"
+          schema:
+            type: string
+  /api/v1/user/{username}:
+    get:
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+          description: Username of user
+      description: Get activitypub details of user
+      responses:
+        '200':
+          description: ActivityPub data
+          content:
+            'application/activity+json':
+              schema:
+                type: object
+
+
+

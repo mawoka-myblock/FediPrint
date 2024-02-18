@@ -25,17 +25,20 @@ model Account {
 }
 
 model Profile {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username    String    @unique
-  displayName String
-  summary     String    @default("")
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username     String
+  server       String    @default("local")
+  serverId     String    @unique
+  displayName  String
+  summary      String    @default("")
   // inbox       String
   // outbox      String
-  publicKey   String
-  followers   Profile[] @relation("Followers")
-  following   Profile[] @relation("Followers")
+  publicKey    String
+  registeredAt DateTime  @default(now()) @db.Date
+  followers    Profile[] @relation("Followers")
+  following    Profile[] @relation("Followers")
   // activities Activity[] @relation("Actor")
-  account     Account?
+  account      Account?
 }
 
 // Define the Activity table to store information about activities

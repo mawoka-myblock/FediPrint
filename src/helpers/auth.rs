@@ -1,9 +1,10 @@
-use std::{env};
-
-use argon2::{password_hash::{rand_core::OsRng, SaltString}, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{
+    password_hash::{rand_core::OsRng, SaltString},
+    Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
+};
 use chrono::{Duration, Local, Utc};
 use jsonwebtoken::{
-    decode, encode, errors, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation
+    decode, encode, errors, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -27,8 +28,7 @@ pub struct InputClaims {
     pub profile_id: Uuid,
 }
 
-
-pub fn generate_jwt(input_claims: InputClaims) -> String {
+pub fn generate_jwt(input_claims: InputClaims, secret: String) -> String {
     let now = Local::now();
     let claims = Claims {
         display_name: input_claims.display_name,
@@ -37,31 +37,30 @@ pub fn generate_jwt(input_claims: InputClaims) -> String {
         username: input_claims.username,
         sub: input_claims.sub,
         iat: now.timestamp(),
-        exp: (now + Duration::hours(1)).timestamp()
-
+        exp: (now + Duration::hours(1)).timestamp(),
     };
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
+        &EncodingKey::from_secret(secret.as_ref()),
     )
     .unwrap()
 }
 
-pub fn read_jwt(jwt: String) -> Result<TokenData<Claims>, errors::Error> {
+pub fn read_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, errors::Error> {
     decode::<Claims>(
         &jwt,
-        &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
+        &DecodingKey::from_secret(secret.as_ref()),
         &Validation::new(Algorithm::HS256),
     )
 }
 
-pub fn check_if_token_was_valid(jwt: String) -> Result<Claims, ()> {
+pub fn check_if_token_was_valid(jwt: String, secret: String) -> Result<Claims, ()> {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = false;
     let jwt_data = match decode::<Claims>(
         &jwt,
-        &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
+        &DecodingKey::from_secret(secret.as_ref()),
         &validation,
     ) {
         Err(_) => return Err(()),
@@ -77,17 +76,21 @@ pub fn check_if_token_was_valid(jwt: String) -> Result<Claims, ()> {
         Ok(jwt_data.claims)
     } else {
         Err(())
-    }
+    };
 }
-
 
 pub fn get_password_hash(password: String) -> String {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
-    argon2.hash_password(password.as_bytes(), &salt).unwrap().to_string()
+    argon2
+        .hash_password(password.as_bytes(), &salt)
+        .unwrap()
+        .to_string()
 }
 
 pub fn check_password_hash(plain_password: String, hashed_password: &str) -> bool {
     let parsed_hash = PasswordHash::new(hashed_password).unwrap();
-    Argon2::default().verify_password(plain_password.as_bytes(), &parsed_hash).is_ok()
+    Argon2::default()
+        .verify_password(plain_password.as_bytes(), &parsed_hash)
+        .is_ok()
 }

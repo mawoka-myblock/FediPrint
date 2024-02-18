@@ -1,19 +1,24 @@
+use axum::extract::State;
 use axum::{debug_handler, Extension};
 use axum::{extract::Json, http::StatusCode, Form};
+use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 use openssl::rsa::Rsa;
 use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
-use axum::extract::State;
 use uuid::Uuid;
-use axum_extra::extract::cookie::Cookie;
 
-use crate::{helpers::auth::{generate_jwt, get_password_hash}, helpers::{
-    auth::{check_password_hash, InputClaims},
-    AppResult,
-}, models::users::CreateUserInput, prisma, AppState};
 use crate::helpers::auth::Claims;
+use crate::{
+    helpers::auth::{generate_jwt, get_password_hash},
+    helpers::{
+        auth::{check_password_hash, InputClaims},
+        AppResult,
+    },
+    models::users::CreateUserInput,
+    prisma, AppState,
+};
 
 #[debug_handler]
 pub async fn create_user(
@@ -29,12 +34,21 @@ pub async fn create_user(
         .unwrap()
         .to_string();
     // https://github.com/Brendonovich/prisma-client-rust/issues/44
-    let profile = state.db
+    let profile = state
+        .db
         .profile()
-        .create(input.username, input.display_name, public_key, vec![])
+        .create(
+            input.username.clone(),
+            format!("{}/api/v1/user/{}", state.env.public_url, input.username),
+            input.display_name,
+            public_key,
+            vec![],
+        )
         .exec()
         .await?;
-    state.db.account()
+    state
+        .db
+        .account()
         .create(
             pw_hash,
             input.email,
@@ -54,8 +68,13 @@ pub struct LogIn {
 }
 
 #[debug_handler]
-pub async fn login(State(state): State<Arc<AppState>>, jar: CookieJar, Form(data): Form<LogIn>) -> AppResult<(CookieJar, StatusCode)> {
-    let user = match state.db
+pub async fn login(
+    State(state): State<Arc<AppState>>,
+    jar: CookieJar,
+    Form(data): Form<LogIn>,
+) -> AppResult<(CookieJar, StatusCode)> {
+    let user = match state
+        .db
         .account()
         .find_unique(prisma::account::email::equals(data.email))
         .with(prisma::account::profile::fetch())
@@ -79,7 +98,7 @@ pub async fn login(State(state): State<Arc<AppState>>, jar: CookieJar, Form(data
         email: user.email,
         username: profile.username,
     };
-    let jwt = generate_jwt(claims);
+    let jwt = generate_jwt(claims, state.env.jwt_secret.clone());
     let auth_cookie = Cookie::build(("authorization_key", jwt))
         .secure(true)
         .http_only(true);
