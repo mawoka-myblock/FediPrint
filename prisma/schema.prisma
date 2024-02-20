@@ -27,7 +27,7 @@ model Account {
 model Profile {
   id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username     String
-  server       String    @default("local")
+  server       String
   serverId     String    @unique
   displayName  String
   summary      String    @default("")

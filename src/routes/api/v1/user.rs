@@ -1,7 +1,7 @@
 use crate::helpers::{ensure_ap_header, AppResult};
 use crate::models::activitypub::{
-    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey,
-    IdentityKey, PeopleData, PeopleDataPage, Profile, PublicKey,
+    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, IdentityKey, PeopleData,
+    PeopleDataPage, Profile, PublicKey,
 };
 use crate::{prisma, AppState};
 use axum::body::Body;
@@ -46,22 +46,22 @@ pub async fn get_user_profile(
             "https://www.w3.org/ns/activitystreams".to_string(),
             "https://w3id.org/security/v1".to_string(),
             Context {
-                curve25519key: "toot:Curve25519Key".to_string(),
+                curve25519key: Some("toot:Curve25519Key".to_string()),
                 // device: "toot:Device".to_string(),
-                ed25519key: "toot:Ed25519Key".to_string(),
-                ed25519signature: "toot:Ed25519Signature".to_string(),
-                encrypted_message: "toot:EncryptedMessage".to_string(),
-                hashtag: "as:Hashtag".to_string(),
-                property_value: "schema:PropertyValue".to_string(),
+                ed25519key: Some("toot:Ed25519Key".to_string()),
+                ed25519signature: Some("toot:Ed25519Signature".to_string()),
+                encrypted_message: Some("toot:EncryptedMessage".to_string()),
+                hashtag: Some("as:Hashtag".to_string()),
+                property_value: Some("schema:PropertyValue".to_string()),
                 also_known_as: AlsoKnownAs {
                     id: "as:alsoKnownAs".to_string(),
                     type_field: "@id".to_string(),
                 },
-                cipher_text: "toot:cipherText".to_string(),
-                claim: Claim {
+                cipher_text: Some("toot:cipherText".to_string()),
+                claim: Some(Claim {
                     id: "toot:claim".to_string(),
                     type_field: "@id".to_string(),
-                },
+                }),
                 // device_id: "toot:deviceId".to_string(),
                 // devices: Devices{
                 //     id: "toot:devices".to_string(),
@@ -76,32 +76,32 @@ pub async fn get_user_profile(
                 //     id: "toot:featuredTags".to_string(),
                 //     type_field: "@id".to_string()
                 // },
-                fingerprint_key: FingerprintKey {
+                fingerprint_key: Some(FingerprintKey {
                     id: "toot:fingerprintKey".to_string(),
                     type_field: "@id".to_string(),
-                },
+                }),
                 // focal_point: FocalPoint {
                 //     container: "@list".to_string(),
                 //     id: "toot:focalPoint".to_string(),
                 // },
-                identity_key: IdentityKey {
+                identity_key: Some(IdentityKey {
                     id: "toot:identityKey".to_string(),
                     type_field: "@id".to_string(),
-                },
+                }),
                 // indexable: "toot:indexable".to_string(),
                 // manually_approves_followers: "as:manuallyApprovesFollowers".to_string(),
                 // memorial: "toot:memorial".to_string(),
-                message_franking: "toot:messageFranking".to_string(),
-                message_type: "toot:messageType".to_string(),
+                message_franking: Some("toot:messageFranking".to_string()),
+                message_type: Some("toot:messageType".to_string()),
                 // moved_to: MovedTo {
                 //     id: "as:movedTo".to_string(),
                 //     type_field: "@id".to_string()
                 // },
-                public_key_base64: "toot:publicKeyBase64".to_string(),
-                schema: "http://schema.org#".to_string(),
+                public_key_base64: Some("toot:publicKeyBase64".to_string()),
+                schema: Some("http://schema.org#".to_string()),
                 // suspended: "toot:suspended".to_string(),
                 toot: "http://joinmastodon.org/ns#".to_string(),
-                value: "schema:value".to_string(),
+                value: Some("schema:value".to_string()),
             },
         ),
         endpoints: Endpoints {
@@ -272,7 +272,6 @@ pub async fn get_following(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-
     let user = match state
         .db
         .profile()

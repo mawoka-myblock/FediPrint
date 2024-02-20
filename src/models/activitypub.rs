@@ -36,41 +36,41 @@ pub struct Profile {
 #[serde(rename_all = "camelCase")]
 pub struct Context {
     #[serde(rename = "Curve25519Key")]
-    pub curve25519key: String,
+    pub curve25519key: Option<String>,
     // #[serde(rename = "Device")]
     // pub device: String,
     #[serde(rename = "Ed25519Key")]
-    pub ed25519key: String,
+    pub ed25519key: Option<String>,
     #[serde(rename = "Ed25519Signature")]
-    pub ed25519signature: String,
+    pub ed25519signature: Option<String>,
     #[serde(rename = "EncryptedMessage")]
-    pub encrypted_message: String,
+    pub encrypted_message: Option<String>,
     #[serde(rename = "Hashtag")]
-    pub hashtag: String,
+    pub hashtag: Option<String>,
     #[serde(rename = "PropertyValue")]
-    pub property_value: String,
+    pub property_value: Option<String>,
     pub also_known_as: AlsoKnownAs,
-    pub cipher_text: String,
-    pub claim: Claim,
+    pub cipher_text: Option<String>,
+    pub claim: Option<Claim>,
     // pub device_id: String,
     // pub devices: Devices,
     // pub discoverable: String,
     // pub featured: Featured,
     // pub featured_tags: FeaturedTags,
-    pub fingerprint_key: FingerprintKey,
+    pub fingerprint_key: Option<FingerprintKey>,
     // pub focal_point: FocalPoint,
-    pub identity_key: IdentityKey,
+    pub identity_key: Option<IdentityKey>,
     // pub indexable: String,
     // pub manually_approves_followers: String,
     // pub memorial: String,
-    pub message_franking: String,
-    pub message_type: String,
+    pub message_franking: Option<String>,
+    pub message_type: Option<String>,
     // pub moved_to: MovedTo,
-    pub public_key_base64: String,
-    pub schema: String,
+    pub public_key_base64: Option<String>,
+    pub schema: Option<String>,
     // pub suspended: String,
     pub toot: String,
-    pub value: String,
+    pub value: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

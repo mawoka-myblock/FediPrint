@@ -39,6 +39,7 @@ pub async fn create_user(
         .profile()
         .create(
             input.username.clone(),
+            state.env.base_domain.to_string(),
             format!("{}/api/v1/user/{}", state.env.public_url, input.username),
             input.display_name,
             public_key,

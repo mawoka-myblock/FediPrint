@@ -66,6 +66,13 @@ async fn main() {
             "/api/v1/user/:username/following",
             get(v1::user::get_following),
         )
+        .route(
+            "/api/v1/manage/follow",
+            post(v1::manage::follow_user).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
         .with_state(state);
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

@@ -10,18 +10,21 @@ default-run = "fedi_print"
 axum = {version = "0.7.4", features= ["macros"]}
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11" }
 prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11" }
-serde = {version = "1.0.195", features = ["derive"]}
-serde_json = "1.0.95"
-tokio = { version = "1.35.1", features = ["full"] }
+serde = {version = "1.0.196", features = ["derive"]}
+serde_json = "1.0.113"
+tokio = { version = "1.36.0", features = ["full"] }
 openssl = "0.10.63"
 argon2 = "0.5.3"
 axum-extra = { version = "0.9.2", features = ["cookie"] }
-chrono = { version = "0.4.32", features = ["clock", "serde"] }
+chrono = { version = "0.4.34", features = ["clock", "serde"] }
 tower-http = { version = "0.5.1", features = ["cors", "fs"] }
 oauth2 = "4.4.2"
-reqwest = "0.11.23"
+reqwest = { version = "0.11.24", features = ["json"] }
 uuid = { version = "1.7.0", features = ["serde", "v4", "fast-rng"] }
 jsonwebtoken = "9"
 dotenv = "0.15.0"
-serde_derive = "1.0.195"
-regex = "1.10.2"
+serde_derive = "1.0.196"
+regex = "1.10.3"
+anyhow = "1.0.79"
+base64 = "0.21.7"
+url = "2.5.0"
