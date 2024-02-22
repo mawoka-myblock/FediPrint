@@ -12,7 +12,9 @@ use crate::AppState;
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Serialize;
 
-use crate::helpers::auth::{check_if_token_was_valid, generate_jwt, read_jwt, InputClaims, UserState};
+use crate::helpers::auth::{
+    check_if_token_was_valid, generate_jwt, read_jwt, InputClaims, UserState,
+};
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
@@ -35,7 +37,8 @@ pub async fn auth_middleware(
 
     let claims = read_jwt(token.clone(), data.env.jwt_secret.clone());
     if claims.is_ok() {
-        req.extensions_mut().insert(UserState::from_claims(claims.unwrap().claims, &data.env.jwt_secret).unwrap());
+        req.extensions_mut()
+            .insert(UserState::from_claims(claims.unwrap().claims, &data.env.jwt_secret).unwrap());
         return Ok(next.run(req).await);
     }
 
@@ -43,7 +46,6 @@ pub async fn auth_middleware(
         Ok(d) => d,
         Err(_) => return Err(StatusCode::NOT_FOUND),
     };
-
 
     let new_jwt = generate_jwt(
         InputClaims {
@@ -53,7 +55,7 @@ pub async fn auth_middleware(
             username: invalid_claims.username.clone(),
             display_name: invalid_claims.display_name.clone(),
             server_id: invalid_claims.server_id.clone(),
-            private_key: invalid_claims.private_key.clone()
+            private_key: invalid_claims.private_key.clone(),
         },
         data.env.jwt_secret.clone(),
     );
@@ -63,7 +65,8 @@ pub async fn auth_middleware(
         .http_only(true)
         .build()
         .to_string();
-    req.extensions_mut().insert(UserState::from_claims(invalid_claims, &data.env.jwt_secret).unwrap());
+    req.extensions_mut()
+        .insert(UserState::from_claims(invalid_claims, &data.env.jwt_secret).unwrap());
     let mut resp = next.run(req).await;
     resp.headers_mut()
         .insert(SET_COOKIE, HeaderValue::from_str(&*auth_cookie).unwrap());

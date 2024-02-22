@@ -1,3 +1,6 @@
+use crate::helpers::auth::{Claims, UserState};
+use crate::helpers::sign::sign_post_request_with_body;
+use crate::helpers::Config;
 use crate::models::activitypub::{FollowRequest, Profile};
 use crate::models::data::Webfinger;
 use crate::prisma;
@@ -8,9 +11,6 @@ use axum::body::Body;
 use axum::http::StatusCode;
 use axum::response::Response;
 use uuid::Uuid;
-use crate::helpers::auth::{Claims, UserState};
-use crate::helpers::Config;
-use crate::helpers::sign::sign_post_request_with_body;
 
 pub async fn create_remote_profile(
     username: String,
@@ -67,7 +67,11 @@ pub async fn create_remote_profile(
         .await?)
 }
 
-pub async fn follow_user(to_follow: &prisma::profile::Data, claims: &UserState, env: &Config)-> anyhow::Result<()> {
+pub async fn follow_user(
+    to_follow: &prisma::profile::Data,
+    claims: &UserState,
+    env: &Config,
+) -> anyhow::Result<()> {
     let data = FollowRequest {
         context: "https://www.w3.org/ns/activitystreams".to_string(),
         id: format!("{}/{}", env.public_url, Uuid::new_v4()),
@@ -76,18 +80,33 @@ pub async fn follow_user(to_follow: &prisma::profile::Data, claims: &UserState, 
         object: to_follow.server_id.clone(),
     };
     let json_data = serde_json::to_string(&data).unwrap();
-    let data_signature = sign_post_request_with_body(&to_follow.inbox, json_data.as_ref(), claims.private_key.clone(), format!("{}#main-key", &to_follow.server_id))?;
+    let data_signature = sign_post_request_with_body(
+        &to_follow.inbox,
+        json_data.as_ref(),
+        claims.private_key.clone(),
+        format!("{}#main-key", &to_follow.server_id),
+    )?;
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert(
         "Accept",
         reqwest::header::HeaderValue::from_str("application/activity+json").unwrap(),
     );
-    headers.insert("Digest", reqwest::header::HeaderValue::from_str(&data_signature.1).unwrap());
-    headers.insert("Signature", reqwest::header::HeaderValue::from_str(&data_signature.1).unwrap());
+    headers.insert(
+        "Digest",
+        reqwest::header::HeaderValue::from_str(&data_signature.1).unwrap(),
+    );
+    headers.insert(
+        "Signature",
+        reqwest::header::HeaderValue::from_str(&data_signature.1).unwrap(),
+    );
     let ap_client = reqwest::Client::builder()
         .default_headers(headers)
         .build()
         .unwrap();
-    ap_client.post(to_follow.inbox.clone()).body(json_data).send().await?;
+    ap_client
+        .post(to_follow.inbox.clone())
+        .body(json_data)
+        .send()
+        .await?;
     Ok(())
 }

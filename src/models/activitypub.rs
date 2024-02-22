@@ -229,5 +229,5 @@ pub struct FollowRequest {
     #[serde(rename = "type")]
     pub type_field: String,
     pub actor: String,
-    pub object: String
+    pub object: String,
 }

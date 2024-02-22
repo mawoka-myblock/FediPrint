@@ -35,7 +35,11 @@ pub fn sign_get_request_by_details(
     ))
 }
 
-pub fn sign_get_request_by_url(url: String, key: PKey<Private>, key_id: String) -> anyhow::Result<String> {
+pub fn sign_get_request_by_url(
+    url: String,
+    key: PKey<Private>,
+    key_id: String,
+) -> anyhow::Result<String> {
     let url = Url::parse(&*url)?;
     let host = match url.host_str() {
         Some(d) => d,

@@ -3,15 +3,14 @@ use axum::{debug_handler, Extension};
 use axum::{extract::Json, http::StatusCode, Form};
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
+use base64::{engine::general_purpose, Engine as _};
+use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
+use openssl::symm::Cipher;
 use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
-use openssl::symm::Cipher;
-use openssl::pkey::PKey;
 use uuid::Uuid;
-use base64::{engine::general_purpose, Engine as _};
-
 
 use crate::helpers::auth::{Claims, UserState};
 use crate::{
@@ -46,8 +45,14 @@ pub async fn create_user(
             state.env.base_domain.to_string(),
             format!("{}/api/v1/user/{}", state.env.public_url, input.username),
             input.display_name,
-            format!("{}/api/v1/user/{}/inbox", state.env.public_url, input.username),
-            format!("{}/api/v1/user/{}/outbox", state.env.public_url, input.username),
+            format!(
+                "{}/api/v1/user/{}/inbox",
+                state.env.public_url, input.username
+            ),
+            format!(
+                "{}/api/v1/user/{}/outbox",
+                state.env.public_url, input.username
+            ),
             public_key,
             vec![],
         )
@@ -100,7 +105,9 @@ pub async fn login(
     };
     let rsa_key = Rsa::private_key_from_pem(user.private_key.as_ref()).unwrap();
     let pkey = PKey::from_rsa(rsa_key).unwrap();
-    let encrypted_key = pkey.private_key_to_pem_pkcs8_passphrase(Cipher::aes_128_cbc(), state.env.jwt_secret.as_ref()).unwrap();
+    let encrypted_key = pkey
+        .private_key_to_pem_pkcs8_passphrase(Cipher::aes_128_cbc(), state.env.jwt_secret.as_ref())
+        .unwrap();
     let claims = InputClaims {
         sub: Uuid::parse_str(&user.id).unwrap(),
         profile_id: Uuid::parse_str(&user.profile_id).unwrap(),
