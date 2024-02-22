@@ -220,3 +220,14 @@ pub struct PeopleDataPage {
     #[serde(rename = "type")]
     pub type_field: String,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FollowRequest {
+    #[serde(rename = "@context")]
+    pub context: String,
+    pub id: String,
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub actor: String,
+    pub object: String
+}

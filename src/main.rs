@@ -68,7 +68,7 @@ async fn main() {
         )
         .route(
             "/api/v1/manage/follow",
-            post(v1::manage::follow_user).route_layer(middleware::from_fn_with_state(
+            post(v1::manage::follow_user_route).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),

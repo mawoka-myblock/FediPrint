@@ -28,3 +28,6 @@ regex = "1.10.3"
 anyhow = "1.0.79"
 base64 = "0.21.7"
 url = "2.5.0"
+
+[profile.dev]
+debug = 0

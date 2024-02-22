@@ -31,14 +31,24 @@ model Profile {
   serverId     String    @unique
   displayName  String
   summary      String    @default("")
-  // inbox       String
-  // outbox      String
+  inbox        String
+  outbox       String
   publicKey    String
   registeredAt DateTime  @default(now()) @db.Date
   followers    Profile[] @relation("Followers")
   following    Profile[] @relation("Followers")
   // activities Activity[] @relation("Actor")
   account      Account?
+}
+
+model Note {
+  id        BigInt    @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  content   String
+  hashtags  String[]
+  mentions  Profile[]
+  inReplyTo Note?
+  replies   Note[]
 }
 
 // Define the Activity table to store information about activities

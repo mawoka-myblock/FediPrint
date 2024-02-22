@@ -2,10 +2,14 @@ use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
+use base64::Engine;
 use chrono::{Duration, Local, Utc};
 use jsonwebtoken::{
     decode, encode, errors, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation,
 };
+use openssl::pkey::{PKey, Private};
+use openssl::rsa::Rsa;
+use prisma_client_rust::query_core::In;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -16,6 +20,8 @@ pub struct Claims {
     pub username: String,
     pub display_name: String,
     pub profile_id: Uuid,
+    pub server_id: String,
+    pub private_key: String,
     pub exp: i64,
     pub iat: i64,
 }
@@ -26,6 +32,38 @@ pub struct InputClaims {
     pub username: String,
     pub display_name: String,
     pub profile_id: Uuid,
+    pub server_id: String,
+    pub private_key: String,
+}
+#[derive(Debug, Clone)]
+pub struct UserState {
+    pub sub: Uuid,
+    pub email: String,
+    pub username: String,
+    pub display_name: String,
+    pub profile_id: Uuid,
+    pub server_id: String,
+    pub exp: i64,
+    pub iat: i64,
+    pub private_key: PKey<Private>,
+}
+impl UserState {
+    pub fn from_claims(input: Claims, key: &str) -> anyhow::Result<UserState> {
+        use base64::{engine::general_purpose, Engine as _};
+        let pkcs8_key = general_purpose::STANDARD.decode(input.private_key)?;
+        let private_key = PKey::private_key_from_pkcs8_passphrase(&pkcs8_key, key.as_ref())?;
+        Ok(UserState {
+            sub: input.sub,
+            email: input.email,
+            username: input.username,
+            display_name: input.display_name,
+            profile_id: input.profile_id,
+            server_id: input.server_id,
+            iat: input.iat,
+            exp: input.exp,
+            private_key,
+        })
+    }
 }
 
 pub fn generate_jwt(input_claims: InputClaims, secret: String) -> String {
@@ -35,6 +73,8 @@ pub fn generate_jwt(input_claims: InputClaims, secret: String) -> String {
         email: input_claims.email,
         profile_id: input_claims.profile_id,
         username: input_claims.username,
+        server_id: input_claims.server_id,
+        private_key: input_claims.private_key,
         sub: input_claims.sub,
         iat: now.timestamp(),
         exp: (now + Duration::hours(1)).timestamp(),
