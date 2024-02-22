@@ -2,7 +2,6 @@ use anyhow::bail;
 use base64::{engine::general_purpose, Engine as _};
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private};
-use openssl::rsa::Rsa;
 use openssl::sha;
 use openssl::sign::Signer;
 use url::Url;

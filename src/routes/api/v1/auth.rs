@@ -12,7 +12,7 @@ use std::str;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::helpers::auth::{Claims, UserState};
+use crate::helpers::auth::UserState;
 use crate::{
     helpers::auth::{generate_jwt, get_password_hash},
     helpers::{

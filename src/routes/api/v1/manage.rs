@@ -1,4 +1,4 @@
-use crate::helpers::auth::{Claims, UserState};
+use crate::helpers::auth::UserState;
 use crate::helpers::interactions::{create_remote_profile, follow_user};
 use crate::helpers::AppResult;
 use crate::{prisma, AppState};

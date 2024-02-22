@@ -1,4 +1,4 @@
-use crate::helpers::auth::{Claims, UserState};
+use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
 use crate::helpers::Config;
 use crate::models::activitypub::{FollowRequest, Profile};
@@ -7,9 +7,6 @@ use crate::prisma;
 use crate::prisma::profile::Data;
 use crate::prisma::PrismaClient;
 use anyhow::Context;
-use axum::body::Body;
-use axum::http::StatusCode;
-use axum::response::Response;
 use uuid::Uuid;
 
 pub async fn create_remote_profile(

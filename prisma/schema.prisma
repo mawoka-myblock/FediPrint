@@ -38,17 +38,38 @@ model Profile {
   followers    Profile[] @relation("Followers")
   following    Profile[] @relation("Followers")
   // activities Activity[] @relation("Actor")
+  notes        Note[]    @relation("Actor")
+  likedNotes   Note[]    @relation("Likes")
+  mentionedIn  Note[]    @relation("Mentions")
+  boostedNotes Note[]    @relation("Boosts")
   account      Account?
 }
 
+enum EventAudience {
+  Public
+  Followers
+  Mentioned
+  Nobody
+}
+
 model Note {
-  id        BigInt    @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  content   String
-  hashtags  String[]
-  mentions  Profile[]
-  inReplyTo Note?
-  replies   Note[]
+  id                 BigInt        @id @default(autoincrement())
+  createdAt          DateTime      @default(now())
+  serverId           String?       @unique
+  content            String
+  hashtags           String[]
+  audience           EventAudience
+  mentions           Profile[]     @relation("Mentions")
+  actor              Profile       @relation("Actor", references: [id], fields: [actorId])
+  inReplyToComment   Note?         @relation("InReplyToComment", fields: [inReplyToCommentId], references: [id]) // Parent note/comment being replied to
+  inReplyToCommentId BigInt?       @unique
+  inReplyToNote      Note?         @relation("InReplyToNote", fields: [inReplyToNoteId], references: [id]) // Main post/note being replied to
+  inReplyToNoteId    BigInt?       @unique
+  likedBy            Profile[]     @relation("Likes")
+  boostedBy          Profile[]     @relation("Boosts")
+  actorId            String        @db.Uuid @unique
+  repliesToNote      Note[]        @relation("InReplyToNote")
+  repliesToComment   Note[]        @relation("InReplyToComment")
 }
 
 // Define the Activity table to store information about activities
