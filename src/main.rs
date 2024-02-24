@@ -73,6 +73,14 @@ async fn main() {
                 auth_middleware,
             )),
         )
+        .route(
+            "/api/v1/manage/interact/note",
+            post(v1::interact::post_note).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route("/api/v1/user/:username/outbox", get(v1::user::get_outbox))
         .with_state(state);
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

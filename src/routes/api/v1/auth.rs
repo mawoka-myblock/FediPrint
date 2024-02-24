@@ -120,6 +120,7 @@ pub async fn login(
     let jwt = generate_jwt(claims, state.env.jwt_secret.clone());
     let auth_cookie = Cookie::build(("authorization_key", jwt))
         .secure(true)
+        .path("/")
         .http_only(true);
 
     Ok((jar.add(auth_cookie), StatusCode::OK))

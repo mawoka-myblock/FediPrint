@@ -201,5 +201,44 @@ paths:
               required:
                 - username
 
+  /api/v1/manage/interact/note:
+    post:
+      tags:
+        - interact
+      summary: Post a note
+      responses: 
+        "200":
+          description: Note created successfully
+      requestBody:
+        required: true
+        content: 
+          "application/json":
+            schema: 
+              type: object
+              properties: 
+                content:
+                  type: string
+                audience:
+                  type: string
+                  enum:
+                    - Public
+                    - Followers
+                    - Mentioned
+                    - Nobody
+                hashtags:
+                  type: array
+                  items: 
+                    type: string
+                mentions:
+                  type: array
+                  items: 
+                    type: string
+                in_reply_to:
+                  type: string
+              required: 
+                - content
+                - audience
+                - hashtags
+                - mentions
 
-
+                    

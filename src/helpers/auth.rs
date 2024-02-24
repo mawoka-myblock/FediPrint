@@ -1,3 +1,4 @@
+use anyhow::bail;
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
@@ -22,6 +23,7 @@ pub struct Claims {
     pub exp: i64,
     pub iat: i64,
 }
+
 // Same as claims, but excluding exp and iat
 pub struct InputClaims {
     pub sub: Uuid,
@@ -32,6 +34,7 @@ pub struct InputClaims {
     pub server_id: String,
     pub private_key: String,
 }
+
 #[derive(Debug, Clone)]
 pub struct UserState {
     pub sub: Uuid,
@@ -44,11 +47,12 @@ pub struct UserState {
     pub iat: i64,
     pub private_key: PKey<Private>,
 }
+
 impl UserState {
     pub fn from_claims(input: Claims, key: &str) -> anyhow::Result<UserState> {
         use base64::{engine::general_purpose, Engine as _};
         let pkcs8_key = general_purpose::STANDARD.decode(input.private_key)?;
-        let private_key = PKey::private_key_from_pkcs8_passphrase(&pkcs8_key, key.as_ref())?;
+        let private_key = PKey::private_key_from_pem_passphrase(&pkcs8_key, key.as_ref())?;
         Ok(UserState {
             sub: input.sub,
             email: input.email,
