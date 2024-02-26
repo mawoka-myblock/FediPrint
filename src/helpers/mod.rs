@@ -92,6 +92,11 @@ pub struct Config {
     pub jwt_secret: String,
     pub public_url: String,
     pub base_domain: String,
+    pub s3_base_url: String,
+    pub s3_region: String,
+    pub s3_username: String,
+    pub s3_password: String,
+    pub s3_bucket_name: String
 }
 
 impl Config {
@@ -100,11 +105,21 @@ impl Config {
         let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
         let public_url = std::env::var("PUBLIC_URL").expect("PUBLIC_URL must be set");
         let base_domain = std::env::var("BASE_DOMAIN").expect("BASE_DOMAIN must be set");
+        let s3_base_url = std::env::var("S3_BASE_URL").expect("S3_BASE_URL must be set");
+        let s3_region = std::env::var("S3_REGION").expect("S3_REGION must be set");
+        let s3_username = std::env::var("S3_USERNAME").expect("S3_USERNAME must be set");
+        let s3_password = std::env::var("S3_PASSWORD").expect("S3_PASSWORD must be set");
+        let s3_bucket_name = std::env::var("S3_BUCKET_NAME").unwrap_or("fediprint".to_string());
         Config {
             database_url,
             jwt_secret,
             public_url,
             base_domain,
+            s3_base_url,
+            s3_region,
+            s3_username,
+            s3_password,
+            s3_bucket_name
         }
     }
 }

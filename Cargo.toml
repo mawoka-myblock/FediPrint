@@ -1,3 +1,7 @@
+[workspace]
+
+members = ["prusaslicer", "prusaslicer/prusaslicer_macros"]
+
 [package]
 name = "fedi_print"
 version = "0.1.0"
@@ -7,10 +11,10 @@ default-run = "fedi_print"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = {version = "0.7.4", features= ["macros"]}
+axum = { version = "0.7.4", features = ["macros", "multipart"] }
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11" }
 prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11" }
-serde = {version = "1.0.196", features = ["derive"]}
+serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 tokio = { version = "1.36.0", features = ["full"] }
 openssl = "0.10.63"
@@ -28,6 +32,11 @@ regex = "1.10.3"
 anyhow = "1.0.79"
 base64 = "0.21.7"
 url = "2.5.0"
+rust-s3 = { version = "0.34.0-rc4", features = ["async-std"] }
+aws-creds = "0.36.0"
+blurhash = "0.2.0"
+futures = "0.3.30"
+tokio-util = "0.7.10"
 
 [profile.dev]
 debug = 0

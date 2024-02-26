@@ -11,7 +11,9 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use s3::{Bucket, BucketConfiguration, Region};
 use tower_http::cors::{Any, CorsLayer};
+use awscreds::Credentials;
 
 pub mod helpers;
 pub mod models;
@@ -21,6 +23,7 @@ pub mod routes;
 pub struct AppState {
     env: Config,
     db: PrismaClient,
+    s3: Bucket,
 }
 
 #[tokio::main]
@@ -30,9 +33,27 @@ async fn main() {
     let config = Config::init();
 
     let prisma_client = PrismaClient::_builder().build().await.unwrap();
+    let s3_region = Region::Custom {
+        region: config.s3_region.clone(),
+        endpoint: config.s3_base_url.clone(),
+    };
+    let s3_creds = Credentials::new(Some(&config.s3_username), Some(&config.s3_password), None, None, None).expect("S3 credentials invalid");
+    let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone()).expect("S3 Bucket initialization failed");
+    if !bucket.exists().await.unwrap() {
+        bucket = Bucket::create_with_path_style(
+            &config.s3_bucket_name,
+            s3_region,
+            s3_creds,
+            BucketConfiguration::default(),
+        )
+            .await.unwrap()
+            .bucket;
+    }
+
     let state = Arc::new(AppState {
         db: prisma_client,
         env: config,
+        s3: bucket,
     });
 
     let cors = CorsLayer::new()
@@ -81,6 +102,10 @@ async fn main() {
             )),
         )
         .route("/api/v1/user/:username/outbox", get(v1::user::get_outbox))
+        .route("/api/v1/storage/upload/image", post(v1::storage::upload_image).route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        )))
         .with_state(state);
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
