@@ -43,6 +43,8 @@ model Profile {
   mentionedIn  Note[]    @relation("Mentions")
   boostedNotes Note[]    @relation("Boosts")
   account      Account?
+  Printer      Printer[]
+  File         File[]
 }
 
 enum EventAudience {
@@ -67,7 +69,7 @@ model Note {
   inReplyToNoteId    BigInt?       @unique
   likedBy            Profile[]     @relation("Likes")
   boostedBy          Profile[]     @relation("Boosts")
-  actorId            String        @db.Uuid @unique
+  actorId            String        @unique @db.Uuid
   repliesToNote      Note[]        @relation("InReplyToNote")
   repliesToComment   Note[]        @relation("InReplyToComment")
 }
@@ -90,3 +92,42 @@ model Note {
 //   // Add more fields as needed for your specific use case
 //   Activity Activity[]
 // }
+
+enum ModifiedScale {
+  NoMods
+  LightMods
+  MediumMods
+  HardMods
+  NewPrinter
+}
+
+model Printer {
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  name               String
+  manufacturer       String
+  profile            Profile       @relation(fields: [profileId], references: [id])
+  profileId          String        @db.Uuid
+  public             Boolean       @default(true)
+  slicerConfig       String?
+  slicerConfigPublic Boolean       @default(true)
+  description        String?
+  modifiedScale      ModifiedScale @default(NoMods)
+}
+
+model File {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  mimeType      String
+  description   String?
+  altText       String?
+  thumbhash     String?
+  previewFile   File?     @relation("PreviewFile", fields: [previewFileId], references: [id])
+  previewFileId String?   @unique @db.Uuid
+  previewFor    File?     @relation("PreviewFile")
+  toBeDeletedAt DateTime? @default(dbgenerated("(NOW() + '30 days'::interval)"))
+  profile       Profile   @relation(fields: [profileId], references: [id])
+  profileId     String    @db.Uuid
+}

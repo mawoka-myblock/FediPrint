@@ -3,3 +3,4 @@ src/prisma.rs
 .vscode
 .idea
 /prusaslicer/target/
+temp.json
