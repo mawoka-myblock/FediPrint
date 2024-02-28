@@ -1,5 +1,5 @@
-use std::fmt;
 use prusaslicer_macros::CommandOptions;
+use std::fmt;
 
 pub struct NoExtraParam;
 impl fmt::Display for NoExtraParam {
@@ -98,7 +98,7 @@ pub struct PrusaSlicerOptions {
     pub extruder_offset: Option<String>,
     pub extrusion_axis: Option<String>,
     pub extrusion_multiplier: Option<i32>,
-    pub fan_always_on:Option<NoExtraParam>,
+    pub fan_always_on: Option<NoExtraParam>,
     pub fan_below_layer_time: Option<i32>,
     pub filament_colour: Option<String>,
     pub filament_cooling_final_speed: Option<i32>,
@@ -266,13 +266,13 @@ pub struct PrusaSlicerOptions {
     pub support_material_interface_extruder: Option<i32>,
     pub wipe_tower_extruder: Option<i32>,
     pub external_perimeter_extrusion_width: Option<String>, // % or mm
-    pub extrusion_width: Option<String>, // % or mm
-    pub first_layer_extrusion_width: Option<String>, // % or mm
-    pub infill_extrusion_width: Option<String>, // % or mm
-    pub perimeter_extrusion_width: Option<String>, // % or mm
-    pub solid_infill_extrusion_width: Option<String>, // % or mm
-    pub support_material_extrusion_width: Option<String>, // % or mm
-    pub top_infill_extrusion_width: Option<String>, // % or mm
+    pub extrusion_width: Option<String>,                    // % or mm
+    pub first_layer_extrusion_width: Option<String>,        // % or mm
+    pub infill_extrusion_width: Option<String>,             // % or mm
+    pub perimeter_extrusion_width: Option<String>,          // % or mm
+    pub solid_infill_extrusion_width: Option<String>,       // % or mm
+    pub support_material_extrusion_width: Option<String>,   // % or mm
+    pub top_infill_extrusion_width: Option<String>,         // % or mm
     pub fuzzy_skin: Option<NoExtraParam>,
     pub fuzzy_skin_point_dist: Option<f32>,
     pub fuzzy_skin_thickness: Option<f32>,
@@ -324,7 +324,7 @@ pub struct PrusaSlicerOptions {
     pub machine_max_jerk_y: Option<TwoFloatArgs>,
     pub machine_max_jerk_z: Option<TwoFloatArgs>,
     pub machine_min_extruding_rate: Option<i32>,
-    pub machine_min_travel_rate:Option<i32>,
+    pub machine_min_travel_rate: Option<i32>,
     pub brim_separation: Option<i32>,
     pub brim_type: Option<String>,
     pub brim_width: Option<f32>,
@@ -339,8 +339,8 @@ pub struct PrusaSlicerOptions {
     pub overhang_speed_2: Option<String>, // % or mm/s
     pub overhang_speed_3: Option<String>, // % or mm/s
     pub perimeter_speed: Option<i32>,
-    pub small_perimeter_speed: Option<String>, // % or mm/s
-    pub solid_infill_speed: Option<String>, // % or mm/s
+    pub small_perimeter_speed: Option<String>,  // % or mm/s
+    pub solid_infill_speed: Option<String>,     // % or mm/s
     pub top_solid_infill_speed: Option<String>, // % or mm/s
     pub dont_support_bridges: Option<NoExtraParam>,
     pub raft_contact_distance: Option<f32>,
@@ -379,7 +379,7 @@ pub struct PrusaSlicerOptions {
 }
 
 fn main() {
-/*    let options = PrusaSlicerOptions {
+    /*    let options = PrusaSlicerOptions {
         align_xy: Some(NoExtraParam),
         datadir: Some("hallo".to_string()),
         scale_to_fit: Some(ThreeArgs(10,10,10))

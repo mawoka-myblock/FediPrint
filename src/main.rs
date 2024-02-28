@@ -5,18 +5,18 @@ use std::sync::Arc;
 use crate::helpers::middleware::auth_middleware;
 use crate::prisma::*;
 use crate::routes::api::v1;
+use awscreds::Credentials;
 use axum::http::Method;
 use axum::{
     middleware,
     routing::{get, post},
     Router,
 };
-use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
 use s3::{Bucket, BucketConfiguration, Region};
 use tower_http::cors::{Any, CorsLayer};
-use awscreds::Credentials;
 use tower_http::trace::TraceLayer;
+use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 pub mod helpers;
 pub mod models;
@@ -51,8 +51,16 @@ async fn main() {
         region: config.s3_region.clone(),
         endpoint: config.s3_base_url.clone(),
     };
-    let s3_creds = Credentials::new(Some(&config.s3_username), Some(&config.s3_password), None, None, None).expect("S3 credentials invalid");
-    let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone()).expect("S3 Bucket initialization failed");
+    let s3_creds = Credentials::new(
+        Some(&config.s3_username),
+        Some(&config.s3_password),
+        None,
+        None,
+        None,
+    )
+    .expect("S3 credentials invalid");
+    let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone())
+        .expect("S3 Bucket initialization failed");
     if !bucket.exists().await.unwrap() {
         bucket = Bucket::create_with_path_style(
             &config.s3_bucket_name,
@@ -60,8 +68,9 @@ async fn main() {
             s3_creds,
             BucketConfiguration::default(),
         )
-            .await.unwrap()
-            .bucket;
+        .await
+        .unwrap()
+        .bucket;
     }
 
     let state = Arc::new(AppState {
@@ -116,10 +125,13 @@ async fn main() {
             )),
         )
         .route("/api/v1/user/:username/outbox", get(v1::user::get_outbox))
-        .route("/api/v1/storage/upload/image", post(v1::storage::upload_image).route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            auth_middleware,
-        )))
+        .route(
+            "/api/v1/storage/upload/image",
+            post(v1::storage::upload_image).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http());
     // run our app with hyper, listening globally on port 3000

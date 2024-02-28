@@ -1,6 +1,6 @@
+use crate::prisma::ModifiedScale;
 use serde_derive::Deserialize;
 use uuid::Uuid;
-use crate::prisma::ModifiedScale;
 
 #[derive(Deserialize)]
 pub struct CreatePrinter {
@@ -10,7 +10,7 @@ pub struct CreatePrinter {
     pub slicer_config_public: bool,
     pub description: Option<String>,
     pub modified_scale: ModifiedScale,
-    pub public: bool
+    pub public: bool,
 }
 
 #[derive(Deserialize)]
@@ -22,5 +22,5 @@ pub struct UpdatePrinter {
     pub slicer_config_public: bool,
     pub description: Option<String>,
     pub modified_scale: ModifiedScale,
-    pub public: bool
+    pub public: bool,
 }
