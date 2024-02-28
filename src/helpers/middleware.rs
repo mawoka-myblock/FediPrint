@@ -46,6 +46,7 @@ pub async fn auth_middleware(
         Ok(d) => d,
         Err(_) => return Err(StatusCode::NOT_FOUND),
     };
+    tracing::debug!("Renewing jwt token");
 
     let new_jwt = generate_jwt(
         InputClaims {

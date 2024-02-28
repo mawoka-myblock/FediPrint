@@ -121,6 +121,8 @@ model File {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   mimeType      String
+  size          BigInt
+  fileName      String?
   description   String?
   altText       String?
   thumbhash     String?

@@ -18,12 +18,14 @@ use prisma_client_rust::{
     prisma_errors::query_engine::{RecordNotFound, UniqueKeyViolation},
     QueryError,
 };
+use s3::error::S3Error;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
 pub enum AppError {
     PrismaError(QueryError),
     ToStrError(ToStrError),
+    S3Error(S3Error),
     NotFound,
 }
 
@@ -45,6 +47,12 @@ impl From<ToStrError> for AppError {
     }
 }
 
+impl From<S3Error> for AppError {
+    fn from(error: S3Error) -> Self {
+        AppError::S3Error(error)
+    }
+}
+
 // This centralizes all different errors from our app in one place
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
@@ -55,6 +63,7 @@ impl IntoResponse for AppError {
             AppError::PrismaError(_) => StatusCode::BAD_REQUEST,
             AppError::NotFound => StatusCode::NOT_FOUND,
             AppError::ToStrError(_) => StatusCode::BAD_REQUEST,
+            AppError::S3Error(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         status.into_response()
@@ -96,7 +105,7 @@ pub struct Config {
     pub s3_region: String,
     pub s3_username: String,
     pub s3_password: String,
-    pub s3_bucket_name: String
+    pub s3_bucket_name: String,
 }
 
 impl Config {
@@ -119,7 +128,7 @@ impl Config {
             s3_region,
             s3_username,
             s3_password,
-            s3_bucket_name
+            s3_bucket_name,
         }
     }
 }

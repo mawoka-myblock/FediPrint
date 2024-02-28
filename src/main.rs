@@ -11,9 +11,12 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use s3::{Bucket, BucketConfiguration, Region};
 use tower_http::cors::{Any, CorsLayer};
 use awscreds::Credentials;
+use tower_http::trace::TraceLayer;
 
 pub mod helpers;
 pub mod models;
@@ -31,6 +34,17 @@ async fn main() {
     dotenv().ok();
 
     let config = Config::init();
+
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                // axum logs rejections from built-in extractors with the `axum::rejection`
+                // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
+                "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
+            }),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
     let prisma_client = PrismaClient::_builder().build().await.unwrap();
     let s3_region = Region::Custom {
@@ -106,7 +120,8 @@ async fn main() {
             state.clone(),
             auth_middleware,
         )))
-        .with_state(state);
+        .with_state(state)
+        .layer(TraceLayer::new_for_http());
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
