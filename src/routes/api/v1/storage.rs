@@ -4,25 +4,28 @@ use crate::models::storage::UpdateImageMetadata;
 use crate::prisma::{file, profile};
 use crate::AppState;
 use axum::body::Body;
-use axum::extract::{Multipart, State};
+use axum::extract::{Multipart, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use futures::TryStreamExt;
 use s3::Bucket;
+use serde_derive::Deserialize;
 use std::sync::Arc;
 use std::{io, pin::Pin};
 use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
+use tracing::info_span;
 use uuid::{uuid, Uuid};
 
 async fn put_file(
     bucket: &Bucket,
     filename: &str,
+    content_type: &str,
     mut reader: Pin<&mut (dyn AsyncRead + Send)>,
 ) -> Result<(), ()> {
     bucket
-        .put_object_stream(&mut reader, filename)
+        .put_object_stream_with_content_type(&mut reader, filename, content_type)
         .await
         .unwrap();
 
@@ -30,7 +33,7 @@ async fn put_file(
 }
 
 #[debug_handler]
-pub async fn upload_image(
+pub async fn upload_file(
     Extension(claims): Extension<UserState>,
     State(state): State<Arc<AppState>>,
     mut multipart: Multipart,
@@ -52,17 +55,17 @@ pub async fn upload_image(
                 return Ok(Response::builder()
                     .status(StatusCode::BAD_REQUEST)
                     .body(Body::from("Content Type not available"))
-                    .unwrap())
+                    .unwrap());
             }
         };
         let body_with_io_error = field.map_err(|err| io::Error::new(io::ErrorKind::Other, err));
         let body_reader = StreamReader::new(body_with_io_error);
         futures::pin_mut!(body_reader);
 
-        match put_file(&state.s3, &str_id, body_reader).await {
+        match put_file(&state.s3, &str_id, &content_type, body_reader).await {
             Ok(_) => (),
             Err(e) => {
-                println!("{:?}", e);
+                tracing::debug!("{:?}", e);
                 return Ok(Response::builder()
                     .status(StatusCode::BAD_REQUEST)
                     .body(Body::from(""))
@@ -84,12 +87,13 @@ pub async fn upload_image(
         .await?;
     return Ok(Response::builder()
         .status(StatusCode::CREATED)
+        .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&file_data).unwrap()))
         .unwrap());
 }
 
 #[debug_handler]
-pub async fn edit_image_metadata(
+pub async fn edit_file_metadata(
     Extension(claims): Extension<UserState>,
     State(state): State<Arc<AppState>>,
     Json(input): Json<UpdateImageMetadata>,
@@ -109,7 +113,7 @@ pub async fn edit_image_metadata(
             return Ok(Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body(Body::from("Image id from user not found"))
-                .unwrap())
+                .unwrap());
         }
     }
 
@@ -129,6 +133,41 @@ pub async fn edit_image_metadata(
 
     return Ok(Response::builder()
         .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&data).unwrap()))
+        .unwrap());
+}
+
+#[derive(Deserialize)]
+pub struct PaginationQuery {
+    pub page: i16,
+}
+
+#[debug_handler]
+pub async fn list_own_files(
+    Extension(claims): Extension<UserState>,
+    State(state): State<Arc<AppState>>,
+    query: Query<PaginationQuery>,
+) -> AppResult<impl IntoResponse> {
+    if query.page < 0 {
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::from("page can't be less than 0"))
+            .unwrap());
+    }
+    let files = state
+        .db
+        .file()
+        .find_many(vec![file::profile_id::equals(
+            claims.profile_id.to_string(),
+        )])
+        .skip((&query.page * 10) as i64)
+        .take(10)
+        .exec()
+        .await?;
+    return Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Body::from(serde_json::to_string(&files).unwrap()))
         .unwrap());
 }

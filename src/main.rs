@@ -9,7 +9,7 @@ use awscreds::Credentials;
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use s3::{Bucket, BucketConfiguration, Region};
@@ -40,7 +40,7 @@ async fn main() {
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 // axum logs rejections from built-in extractors with the `axum::rejection`
                 // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
+                "fedi_print=debug,tower_http=debug,axum::rejection=trace".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())
@@ -61,6 +61,8 @@ async fn main() {
     .expect("S3 credentials invalid");
     let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone())
         .expect("S3 Bucket initialization failed");
+    bucket.set_path_style();
+
     if !bucket.exists().await.unwrap() {
         bucket = Bucket::create_with_path_style(
             &config.s3_bucket_name,
@@ -71,6 +73,7 @@ async fn main() {
         .await
         .unwrap()
         .bucket;
+        bucket.set_path_style();
     }
 
     let state = Arc::new(AppState {
@@ -126,8 +129,50 @@ async fn main() {
         )
         .route("/api/v1/user/:username/outbox", get(v1::user::get_outbox))
         .route(
-            "/api/v1/storage/upload/image",
-            post(v1::storage::upload_image).route_layer(middleware::from_fn_with_state(
+            "/api/v1/printers/create",
+            post(v1::printers::create_printer).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/printers/list",
+            get(v1::printers::get_all_printers).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/printers/update",
+            put(v1::printers::update_printer).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/storage/upload",
+            post(v1::storage::upload_file).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/storage/edit",
+            put(v1::storage::edit_file_metadata).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/storage/list",
+            get(v1::storage::list_own_files).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/model/create",
+            post(v1::model::create_model).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),

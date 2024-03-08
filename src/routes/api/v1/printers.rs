@@ -41,6 +41,7 @@ pub async fn create_printer(
         .await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)
+        .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&printer_data).unwrap()))
         .unwrap())
 }
@@ -59,6 +60,7 @@ pub async fn get_all_printers(
         .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&printers).unwrap()))
         .unwrap())
 }
@@ -112,6 +114,7 @@ pub async fn update_printer(
 
     Ok(Response::builder()
         .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&printer_data).unwrap()))
         .unwrap())
 }

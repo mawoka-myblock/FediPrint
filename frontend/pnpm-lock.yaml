@@ -10,6 +10,12 @@ dependencies:
     version: 0.58.5
 
 devDependencies:
+  '@felte/reporter-tippy':
+    specifier: ^1.1.9
+    version: 1.1.9(tippy.js@6.3.7)
+  '@fontsource/marck-script':
+    specifier: ^5.0.18
+    version: 5.0.18
   '@sveltejs/adapter-auto':
     specifier: ^3.0.0
     version: 3.1.1(@sveltejs/kit@2.5.2)
@@ -46,6 +52,9 @@ devDependencies:
   eslint-plugin-svelte:
     specifier: ^2.36.0-next.4
     version: 2.36.0-next.6(eslint@8.57.0)(svelte@5.0.0-next.68)
+  felte:
+    specifier: ^1.2.14
+    version: 1.2.14(svelte@5.0.0-next.68)
   prettier:
     specifier: ^3.1.1
     version: 3.2.5
@@ -58,6 +67,9 @@ devDependencies:
   svelte-check:
     specifier: ^3.6.0
     version: 3.6.5(@babel/core@7.24.0)(postcss@8.4.35)(svelte@5.0.0-next.68)
+  tippy.js:
+    specifier: ^6.3.7
+    version: 6.3.7
   tslib:
     specifier: ^2.4.1
     version: 2.6.2
@@ -654,6 +666,32 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
+  /@felte/common@1.1.8:
+    resolution: {integrity: sha512-VbEOfNLWfDx0SpCfeE+fNWDpvcntND4MFs7Lxd18RIjrZYH82D0wWe9th2oVF9QT5XzgBEdMF5NGIttcwU4sjg==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: true
+
+  /@felte/core@1.4.3:
+    resolution: {integrity: sha512-DoXTuHD4atDG0SfTfI4orllcnriHRgM/ijMdRsUbLPL7O/UWGSWNXkxErx7XPbWOXMjX0J79KLfxZzm9abOCxw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      '@felte/common': 1.1.8
+    dev: true
+
+  /@felte/reporter-tippy@1.1.9(tippy.js@6.3.7):
+    resolution: {integrity: sha512-X826UDeovXjsv1cUzSihWNKVSB3SuzlH9IUD6ps712icieavTOuVn14u/Vz8kpvv3uzVUT7t1obkQIoXU2SucA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    peerDependencies:
+      tippy.js: ^6.0.0
+    dependencies:
+      '@felte/common': 1.1.8
+      tippy.js: 6.3.7
+    dev: true
+
+  /@fontsource/marck-script@5.0.18:
+    resolution: {integrity: sha512-5OrMNQkakRsrH3K3FdDdFjNItXdoYtTbvOyQH3x4LTe1fRgpJLWCFTxXAbHqofVJwxD5JsQzpeyFBa+ykrzoVA==}
+    dev: true
+
   /@humanwhocodes/config-array@0.11.14:
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
@@ -745,6 +783,10 @@ packages:
 
   /@polka/url@1.0.0-next.24:
     resolution: {integrity: sha512-2LuNTFBIO0m7kKIQvvPHN6UE63VjpmL9rnEEaOOaiSPbZK+zUOYIzBAWcED+3XYzhYsd/0mD57VdxAEqqV52CQ==}
+    dev: true
+
+  /@popperjs/core@2.11.8:
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: true
 
   /@rollup/pluginutils@5.1.0:
@@ -1876,6 +1918,16 @@ packages:
       reusify: 1.0.4
     dev: true
 
+  /felte@1.2.14(svelte@5.0.0-next.68):
+    resolution: {integrity: sha512-eRByCSKhmvrkPOFQyCEGNx/DmP54nERvWwybyMcBSxlVXvsmDA7mDjXTJTuXFeKaemTehNvZE4tzf/xXLSE3HQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    peerDependencies:
+      svelte: ^3.31.0 || ^4.0.0
+    dependencies:
+      '@felte/core': 1.4.3
+      svelte: 5.0.0-next.68
+    dev: true
+
   /file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -2811,6 +2863,12 @@ packages:
     dependencies:
       globalyzer: 0.1.0
       globrex: 0.1.2
+    dev: true
+
+  /tippy.js@6.3.7:
+    resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
+    dependencies:
+      '@popperjs/core': 2.11.8
     dev: true
 
   /to-fast-properties@2.0.0:

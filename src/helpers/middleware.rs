@@ -41,7 +41,7 @@ pub async fn auth_middleware(
             .insert(UserState::from_claims(claims.unwrap().claims, &data.env.jwt_secret).unwrap());
         return Ok(next.run(req).await);
     }
-
+    tracing::debug!("Checking if token was valid");
     let invalid_claims = match check_if_token_was_valid(token, data.env.jwt_secret.clone()) {
         Ok(d) => d,
         Err(_) => return Err(StatusCode::NOT_FOUND),

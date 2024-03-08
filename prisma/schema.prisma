@@ -45,6 +45,7 @@ model Profile {
   account      Account?
   Printer      Printer[]
   File         File[]
+  Model        Model[]
 }
 
 enum EventAudience {
@@ -117,19 +118,37 @@ model Printer {
 }
 
 model File {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  mimeType      String
-  size          BigInt
-  fileName      String?
-  description   String?
-  altText       String?
-  thumbhash     String?
-  previewFile   File?     @relation("PreviewFile", fields: [previewFileId], references: [id])
-  previewFileId String?   @unique @db.Uuid
-  previewFor    File?     @relation("PreviewFile")
-  toBeDeletedAt DateTime? @default(dbgenerated("(NOW() + '30 days'::interval)"))
-  profile       Profile   @relation(fields: [profileId], references: [id])
-  profileId     String    @db.Uuid
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  mimeType       String
+  size           BigInt
+  fileName       String?
+  description    String?
+  altText        String?
+  thumbhash      String?
+  previewFile    File?     @relation("PreviewFile", fields: [previewFileId], references: [id])
+  previewFileId  String?   @unique @db.Uuid
+  previewFor     File?     @relation("PreviewFile")
+  toBeDeletedAt  DateTime? @default(dbgenerated("(NOW() + '30 days'::interval)"))
+  profile        Profile   @relation(fields: [profileId], references: [id])
+  profileId      String    @db.Uuid
+  fileForModel   Model?    @relation("Images", fields: [fileFormodelId], references: [id])
+  fileFormodelId BigInt?
+  imageForModel  Model?    @relation("Files", fields: [imageFomodelId], references: [id])
+  imageFomodelId BigInt?
+}
+
+model Model {
+  id          BigInt   @id @default(autoincrement())
+  server      String
+  serverId    String?  @unique
+  profile     Profile  @relation(fields: [profileId], references: [id])
+  profileId   String   @db.Uuid
+  title       String
+  summary     String
+  description String
+  tags        String[]
+  images      File[]   @relation("Images")
+  files       File[]   @relation("Files")
 }
