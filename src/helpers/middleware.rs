@@ -62,6 +62,7 @@ pub async fn auth_middleware(
     );
 
     let auth_cookie = Cookie::build(("authorization_key", new_jwt))
+        .path("/")
         .secure(true)
         .http_only(true)
         .build()

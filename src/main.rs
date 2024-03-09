@@ -9,7 +9,7 @@ use awscreds::Credentials;
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{get, post, put},
+    routing::{get, patch, post, put},
     Router,
 };
 use s3::{Bucket, BucketConfiguration, Region};
@@ -173,6 +173,20 @@ async fn main() {
         .route(
             "/api/v1/model/create",
             post(v1::model::create_model).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/model/list",
+            get(v1::model::list_own_models).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/model/visibility",
+            patch(v1::model::change_model_visibility).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),

@@ -73,6 +73,8 @@ model Note {
   actorId            String        @unique @db.Uuid
   repliesToNote      Note[]        @relation("InReplyToNote")
   repliesToComment   Note[]        @relation("InReplyToComment")
+  commentOfModel     Model?        @relation(fields: [commentOfModelId], references: [id])
+  commentOfModelId   BigInt?
 }
 
 // Define the Activity table to store information about activities
@@ -145,10 +147,12 @@ model Model {
   serverId    String?  @unique
   profile     Profile  @relation(fields: [profileId], references: [id])
   profileId   String   @db.Uuid
+  published   Boolean  @default(false)
   title       String
   summary     String
   description String
   tags        String[]
   images      File[]   @relation("Images")
   files       File[]   @relation("Files")
+  comments    Note[]
 }
