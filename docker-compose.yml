@@ -1,0 +1,16 @@
+services:
+  db:
+    build:
+      context: pg_uuidv7
+      args:
+        PG_MAJOR_VERSION: 16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fedi_print
+    volumes:
+      - db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+volumes:
+  db:

@@ -4,3 +4,4 @@ pub mod model;
 pub mod printers;
 pub mod storage;
 pub mod users;
+pub mod db;

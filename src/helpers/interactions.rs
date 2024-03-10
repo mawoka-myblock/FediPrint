@@ -3,23 +3,26 @@ use crate::helpers::sign::sign_post_request_with_body;
 use crate::helpers::Config;
 use crate::models::activitypub::{FollowRequest, Profile};
 use crate::models::data::Webfinger;
-use crate::prisma;
-use crate::prisma::profile::Data;
-use crate::prisma::PrismaClient;
+
 use anyhow::Context;
+use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::pooled_connection::bb8::PooledConnection;
+use tracing::debug;
 use uuid::Uuid;
+use crate::models::db::profile::{CreateProfile, ExtendedCreateProfile, FullProfile};
 
 pub async fn create_remote_profile(
     username: String,
     domain: String,
-    db: &PrismaClient,
-) -> anyhow::Result<Data> {
+    db: &mut PooledConnection<AsyncDieselConnectionManager<AsyncPgConnection>>,
+) -> anyhow::Result<FullProfile> {
     let webfinger_response = reqwest::get(format!(
         "https://{domain}/.well-known/webfinger?resource=acct:{username}@{domain}"
     ))
-    .await?
-    .json::<Webfinger>()
-    .await?;
+        .await?
+        .json::<Webfinger>()
+        .await?;
     let mut server_id = None;
     for link in webfinger_response.links {
         if link.rel != "self" {
@@ -42,7 +45,24 @@ pub async fn create_remote_profile(
         .await?
         .json::<Profile>()
         .await?;
-    println!("{:?}", ap_profile_response);
+    debug!("{:?}", ap_profile_response);
+    use crate::schema::Profile as diesel_profile;
+    diesel::insert_into(diesel_profile::table)
+        .values(&ExtendedCreateProfile {
+            id: Uuid::now_v7(),
+            username: ap_profile_response.preferred_username.clone(),
+            server: domain,
+            server_id: ap_profile_response.id,
+            display_name: ap_profile_response.name,
+            summary: "".to_string(),
+            inbox: ap_profile_response.inbox,
+            outbox: ap_profile_response.outbox,
+            public_key: ap_profile_response.public_key.public_key_pem,
+            registered_at: chrono::DateTime::parse_from_rfc3339(
+                &*ap_profile_response.published,
+            )?.date_naive(),
+        }).returning(FullProfile::as_returning())
+        .get_result(&mut conn)?;
     Ok(db
         .profile()
         .create(
@@ -54,9 +74,7 @@ pub async fn create_remote_profile(
             ap_profile_response.outbox,
             ap_profile_response.public_key.public_key_pem,
             vec![
-                prisma::profile::registered_at::set(chrono::DateTime::parse_from_rfc3339(
-                    &*ap_profile_response.published,
-                )?),
+                prisma::profile::registered_at::set(),
                 // prisma::profile::summary::set(ap_profile_response.summary)
             ],
         )

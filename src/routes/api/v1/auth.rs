@@ -10,7 +10,11 @@ use openssl::symm::Cipher;
 use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
-use uuid::Uuid;
+use axum::response::IntoResponse;
+use uuid::{Timestamp, Uuid};
+use crate::models::db::*;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 use crate::helpers::auth::UserState;
 use crate::{
@@ -20,14 +24,17 @@ use crate::{
         AppResult,
     },
     models::users::CreateUserInput,
-    prisma, AppState,
+    AppState,
 };
+use crate::helpers::{AppError, internal_app_error};
+use crate::models::db::account::{CreateAccount, FullAccount};
+use crate::models::db::profile::{CreateProfile, FullProfile};
 
 #[debug_handler]
 pub async fn create_user(
     State(state): State<Arc<AppState>>,
     Json(input): Json<CreateUserInput>,
-) -> AppResult<StatusCode> {
+) -> AppResult<impl IntoResponse> {
     let pw_hash = get_password_hash(input.password);
     let rsa = Rsa::generate(2048).unwrap();
     let public_key = str::from_utf8(&rsa.public_key_to_pem().unwrap())
@@ -36,40 +43,35 @@ pub async fn create_user(
     let private_key = str::from_utf8(&rsa.private_key_to_pem().unwrap())
         .unwrap()
         .to_string();
-    // https://github.com/Brendonovich/prisma-client-rust/issues/44
-    let profile = state
-        .db
-        .profile()
-        .create(
-            input.username.clone(),
-            state.env.base_domain.to_string(),
-            format!("{}/api/v1/user/{}", state.env.public_url, input.username),
-            input.display_name,
-            format!(
-                "{}/api/v1/user/{}/inbox",
-                state.env.public_url, input.username
-            ),
-            format!(
-                "{}/api/v1/user/{}/outbox",
-                state.env.public_url, input.username
-            ),
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Profile;
+    let profile = diesel::insert_into(Profile::table)
+        .values(&CreateProfile{
+            id: Uuid::now_v7(),
+            username: input.username.clone(),
+            server: state.env.base_domain.to_string(),
+            server_id: format!("{}/api/v1/user/{}", state.env.public_url, input.username),
+            display_name: input.display_name,
+            inbox: format!("{}/api/v1/user/{}/inbox", state.env.public_url, input.username),
+            outbox: format!("{}/api/v1/user/{}/outbox", state.env.public_url, input.username),
+            summary: "".to_string(),
             public_key,
-            vec![],
-        )
-        .exec()
+        })
+        .returning(CreateProfile::as_returning())
+        .get_result(&mut conn)
         .await?;
-    state
-        .db
-        .account()
-        .create(
-            pw_hash,
-            input.email,
-            private_key,
-            prisma::profile::id::equals(profile.id),
-            vec![],
-        )
-        .exec()
+    use crate::schema::Account;
+    diesel::insert_into(Account::table)
+        .values(&CreateAccount {
+            password: &pw_hash,
+            email: &input.email,
+            private_key: &private_key,
+            profile_id: &profile.id
+        })
+        .returning(CreateAccount::as_returning())
+        .execute(&mut conn)
         .await?;
+
     Ok(StatusCode::OK)
 }
 
@@ -85,36 +87,32 @@ pub async fn login(
     jar: CookieJar,
     Form(data): Form<LogIn>,
 ) -> AppResult<(CookieJar, StatusCode)> {
-    let user = match state
-        .db
-        .account()
-        .find_unique(prisma::account::email::equals(data.email))
-        .with(prisma::account::profile::fetch())
-        .exec()
-        .await?
-    {
-        None => return Ok((jar, StatusCode::UNAUTHORIZED)),
+    use crate::schema::Account::dsl::*;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let acct = match Account.filter(email.eq(data.email)).select(FullAccount::as_select()).first(&mut conn).await.optional()? {
         Some(d) => d,
+        None => return Ok((jar, StatusCode::UNAUTHORIZED))
     };
-    if !check_password_hash(data.password, &user.password) {
+    use crate::schema::Profile::dsl::*;
+    let prof = match Profile.find(acct.profile_id).select(FullProfile::as_select()).first(&mut conn).await.optional()? {
+        Some(d) => d,
+        None => return Ok((jar, StatusCode::UNAUTHORIZED))
+    };
+    if !check_password_hash(data.password, acct.password) {
         return Ok((jar, StatusCode::UNAUTHORIZED));
     }
-    let profile: prisma::profile::Data = match user.profile() {
-        Ok(d) => d.clone(),
-        Err(_) => return Ok((jar, StatusCode::INTERNAL_SERVER_ERROR)),
-    };
-    let rsa_key = Rsa::private_key_from_pem(user.private_key.as_ref()).unwrap();
+    let rsa_key = Rsa::private_key_from_pem(acct.private_key.as_ref()).unwrap();
     let pkey = PKey::from_rsa(rsa_key).unwrap();
     let encrypted_key = pkey
         .private_key_to_pem_pkcs8_passphrase(Cipher::aes_128_cbc(), state.env.jwt_secret.as_ref())
         .unwrap();
     let claims = InputClaims {
-        sub: Uuid::parse_str(&user.id).unwrap(),
-        profile_id: Uuid::parse_str(&user.profile_id).unwrap(),
-        display_name: profile.display_name,
-        email: user.email,
-        username: profile.username,
-        server_id: user.profile.unwrap().server_id,
+        sub: acct.id,
+        profile_id: prof.profile_id,
+        display_name: prof.display_name,
+        email: acct.email,
+        username: prof.username,
+        server_id: prof.server_id,
         private_key: general_purpose::STANDARD.encode(encrypted_key),
     };
     let jwt = generate_jwt(claims, state.env.jwt_secret.clone());

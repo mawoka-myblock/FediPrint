@@ -1,7 +1,7 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::AppResult;
+use crate::helpers::{AppResult, internal_app_error};
 use crate::models::model::CreateModel;
-use crate::prisma::{file, model, profile};
+use crate::models::db::model::{CreateModel as DbCreateModel, FullModel};
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Query, State};
@@ -10,8 +10,10 @@ use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
+use diesel::RunQueryDsl;
 use prisma_client_rust::Direction;
 use crate::routes::api::v1::storage::PaginationQuery;
+use diesel_async::RunQueryDsl;
 
 #[debug_handler]
 pub async fn create_model(
@@ -19,54 +21,43 @@ pub async fn create_model(
     State(state): State<Arc<AppState>>,
     Json(input): Json<CreateModel>,
 ) -> AppResult<impl IntoResponse> {
-    let mut images_vec: Vec<file::UniqueWhereParam> = vec![];
+    // let mut images_vec: Vec<file::UniqueWhereParam> = vec![];
     if input.images.len() < 1 || input.files.len() < 1 {
         return Ok(Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::from("Images and/or files are missing"))
             .unwrap());
     }
-    for image in input.images {
-        images_vec.push(file::id::equals(image.to_string()))
-    }
-    let mut files_vec: Vec<file::UniqueWhereParam> = vec![];
-    for f in input.files {
-        files_vec.push(file::id::equals(f.to_string()))
-    }
-    let data = state
-        .db
-        .model()
-        .create(
-            state.env.base_domain.to_string(),
-            profile::id::equals(claims.profile_id.to_string()),
-            input.title,
-            input.summary,
-            input.description,
-            vec![
-                model::files::connect(files_vec),
-                model::images::connect(images_vec),
-            ],
-        )
-        .exec()
-        .await?;
-
-    let server_id = format!(
+    /*    for image in input.images {
+            images_vec.push(file::id::equals(image.to_string()))
+        }
+        let mut files_vec: Vec<file::UniqueWhereParam> = vec![];
+        for f in input.files {
+            files_vec.push(file::id::equals(f.to_string()))
+        }*/
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Model::table;
+    let res = diesel::insert_into(table)
+        .values(&DbCreateModel {
+            server: state.env.base_domain.to_string(),
+            server_id: None,
+            profile_id: claims.profile_id,
+            published: false,
+            title: input.title,
+            summary: input.summary,
+            description: input.description,
+            tags: Some(input.tags),
+        }).returning(FullModel::as_returning()).get_result(&mut conn).await?;
+    let s_id = format!(
         "{}/api/v1/models/{}/{}",
-        state.env.public_url, claims.username, &data.id
+        state.env.public_url, claims.username, &res.id
     );
-    let finished_data = state
-        .db
-        .model()
-        .update(
-            model::id::equals(data.id),
-            vec![model::server_id::set(Some(server_id))],
-        )
-        .exec()
-        .await?;
+    use crate::schema::Model::dsl::*;
+    let model = diesel::update(Model.find(res.id)).set(server_id.eq(s_id)).returning(FullModel::as_returning()).get_result(&mut conn).await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
-        .body(Body::from(serde_json::to_string(&finished_data).unwrap()))
+        .body(Body::from(serde_json::to_string(&model).unwrap()))
         .unwrap())
 }
 

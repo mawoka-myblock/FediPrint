@@ -5,7 +5,6 @@ pub mod sign;
 
 use std::sync::Arc;
 
-use crate::prisma::*;
 use axum::body::Body;
 use axum::http::header::ToStrError;
 use axum::http::HeaderMap;
@@ -14,30 +13,32 @@ use axum::{
     response::{IntoResponse, Response},
     Extension, Json,
 };
-use prisma_client_rust::{
-    prisma_errors::query_engine::{RecordNotFound, UniqueKeyViolation},
-    QueryError,
-};
+use bb8::{RunError};
 use s3::error::S3Error;
+use diesel::result::Error as diesel_error;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
 pub enum AppError {
-    PrismaError(QueryError),
+    DieselError(diesel_error),
     ToStrError(ToStrError),
     S3Error(S3Error),
     NotFound,
+    InternalServerError,
 }
 
-pub type Database = Extension<Arc<PrismaClient>>;
+pub fn internal_app_error<E>(err: E) -> AppError
+    where
+        E: std::error::Error,
+{
+    AppError::InternalServerError
+}
+
 pub type AppResult<T> = Result<T, AppError>;
 
-impl From<QueryError> for AppError {
-    fn from(error: QueryError) -> Self {
-        match error {
-            e if e.is_prisma_error::<RecordNotFound>() => AppError::NotFound,
-            e => AppError::PrismaError(e),
-        }
+impl From<diesel_error> for AppError {
+    fn from(error: diesel_error) -> Self {
+        AppError::DieselError(error)
     }
 }
 
@@ -53,17 +54,28 @@ impl From<S3Error> for AppError {
     }
 }
 
+impl From<RunError<()>> for AppError {
+    fn from(error: RunError<()>) -> Self {
+        AppError::InternalServerError
+    }
+}
+
 // This centralizes all different errors from our app in one place
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let status = match self {
-            AppError::PrismaError(error) if error.is_prisma_error::<UniqueKeyViolation>() => {
-                StatusCode::CONFLICT
+            AppError::DieselError(error) => match error {
+                diesel_error::NotFound => StatusCode::NOT_FOUND,
+                diesel_error::DatabaseError(e, ..) => match e {
+                    diesel::result::DatabaseErrorKind::UniqueViolation => StatusCode::CONFLICT,
+                    _ => StatusCode::INTERNAL_SERVER_ERROR
+                },
+                _ => StatusCode::INTERNAL_SERVER_ERROR
             }
-            AppError::PrismaError(_) => StatusCode::BAD_REQUEST,
             AppError::NotFound => StatusCode::NOT_FOUND,
             AppError::ToStrError(_) => StatusCode::BAD_REQUEST,
             AppError::S3Error(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR
         };
 
         status.into_response()

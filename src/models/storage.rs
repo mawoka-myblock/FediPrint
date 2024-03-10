@@ -1,4 +1,3 @@
-use crate::prisma::ModifiedScale;
 use serde_derive::Deserialize;
 use uuid::Uuid;
 

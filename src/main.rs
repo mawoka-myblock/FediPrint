@@ -3,7 +3,6 @@ use helpers::Config;
 use std::sync::Arc;
 
 use crate::helpers::middleware::auth_middleware;
-use crate::prisma::*;
 use crate::routes::api::v1;
 use awscreds::Credentials;
 use axum::http::Method;
@@ -12,6 +11,8 @@ use axum::{
     routing::{get, patch, post, put},
     Router,
 };
+use diesel_async::AsyncPgConnection;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use s3::{Bucket, BucketConfiguration, Region};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
@@ -20,14 +21,15 @@ use tracing_subscriber::util::SubscriberInitExt;
 
 pub mod helpers;
 pub mod models;
-pub mod prisma;
 pub mod routes;
+mod schema;
 
 pub struct AppState {
     env: Config,
-    db: PrismaClient,
+    db: Pool,
     s3: Bucket,
 }
+pub type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
 
 #[tokio::main]
 async fn main() {
@@ -46,7 +48,6 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let prisma_client = PrismaClient::_builder().build().await.unwrap();
     let s3_region = Region::Custom {
         region: config.s3_region.clone(),
         endpoint: config.s3_base_url.clone(),
@@ -75,9 +76,11 @@ async fn main() {
         .bucket;
         bucket.set_path_style();
     }
+    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(config.database_url.clone());
+    let pool = bb8::Pool::builder().build(config).await.unwrap();
 
     let state = Arc::new(AppState {
-        db: prisma_client,
+        db: pool,
         env: config,
         s3: bucket,
     });
