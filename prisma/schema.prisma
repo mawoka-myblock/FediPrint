@@ -152,6 +152,8 @@ model Model {
   summary     String
   description String
   tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   images      File[]   @relation("Images")
   files       File[]   @relation("Files")
   comments    Note[]

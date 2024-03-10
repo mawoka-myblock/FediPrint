@@ -4,12 +4,14 @@ use crate::models::model::CreateModel;
 use crate::prisma::{file, model, profile};
 use crate::AppState;
 use axum::body::Body;
-use axum::extract::State;
+use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
+use prisma_client_rust::Direction;
+use crate::routes::api::v1::storage::PaginationQuery;
 
 #[debug_handler]
 pub async fn create_model(
@@ -115,7 +117,7 @@ pub async fn change_model_visibility(
             return Ok(Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body(Body::from(""))
-                .unwrap())
+                .unwrap());
         }
     }
     let model_data = state
@@ -132,4 +134,29 @@ pub async fn change_model_visibility(
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&model_data).unwrap()))
         .unwrap())
+}
+
+#[debug_handler]
+pub async fn get_newest_models(State(state): State<Arc<AppState>>, query: Query<PaginationQuery>) -> AppResult<impl IntoResponse> {
+    if query.page < 0 {
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::from("page can't be less than 0"))
+            .unwrap());
+    }
+    let models = state
+        .db
+        .model()
+        .find_many(vec![
+            model::published::equals(true)
+        ])
+        .order_by(model::created_at::order(Direction::Asc))
+        .skip((&query.page * 20) as i64)
+        .take(20)
+        .exec()
+        .await?;
+    return Ok(Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::from(serde_json::to_string(&models).unwrap()))
+        .unwrap());
 }

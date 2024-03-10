@@ -191,6 +191,13 @@ async fn main() {
                 auth_middleware,
             )),
         )
+        .route(
+            "/api/v1/model/public/newest",
+            get(v1::model::get_newest_models).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http());
     // run our app with hyper, listening globally on port 3000
