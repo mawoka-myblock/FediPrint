@@ -1,17 +1,15 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
-use crate::helpers::{Config, internal_app_error};
+use crate::helpers::{Config};
 use crate::models::activitypub::{FollowRequest, Profile};
 use crate::models::data::Webfinger;
 
 use anyhow::Context;
 use diesel::SelectableHelper;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use diesel_async::pooled_connection::bb8::PooledConnection;
+use diesel_async::{RunQueryDsl};
 use tracing::debug;
 use uuid::Uuid;
-use crate::models::db::profile::{CreateProfile, ExtendedCreateProfile, FullProfile};
+use crate::models::db::profile::{ExtendedCreateProfile, FullProfile};
 use crate::Pool;
 
 pub async fn create_remote_profile(

@@ -3,7 +3,6 @@ pub mod interactions;
 pub mod middleware;
 pub mod sign;
 
-use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::header::ToStrError;
@@ -11,7 +10,7 @@ use axum::http::HeaderMap;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Extension, Json,
+    Json,
 };
 use bb8::{RunError};
 use s3::error::S3Error;

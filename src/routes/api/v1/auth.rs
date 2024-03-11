@@ -11,8 +11,7 @@ use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
 use axum::response::IntoResponse;
-use uuid::{Timestamp, Uuid};
-use crate::models::db::*;
+use uuid::{Uuid};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
@@ -26,7 +25,7 @@ use crate::{
     models::users::CreateUserInput,
     AppState,
 };
-use crate::helpers::{AppError, internal_app_error};
+use crate::helpers::{internal_app_error};
 use crate::models::db::account::{CreateAccount, FullAccount};
 use crate::models::db::profile::{CreateProfile, FullProfile};
 

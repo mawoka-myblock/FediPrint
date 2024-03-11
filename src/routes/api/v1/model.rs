@@ -10,15 +10,10 @@ use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
-use diesel::query_dsl::filter_dsl::FindDsl;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel::query_dsl::methods::OrderDsl;
-use prisma_client_rust::Direction;
 use crate::routes::api::v1::storage::PaginationQuery;
 use diesel_async::{RunQueryDsl};
-use prisma_client_rust::psl::schema_ast::ast::Top::Model;
 use uuid::Uuid;
-use crate::schema::_Followers::profile_id;
 
 #[debug_handler]
 pub async fn create_model(
@@ -73,7 +68,7 @@ pub async fn list_own_models(
 ) -> AppResult<impl IntoResponse> {
     use crate::schema::Model::dsl::*;
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let models = Model.filter(profile_id.eq(claims.profile_id)).select(FullModel::as_select()).load(&mut conn)?;
+    let models = Model.filter(profile_id.eq(claims.profile_id)).select(FullModel::as_select()).load(&mut conn).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

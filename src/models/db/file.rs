@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel::{Identifiable, Insertable, Queryable, Selectable};
+use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use serde_derive::Serialize;
 use uuid::Uuid;
 use crate::schema::File;
+use crate::models::db::profile::FullProfile;
 
 
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq)]
@@ -21,7 +22,8 @@ pub struct CreateFile {
     pub image_for_model_id: Option<Uuid>
 }
 
-#[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq, Identifiable)]
+#[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq, Identifiable, Associations)]
+#[diesel(belongs_to(FullProfile, foreign_key = profile_id))]
 #[diesel(table_name = File)]
 pub struct FullFile {
     pub id: Uuid,

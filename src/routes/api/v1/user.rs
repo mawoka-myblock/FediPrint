@@ -1,8 +1,8 @@
 use crate::helpers::{ensure_ap_header, AppResult, internal_app_error};
 use crate::models::activitypub::{
     AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, FocalPoint, IdentityKey,
-    NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteBoxItemRoot, OrderedCollection,
-    OrderedItem, OutboxContext, OutboxDataPage, PeopleDataPage, Profile, PublicKey,
+    OrderedCollection,
+    OrderedItem, OutboxContext, OutboxDataPage, PeopleDataPage, PublicKey,
 };
 use crate::{AppState};
 use axum::body::Body;
@@ -11,12 +11,13 @@ use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde_derive::Deserialize;
-use serde_json::json;
-use std::fmt::format;
 use std::sync::Arc;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use crate::models::db::profile::FullProfile;
+use diesel::SelectableHelper;
+use crate::models::activitypub::Profile;
+use chrono::{Local, NaiveTime, TimeZone};
 
 #[debug_handler]
 pub async fn get_user_profile(
@@ -29,10 +30,10 @@ pub async fn get_user_profile(
         Err(e) => return Ok(e),
     };
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
+    use crate::schema::Profile::dsl::{Profile as db_Profile, server,username as db_username};
 
-    let user = Profile.filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain))
+    let user = db_Profile.filter(db_username.eq(username))
+        .filter(server.eq(state.env.base_domain.clone()))
         .select(FullProfile::as_select())
         .first(&mut conn)
         .await?;
@@ -129,7 +130,7 @@ pub async fn get_user_profile(
             owner: format!("{}/api/v1/user/{}", state.env.public_url, user.username),
             public_key_pem: user.public_key,
         },
-        published: user.registered_at.to_rfc3339(),
+        published: Local.from_local_datetime(&user.registered_at.and_time(NaiveTime::default())).latest().unwrap().to_rfc3339(),
         type_field: "Person".to_string(),
         url: format!("{}/@{}", state.env.public_url, user.username),
     };
@@ -188,7 +189,7 @@ pub async fn get_followers(
     use crate::schema::Profile::dsl::{Profile, server,username as db_username};
 
     let user = Profile.filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain))
+        .filter(server.eq(state.env.base_domain.clone()))
         .select(FullProfile::as_select())
         .first(&mut conn)
         .await?;
@@ -282,7 +283,7 @@ pub async fn get_following(
     use crate::schema::Profile::dsl::{Profile, server,username as db_username};
 
     let user = Profile.filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain))
+        .filter(server.eq(state.env.base_domain.clone()))
         .select(FullProfile::as_select())
         .first(&mut conn)
         .await?;
@@ -356,7 +357,7 @@ pub async fn get_outbox(
     use crate::schema::Profile::dsl::{Profile, server,username as db_username};
 
     let user = Profile.filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain))
+        .filter(server.eq(state.env.base_domain.clone()))
         .select(FullProfile::as_select())
         .first(&mut conn)
         .await?;
@@ -406,7 +407,7 @@ pub async fn get_outbox(
         .exec()
         .await?;*/
     // [Data { id: 1, created_at: 2024-02-24T10:22:48.100+00:00, server_id: Some("http://localhost:3000/api/v1/notes/string/1"), content: "<string>", hashtags: ["<string>", "<string>"], audience: Public, in_reply_to_comment_id: None, in_reply_to_note_id: None, actor_id: "36e820ce-e913-4402-ae7b-86d3cb1552cb", mentions: [], in_reply_to_comment: None, in_reply_to_note: None }]
-    let mut ordered_items: Vec<OrderedItem> = vec![];
+    let /*mut*/ ordered_items: Vec<OrderedItem> = vec![];
     /*println!("{:?}", data);
     for item in data {
         let to = vec![

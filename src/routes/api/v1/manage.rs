@@ -1,5 +1,4 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::interactions::{create_remote_profile, follow_user};
 use crate::helpers::AppResult;
 use crate::{AppState};
 use axum::body::Body;
@@ -18,8 +17,8 @@ pub struct FollowUser {
 
 #[debug_handler]
 pub async fn follow_user_route(
-    Extension(claims): Extension<UserState>,
-    State(state): State<Arc<AppState>>,
+    Extension(_claims): Extension<UserState>,
+    State(_state): State<Arc<AppState>>,
     Json(input): Json<FollowUser>,
 ) -> AppResult<impl IntoResponse> {
     let user_regex = Regex::new(r"@?(.*)@(.*\..{2,})").unwrap();
@@ -33,13 +32,13 @@ pub async fn follow_user_route(
             return bad_request;
         }
     };
-    let username = match caps.get(1) {
+    let _username = match caps.get(1) {
         Some(d) => d.as_str(),
         None => {
             return bad_request;
         }
     };
-    let domain = match caps.get(2) {
+    let _domain = match caps.get(2) {
         Some(d) => d.as_str(),
         None => {
             return bad_request;

@@ -76,8 +76,8 @@ async fn main() {
         .bucket;
         bucket.set_path_style();
     }
-    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(config.database_url.clone());
-    let pool = bb8::Pool::builder().build(config).await.unwrap();
+    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(config.database_url.clone());
+    let pool = bb8::Pool::builder().build(pool_config).await.unwrap();
 
     let state = Arc::new(AppState {
         db: pool,

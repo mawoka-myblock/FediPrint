@@ -12,7 +12,6 @@ use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use crate::models::db::printer::CreatePrinter as DbCreatePrinter;
 use crate::models::db::printer::FullPrinter;
 use diesel_async::RunQueryDsl;
-use futures::StreamExt;
 
 #[debug_handler]
 pub async fn create_printer(
@@ -26,7 +25,6 @@ pub async fn create_printer(
             .body(Body::from("Slicer Config bigger than 60KB."))
             .unwrap());
     }
-    use crate::schema::Printer::dsl::*;
     use crate::schema::Printer::table;
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
     let printer_data = diesel::insert_into(table)
@@ -56,7 +54,7 @@ pub async fn get_all_printers(
 ) -> AppResult<impl IntoResponse> {
     use crate::schema::Printer::dsl::*;
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let printers = Printer.filter(profile_id.eq(claims.profile_id)).select(FullPrinter::as_select()).all(&mut conn).await?;
+    let printers = Printer.filter(profile_id.eq(claims.profile_id)).select(FullPrinter::as_select()).load(&mut conn).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

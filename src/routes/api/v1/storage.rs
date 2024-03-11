@@ -16,8 +16,7 @@ use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
-use tracing::info_span;
-use uuid::{uuid, Uuid};
+use uuid::{Uuid};
 use crate::models::db::file::{CreateFile, FullFile};
 
 async fn put_file(
@@ -110,10 +109,10 @@ pub async fn edit_file_metadata(
 ) -> AppResult<impl IntoResponse> {
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
     use crate::schema::File::dsl::*;
-    let data = File.filter(profile_id.eq(claims.profile_id)).filter(id.eq(input.id))
+    let data = diesel::update(File).filter(profile_id.eq(claims.profile_id)).filter(id.eq(input.id))
         .set((
             alt_text.eq(input.alt_text),
-            description.eq((input.description)),
+            description.eq(input.description),
             thumbhash.eq(input.thumbhash)
             ))
         .returning(FullFile::as_returning())

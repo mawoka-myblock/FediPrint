@@ -1,9 +1,8 @@
-use diesel::{Queryable, Selectable, Insertable, Associations, Identifiable};
+use diesel::{Queryable, Selectable, Insertable, Identifiable};
 use serde_derive::Serialize;
 use uuid::Uuid;
 use crate::schema::Account;
 use chrono::NaiveDateTime;
-use crate::models::db::profile::FullProfile;
 
 
 
