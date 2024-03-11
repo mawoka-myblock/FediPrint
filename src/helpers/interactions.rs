@@ -1,22 +1,25 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
-use crate::helpers::Config;
+use crate::helpers::{Config, internal_app_error};
 use crate::models::activitypub::{FollowRequest, Profile};
 use crate::models::data::Webfinger;
 
 use anyhow::Context;
-use diesel_async::AsyncPgConnection;
+use diesel::SelectableHelper;
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::pooled_connection::bb8::PooledConnection;
 use tracing::debug;
 use uuid::Uuid;
 use crate::models::db::profile::{CreateProfile, ExtendedCreateProfile, FullProfile};
+use crate::Pool;
 
 pub async fn create_remote_profile(
     username: String,
     domain: String,
-    db: &mut PooledConnection<AsyncDieselConnectionManager<AsyncPgConnection>>,
+    pool: Pool,
 ) -> anyhow::Result<FullProfile> {
+    let mut conn = pool.get().await?;
     let webfinger_response = reqwest::get(format!(
         "https://{domain}/.well-known/webfinger?resource=acct:{username}@{domain}"
     ))
@@ -47,7 +50,7 @@ pub async fn create_remote_profile(
         .await?;
     debug!("{:?}", ap_profile_response);
     use crate::schema::Profile as diesel_profile;
-    diesel::insert_into(diesel_profile::table)
+    Ok(diesel::insert_into(diesel_profile::table)
         .values(&ExtendedCreateProfile {
             id: Uuid::now_v7(),
             username: ap_profile_response.preferred_username.clone(),
@@ -61,29 +64,14 @@ pub async fn create_remote_profile(
             registered_at: chrono::DateTime::parse_from_rfc3339(
                 &*ap_profile_response.published,
             )?.date_naive(),
-        }).returning(FullProfile::as_returning())
-        .get_result(&mut conn)?;
-    Ok(db
-        .profile()
-        .create(
-            ap_profile_response.preferred_username.clone(),
-            domain,
-            ap_profile_response.id,
-            ap_profile_response.name,
-            ap_profile_response.inbox,
-            ap_profile_response.outbox,
-            ap_profile_response.public_key.public_key_pem,
-            vec![
-                prisma::profile::registered_at::set(),
-                // prisma::profile::summary::set(ap_profile_response.summary)
-            ],
-        )
-        .exec()
+        })
+        .returning(FullProfile::as_returning())
+        .get_result(&mut conn)
         .await?)
 }
 
 pub async fn follow_user(
-    to_follow: &prisma::profile::Data,
+    to_follow: FullProfile,
     claims: &UserState,
     env: &Config,
 ) -> anyhow::Result<()> {
@@ -92,7 +80,7 @@ pub async fn follow_user(
         id: format!("{}/{}", env.public_url, Uuid::new_v4()),
         type_field: "Follow".to_string(),
         actor: claims.server_id.clone(),
-        object: to_follow.server_id.clone(),
+        object: to_follow.server_id.clone().to_string(),
     };
     let json_data = serde_json::to_string(&data).unwrap();
     let data_signature = sign_post_request_with_body(

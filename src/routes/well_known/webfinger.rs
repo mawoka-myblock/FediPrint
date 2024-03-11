@@ -1,6 +1,6 @@
-use crate::helpers::AppResult;
+use crate::helpers::{AppResult, internal_app_error};
 use crate::models::data::{Webfinger, WebfingerLink};
-use crate::{prisma, AppState};
+use crate::{AppState};
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Query, State};
@@ -9,6 +9,9 @@ use axum::response::{IntoResponse, Response};
 use regex::Regex;
 use serde::Deserialize;
 use std::sync::Arc;
+use diesel::QueryDsl;
+use diesel_async::RunQueryDsl;
+use crate::models::db::profile::FullProfile;
 
 #[derive(Deserialize)]
 pub struct WebfingerQuery {
@@ -55,24 +58,14 @@ pub async fn handler(
             .body(Body::from(""))
             .unwrap());
     }
-    let user = match state
-        .db
-        .profile()
-        .find_first(vec![
-            prisma::profile::username::equals(username.to_string()),
-            prisma::profile::server::equals("local".to_string()),
-        ])
-        .exec()
-        .await?
-    {
-        Some(d) => d,
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(""))
-                .unwrap())
-        }
-    };
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
+
+    let user = Profile.filter(db_username.eq(username))
+        .filter(server.eq(state.env.base_domain))
+        .select(FullProfile::as_select())
+        .first(&mut conn)
+        .await?;
 
     let wf_data = Webfinger {
         subject: format!("acct:{}@{}", user.username, state.env.base_domain),

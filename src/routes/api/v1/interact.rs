@@ -13,6 +13,8 @@ use std::sync::Arc;
 use diesel_async::RunQueryDsl;
 use crate::models::db::EventAudience;
 use crate::models::db::note::{CreateNote, FullNote, UserFacingNote};
+use diesel::{QueryDsl, SelectableHelper};
+use diesel::ExpressionMethods;
 
 #[derive(Deserialize)]
 pub struct PostNoteInput {
@@ -34,8 +36,9 @@ pub async fn post_note(
     //     mentions_vec.push(profile::server_id::equals(mention));
     // }
     use crate::schema::Note::dsl::*;
+    use crate::schema::Note::table;
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let unfinished_note = diesel::insert_into(Note::table)
+    let unfinished_note = diesel::insert_into(table)
         .values(&CreateNote{
             server_id: None,
             content: input.content,

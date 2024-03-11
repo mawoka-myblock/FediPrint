@@ -98,7 +98,7 @@ pub async fn login(
         Some(d) => d,
         None => return Ok((jar, StatusCode::UNAUTHORIZED))
     };
-    if !check_password_hash(data.password, acct.password) {
+    if !check_password_hash(data.password, &acct.password) {
         return Ok((jar, StatusCode::UNAUTHORIZED));
     }
     let rsa_key = Rsa::private_key_from_pem(acct.private_key.as_ref()).unwrap();
@@ -108,7 +108,7 @@ pub async fn login(
         .unwrap();
     let claims = InputClaims {
         sub: acct.id,
-        profile_id: prof.profile_id,
+        profile_id: prof.id,
         display_name: prof.display_name,
         email: acct.email,
         username: prof.username,

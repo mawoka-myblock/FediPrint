@@ -1,17 +1,14 @@
-use crate::models::db::account::FullAccount;
-use crate::models::db::profile::FullProfile;
+use serde_derive::{Deserialize, Serialize};
 
 pub mod profile;
 pub mod account;
 pub mod note;
 pub mod model;
+pub mod printer;
+pub mod file;
 
-
-pub struct AccountWithProfile<'a> {
-    profile: &'a FullProfile,
-    account: &'a FullAccount
-}
-
+#[derive(diesel_derive_enum::DbEnum, Debug, Deserialize, Serialize)]
+#[ExistingTypePath = "crate::schema::sql_types::ModifiedScale"]
 pub enum ModifiedScale {
     NoMods,
     LightMods,
@@ -20,6 +17,8 @@ pub enum ModifiedScale {
     NewPrinter
 }
 
+#[derive(diesel_derive_enum::DbEnum, Debug, Deserialize, Serialize)]
+#[ExistingTypePath = "crate::schema::sql_types::EventAudience"]
 pub enum EventAudience {
     Public,
     Followers,

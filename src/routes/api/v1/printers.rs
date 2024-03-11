@@ -1,7 +1,6 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::AppResult;
+use crate::helpers::{AppResult, internal_app_error};
 use crate::models::printers::{CreatePrinter, UpdatePrinter};
-use crate::prisma::{printer, profile};
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
@@ -9,6 +8,11 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use std::sync::Arc;
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use crate::models::db::printer::CreatePrinter as DbCreatePrinter;
+use crate::models::db::printer::FullPrinter;
+use diesel_async::RunQueryDsl;
+use futures::StreamExt;
 
 #[debug_handler]
 pub async fn create_printer(
@@ -22,22 +26,22 @@ pub async fn create_printer(
             .body(Body::from("Slicer Config bigger than 60KB."))
             .unwrap());
     }
-    let printer_data = state
-        .db
-        .printer()
-        .create(
-            input.name,
-            input.manufacturer,
-            profile::id::equals(claims.profile_id.to_string()),
-            vec![
-                printer::slicer_config::set(input.slicer_config),
-                printer::slicer_config_public::set(input.slicer_config_public),
-                printer::description::set(input.description),
-                printer::modified_scale::set(input.modified_scale),
-                printer::public::set(input.public),
-            ],
-        )
-        .exec()
+    use crate::schema::Printer::dsl::*;
+    use crate::schema::Printer::table;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let printer_data = diesel::insert_into(table)
+        .values(&DbCreatePrinter {
+            name: input.name,
+            manufacturer: input.manufacturer,
+            profile_id: claims.profile_id,
+            public: input.public,
+            slicer_config: input.slicer_config,
+            slicer_config_public: input.slicer_config_public,
+            description: input.description,
+            modified_scale: input.modified_scale
+        })
+        .returning(FullPrinter::as_returning())
+        .get_result(&mut conn)
         .await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)
@@ -50,14 +54,9 @@ pub async fn get_all_printers(
     Extension(claims): Extension<UserState>,
     State(state): State<Arc<AppState>>,
 ) -> AppResult<impl IntoResponse> {
-    let printers = state
-        .db
-        .printer()
-        .find_many(vec![printer::profile_id::equals(
-            claims.profile_id.to_string(),
-        )])
-        .exec()
-        .await?;
+    use crate::schema::Printer::dsl::*;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let printers = Printer.filter(profile_id.eq(claims.profile_id)).select(FullPrinter::as_select()).all(&mut conn).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -76,42 +75,25 @@ pub async fn update_printer(
             .body(Body::from("Slicer Config bigger than 60KB."))
             .unwrap());
     }
-    match state
-        .db
-        .printer()
-        .find_first(vec![
-            printer::id::equals(input.id.to_string()),
-            printer::profile_id::equals(claims.profile_id.to_string()),
-        ])
-        .exec()
-        .await?
-    {
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::UNAUTHORIZED)
-                .body(Body::from(""))
-                .unwrap())
-        }
-        Some(_) => (),
-    }
-    let printer_data = state
-        .db
-        .printer()
-        .update(
-            printer::id::equals(input.id.to_string()),
-            vec![
-                printer::name::set(input.name),
-                printer::manufacturer::set(input.manufacturer),
-                printer::slicer_config::set(input.slicer_config),
-                printer::slicer_config_public::set(input.slicer_config_public),
-                printer::description::set(input.description),
-                printer::modified_scale::set(input.modified_scale),
-                printer::public::set(input.public),
-            ],
-        )
-        .exec()
+    use crate::schema::Printer::dsl::*;
+    use crate::schema::Printer::table;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let printer_data = diesel::update(table)
+        .filter(id.eq(input.id))
+        .filter(profile_id.eq(claims.profile_id))
+        .set(&DbCreatePrinter {
+            name: input.name,
+            manufacturer: input.manufacturer,
+            profile_id: claims.profile_id,
+            public: input.public,
+            slicer_config: input.slicer_config,
+            slicer_config_public: input.slicer_config_public,
+            description: input.description,
+            modified_scale: input.modified_scale
+        })
+        .returning(FullPrinter::as_returning())
+        .get_result(&mut conn)
         .await?;
-
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

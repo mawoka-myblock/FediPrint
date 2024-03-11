@@ -1,11 +1,10 @@
-use crate::helpers::{ensure_ap_header, AppResult};
+use crate::helpers::{ensure_ap_header, AppResult, internal_app_error};
 use crate::models::activitypub::{
     AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, FocalPoint, IdentityKey,
     NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteBoxItemRoot, OrderedCollection,
     OrderedItem, OutboxContext, OutboxDataPage, PeopleDataPage, Profile, PublicKey,
 };
-use crate::prisma::{note, profile};
-use crate::{prisma, AppState};
+use crate::{AppState};
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Path, Query, State};
@@ -15,6 +14,9 @@ use serde_derive::Deserialize;
 use serde_json::json;
 use std::fmt::format;
 use std::sync::Arc;
+use diesel::{ExpressionMethods, QueryDsl};
+use diesel_async::RunQueryDsl;
+use crate::models::db::profile::FullProfile;
 
 #[debug_handler]
 pub async fn get_user_profile(
@@ -26,25 +28,14 @@ pub async fn get_user_profile(
         Ok(_) => (),
         Err(e) => return Ok(e),
     };
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
 
-    let user = match state
-        .db
-        .profile()
-        .find_first(vec![
-            prisma::profile::username::equals(username),
-            prisma::profile::server::equals("local".to_string()),
-        ])
-        .exec()
-        .await?
-    {
-        Some(d) => d,
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(""))
-                .unwrap());
-        }
-    };
+    let user = Profile.filter(db_username.eq(username))
+        .filter(server.eq(state.env.base_domain))
+        .select(FullProfile::as_select())
+        .first(&mut conn)
+        .await?;
     let data = Profile {
         context: (
             "https://www.w3.org/ns/activitystreams".to_string(),
@@ -193,8 +184,16 @@ pub async fn get_followers(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
 
-    let user = match state
+    let user = Profile.filter(db_username.eq(username))
+        .filter(server.eq(state.env.base_domain))
+        .select(FullProfile::as_select())
+        .first(&mut conn)
+        .await?;
+
+/*    let user = match state
         .db
         .profile()
         .find_first(vec![
@@ -217,17 +216,18 @@ pub async fn get_followers(
                 .body(Body::from(""))
                 .unwrap());
         }
-    }; // Data { id: "ff928bab-96ea-485b-9d40-667e79a19dcc", username: "Mawoka", server: "local", display_name: "Mawoka", summary: "", public_key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3OV1S2zNjE0OPICeA9pC\nm3pi5x6u9NLYyY51OSutpLpCFLEA50HjXKvqCaXVNtRXzmQmMg5lsrimm+/nJT3a\nrKuLhecXo6HrOV6GQ2+4n/kRRk75Uymk80upeAH5uI6CFBGB+1114JZp5MonuHQx\nt1um+DR3gtFkp8TLiJp5xk/L4/OQMBDfJROCKRw3OFFmEiWM9JlMxHOhekXkl9uc\nljVoese7xVaw+lD0R7sxdqLBHgjDDgf3A6dAQ/fTG+7DGUbMZvubvpQu7taCpevi\nLTtAi94R8RcLcg6/yAACXe2+gn2fGTeT2MncJgNuwTnZjNWmEfRNvX0cZ32qUc99\nfQIDAQAB\n-----END PUBLIC KEY-----\n", registered_at: 2024-02-18T00:00:00+00:00, followers: [Data { server_id: "http://localhost:3000/api/v1/user/Mawoka" }] }
+    };*/
+    // Data { id: "ff928bab-96ea-485b-9d40-667e79a19dcc", username: "Mawoka", server: "local", display_name: "Mawoka", summary: "", public_key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3OV1S2zNjE0OPICeA9pC\nm3pi5x6u9NLYyY51OSutpLpCFLEA50HjXKvqCaXVNtRXzmQmMg5lsrimm+/nJT3a\nrKuLhecXo6HrOV6GQ2+4n/kRRk75Uymk80upeAH5uI6CFBGB+1114JZp5MonuHQx\nt1um+DR3gtFkp8TLiJp5xk/L4/OQMBDfJROCKRw3OFFmEiWM9JlMxHOhekXkl9uc\nljVoese7xVaw+lD0R7sxdqLBHgjDDgf3A6dAQ/fTG+7DGUbMZvubvpQu7taCpevi\nLTtAi94R8RcLcg6/yAACXe2+gn2fGTeT2MncJgNuwTnZjNWmEfRNvX0cZ32qUc99\nfQIDAQAB\n-----END PUBLIC KEY-----\n", registered_at: 2024-02-18T00:00:00+00:00, followers: [Data { server_id: "http://localhost:3000/api/v1/user/Mawoka" }] }
 
     let data = PeopleDataPage {
         context: "https://www.w3.org/ns/activitystreams".to_string(),
         id: format!("{}/followers?page={}", user.server_id, page.unwrap()),
         next: format!("{}/followers?page={}", user.server_id, page.unwrap() + 1),
-        ordered_items: user
+        ordered_items: /*user
             .followers
             .iter()
             .map(|server| server.server_id.to_string())
-            .collect(),
+            .collect(),*/ vec!["PLACEHOLDER".to_string()],
         part_of: format!("{}/followers", user.server_id),
         total_items: count,
         type_field: "OrderedCollectionPage".to_string(),
@@ -278,7 +278,15 @@ pub async fn get_following(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-    let user = match state
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
+
+    let user = Profile.filter(db_username.eq(username))
+        .filter(server.eq(state.env.base_domain))
+        .select(FullProfile::as_select())
+        .first(&mut conn)
+        .await?;
+/*    let user = match state
         .db
         .profile()
         .find_first(vec![
@@ -301,17 +309,18 @@ pub async fn get_following(
                 .body(Body::from(""))
                 .unwrap());
         }
-    }; // Data { id: "ff928bab-96ea-485b-9d40-667e79a19dcc", username: "Mawoka", server: "local", display_name: "Mawoka", summary: "", public_key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3OV1S2zNjE0OPICeA9pC\nm3pi5x6u9NLYyY51OSutpLpCFLEA50HjXKvqCaXVNtRXzmQmMg5lsrimm+/nJT3a\nrKuLhecXo6HrOV6GQ2+4n/kRRk75Uymk80upeAH5uI6CFBGB+1114JZp5MonuHQx\nt1um+DR3gtFkp8TLiJp5xk/L4/OQMBDfJROCKRw3OFFmEiWM9JlMxHOhekXkl9uc\nljVoese7xVaw+lD0R7sxdqLBHgjDDgf3A6dAQ/fTG+7DGUbMZvubvpQu7taCpevi\nLTtAi94R8RcLcg6/yAACXe2+gn2fGTeT2MncJgNuwTnZjNWmEfRNvX0cZ32qUc99\nfQIDAQAB\n-----END PUBLIC KEY-----\n", registered_at: 2024-02-18T00:00:00+00:00, following: [Data { server_id: "http://localhost:3000/api/v1/user/Mawoka" }] }
+    }; */
+    // Data { id: "ff928bab-96ea-485b-9d40-667e79a19dcc", username: "Mawoka", server: "local", display_name: "Mawoka", summary: "", public_key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3OV1S2zNjE0OPICeA9pC\nm3pi5x6u9NLYyY51OSutpLpCFLEA50HjXKvqCaXVNtRXzmQmMg5lsrimm+/nJT3a\nrKuLhecXo6HrOV6GQ2+4n/kRRk75Uymk80upeAH5uI6CFBGB+1114JZp5MonuHQx\nt1um+DR3gtFkp8TLiJp5xk/L4/OQMBDfJROCKRw3OFFmEiWM9JlMxHOhekXkl9uc\nljVoese7xVaw+lD0R7sxdqLBHgjDDgf3A6dAQ/fTG+7DGUbMZvubvpQu7taCpevi\nLTtAi94R8RcLcg6/yAACXe2+gn2fGTeT2MncJgNuwTnZjNWmEfRNvX0cZ32qUc99\nfQIDAQAB\n-----END PUBLIC KEY-----\n", registered_at: 2024-02-18T00:00:00+00:00, following: [Data { server_id: "http://localhost:3000/api/v1/user/Mawoka" }] }
 
     let data = PeopleDataPage {
         context: "https://www.w3.org/ns/activitystreams".to_string(),
         id: format!("{}/following?page={}", user.server_id, page.unwrap()),
         next: format!("{}/following?page={}", user.server_id, page.unwrap() + 1),
-        ordered_items: user
+        ordered_items: /*user
             .following
             .iter()
             .map(|server| server.server_id.to_string())
-            .collect(),
+            .collect(),*/vec!["PLACEHOLDER".to_string()],
         part_of: format!("{}/following", user.server_id),
         total_items: count,
         type_field: "OrderedCollectionPage".to_string(),
@@ -343,24 +352,14 @@ pub async fn get_outbox(
 
     // TODO get the count right
     let count: i64 = 12;
-    let user = match state
-        .db
-        .profile()
-        .find_unique(profile::server_id::equals(format!(
-            "{}/api/v1/user/{}",
-            state.env.public_url, username
-        )))
-        .exec()
-        .await?
-    {
-        Some(d) => d,
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(""))
-                .unwrap());
-        }
-    };
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
+
+    let user = Profile.filter(db_username.eq(username))
+        .filter(server.eq(state.env.base_domain))
+        .select(FullProfile::as_select())
+        .first(&mut conn)
+        .await?;
 
     if query.page.is_none() {
         let return_data = OrderedCollection {
@@ -386,7 +385,7 @@ pub async fn get_outbox(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-    let data = state
+/*    let data = state
         .db
         .note()
         .find_many(vec![note::actor_id::equals(user.id)])
@@ -405,10 +404,10 @@ pub async fn get_outbox(
             }
         }))
         .exec()
-        .await?;
+        .await?;*/
     // [Data { id: 1, created_at: 2024-02-24T10:22:48.100+00:00, server_id: Some("http://localhost:3000/api/v1/notes/string/1"), content: "<string>", hashtags: ["<string>", "<string>"], audience: Public, in_reply_to_comment_id: None, in_reply_to_note_id: None, actor_id: "36e820ce-e913-4402-ae7b-86d3cb1552cb", mentions: [], in_reply_to_comment: None, in_reply_to_note: None }]
     let mut ordered_items: Vec<OrderedItem> = vec![];
-    println!("{:?}", data);
+    /*println!("{:?}", data);
     for item in data {
         let to = vec![
             "https://www.w3.org/ns/activitystreams#Public".to_string(), // TODO Implement check for Audience
@@ -466,7 +465,7 @@ pub async fn get_outbox(
                 in_reply_to: serde_json::Value::String("PLACEHOLDER".to_string())
             }),
         })
-    }
+    }*/
 
     let data = OutboxDataPage {
         context: (

@@ -10,10 +10,15 @@ use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
-use diesel::RunQueryDsl;
+use diesel::query_dsl::filter_dsl::FindDsl;
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel::query_dsl::methods::OrderDsl;
 use prisma_client_rust::Direction;
 use crate::routes::api::v1::storage::PaginationQuery;
-use diesel_async::RunQueryDsl;
+use diesel_async::{RunQueryDsl};
+use prisma_client_rust::psl::schema_ast::ast::Top::Model;
+use uuid::Uuid;
+use crate::schema::_Followers::profile_id;
 
 #[debug_handler]
 pub async fn create_model(
@@ -66,14 +71,9 @@ pub async fn list_own_models(
     Extension(claims): Extension<UserState>,
     State(state): State<Arc<AppState>>,
 ) -> AppResult<impl IntoResponse> {
-    let models = state
-        .db
-        .model()
-        .find_many(vec![model::profile_id::equals(
-            claims.profile_id.to_string(),
-        )])
-        .exec()
-        .await?;
+    use crate::schema::Model::dsl::*;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let models = Model.filter(profile_id.eq(claims.profile_id)).select(FullModel::as_select()).load(&mut conn)?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -83,7 +83,7 @@ pub async fn list_own_models(
 
 #[derive(Deserialize)]
 pub struct ChangeModelVisibilityInput {
-    pub model_id: i64,
+    pub model_id: Uuid,
     pub public: bool,
 }
 
@@ -93,37 +93,20 @@ pub async fn change_model_visibility(
     State(state): State<Arc<AppState>>,
     Json(input): Json<ChangeModelVisibilityInput>,
 ) -> AppResult<impl IntoResponse> {
-    match state
-        .db
-        .model()
-        .find_first(vec![
-            model::id::equals(input.model_id),
-            model::profile_id::equals(claims.profile_id.to_string()),
-        ])
-        .exec()
-        .await?
-    {
-        Some(_) => (),
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(""))
-                .unwrap());
-        }
-    }
-    let model_data = state
-        .db
-        .model()
-        .update(
-            model::id::equals(input.model_id),
-            vec![model::published::set(input.public)],
-        )
-        .exec()
+    use crate::schema::Model::dsl::*;
+    use crate::schema::Model::table;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let model = diesel::update(table)
+        .filter(id.eq(input.model_id))
+        .filter(profile_id.eq(claims.profile_id))
+        .set(published.eq(input.public))
+        .returning(FullModel::as_returning())
+        .get_result(&mut conn)
         .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
-        .body(Body::from(serde_json::to_string(&model_data).unwrap()))
+        .body(Body::from(serde_json::to_string(&model).unwrap()))
         .unwrap())
 }
 
@@ -135,17 +118,9 @@ pub async fn get_newest_models(State(state): State<Arc<AppState>>, query: Query<
             .body(Body::from("page can't be less than 0"))
             .unwrap());
     }
-    let models = state
-        .db
-        .model()
-        .find_many(vec![
-            model::published::equals(true)
-        ])
-        .order_by(model::created_at::order(Direction::Asc))
-        .skip((&query.page * 20) as i64)
-        .take(20)
-        .exec()
-        .await?;
+    use crate::schema::Model::dsl::*;
+    let mut conn = state.db.get().await.map_err(internal_app_error)?;
+    let models = Model.filter(published.eq(true)).order(created_at.asc()).offset((&query.page * 20) as i64).limit(20).select(FullModel::as_select()).load(&mut conn).await?;
     return Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::from(serde_json::to_string(&models).unwrap()))
