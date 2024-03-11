@@ -1,19 +1,19 @@
-use crate::helpers::{AppResult, internal_app_error};
+use crate::helpers::{internal_app_error, AppResult};
 use crate::models::data::{Webfinger, WebfingerLink};
-use crate::{AppState};
+use crate::models::db::profile::FullProfile;
+use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use diesel::ExpressionMethods;
+use diesel::QueryDsl;
+use diesel::SelectableHelper;
+use diesel_async::RunQueryDsl;
 use regex::Regex;
 use serde::Deserialize;
 use std::sync::Arc;
-use diesel::QueryDsl;
-use crate::models::db::profile::FullProfile;
-use diesel::ExpressionMethods;
-use diesel::SelectableHelper;
-use diesel_async::RunQueryDsl;
 
 #[derive(Deserialize)]
 pub struct WebfingerQuery {
@@ -61,9 +61,10 @@ pub async fn handler(
             .unwrap());
     }
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{Profile, server,username as db_username};
+    use crate::schema::Profile::dsl::{server, username as db_username, Profile};
 
-    let user = Profile.filter(db_username.eq(username))
+    let user = Profile
+        .filter(db_username.eq(username))
         .filter(server.eq(state.env.base_domain.clone()))
         .select(FullProfile::as_select())
         .first(&mut conn)

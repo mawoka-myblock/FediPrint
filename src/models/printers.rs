@@ -1,6 +1,6 @@
+use crate::models::db::ModifiedScale;
 use serde_derive::Deserialize;
 use uuid::Uuid;
-use crate::models::db::ModifiedScale;
 
 #[derive(Deserialize)]
 pub struct CreatePrinter {

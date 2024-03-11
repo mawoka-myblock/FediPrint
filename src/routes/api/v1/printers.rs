@@ -1,5 +1,7 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::{AppResult, internal_app_error};
+use crate::helpers::{internal_app_error, AppResult};
+use crate::models::db::printer::CreatePrinter as DbCreatePrinter;
+use crate::models::db::printer::FullPrinter;
 use crate::models::printers::{CreatePrinter, UpdatePrinter};
 use crate::AppState;
 use axum::body::Body;
@@ -7,11 +9,9 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
-use std::sync::Arc;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use crate::models::db::printer::CreatePrinter as DbCreatePrinter;
-use crate::models::db::printer::FullPrinter;
 use diesel_async::RunQueryDsl;
+use std::sync::Arc;
 
 #[debug_handler]
 pub async fn create_printer(
@@ -36,7 +36,7 @@ pub async fn create_printer(
             slicer_config: input.slicer_config,
             slicer_config_public: input.slicer_config_public,
             description: input.description,
-            modified_scale: input.modified_scale
+            modified_scale: input.modified_scale,
         })
         .returning(FullPrinter::as_returning())
         .get_result(&mut conn)
@@ -54,7 +54,11 @@ pub async fn get_all_printers(
 ) -> AppResult<impl IntoResponse> {
     use crate::schema::Printer::dsl::*;
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let printers = Printer.filter(profile_id.eq(claims.profile_id)).select(FullPrinter::as_select()).load(&mut conn).await?;
+    let printers = Printer
+        .filter(profile_id.eq(claims.profile_id))
+        .select(FullPrinter::as_select())
+        .load(&mut conn)
+        .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -87,7 +91,7 @@ pub async fn update_printer(
             slicer_config: input.slicer_config,
             slicer_config_public: input.slicer_config_public,
             description: input.description,
-            modified_scale: input.modified_scale
+            modified_scale: input.modified_scale,
         })
         .returning(FullPrinter::as_returning())
         .get_result(&mut conn)

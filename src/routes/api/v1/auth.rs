@@ -1,21 +1,24 @@
 use axum::extract::State;
+use axum::response::IntoResponse;
 use axum::{debug_handler, Extension};
 use axum::{extract::Json, http::StatusCode, Form};
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 use base64::{engine::general_purpose, Engine as _};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
 use openssl::symm::Cipher;
 use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
-use axum::response::IntoResponse;
-use uuid::{Uuid};
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use uuid::Uuid;
 
 use crate::helpers::auth::UserState;
+use crate::helpers::internal_app_error;
+use crate::models::db::account::{CreateAccount, FullAccount};
+use crate::models::db::profile::{CreateProfile, FullProfile};
 use crate::{
     helpers::auth::{generate_jwt, get_password_hash},
     helpers::{
@@ -25,9 +28,6 @@ use crate::{
     models::users::CreateUserInput,
     AppState,
 };
-use crate::helpers::{internal_app_error};
-use crate::models::db::account::{CreateAccount, FullAccount};
-use crate::models::db::profile::{CreateProfile, FullProfile};
 
 #[debug_handler]
 pub async fn create_user(
@@ -45,14 +45,20 @@ pub async fn create_user(
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
     use crate::schema::Profile;
     let profile = diesel::insert_into(Profile::table)
-        .values(&CreateProfile{
+        .values(&CreateProfile {
             id: Uuid::now_v7(),
             username: input.username.clone(),
             server: state.env.base_domain.to_string(),
             server_id: format!("{}/api/v1/user/{}", state.env.public_url, input.username),
             display_name: input.display_name,
-            inbox: format!("{}/api/v1/user/{}/inbox", state.env.public_url, input.username),
-            outbox: format!("{}/api/v1/user/{}/outbox", state.env.public_url, input.username),
+            inbox: format!(
+                "{}/api/v1/user/{}/inbox",
+                state.env.public_url, input.username
+            ),
+            outbox: format!(
+                "{}/api/v1/user/{}/outbox",
+                state.env.public_url, input.username
+            ),
             summary: "".to_string(),
             public_key,
         })
@@ -65,7 +71,7 @@ pub async fn create_user(
             password: &pw_hash,
             email: &input.email,
             private_key: &private_key,
-            profile_id: &profile.id
+            profile_id: &profile.id,
         })
         .returning(CreateAccount::as_returning())
         .execute(&mut conn)
@@ -88,14 +94,26 @@ pub async fn login(
 ) -> AppResult<(CookieJar, StatusCode)> {
     use crate::schema::Account::dsl::*;
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let acct = match Account.filter(email.eq(data.email)).select(FullAccount::as_select()).first(&mut conn).await.optional()? {
+    let acct = match Account
+        .filter(email.eq(data.email))
+        .select(FullAccount::as_select())
+        .first(&mut conn)
+        .await
+        .optional()?
+    {
         Some(d) => d,
-        None => return Ok((jar, StatusCode::UNAUTHORIZED))
+        None => return Ok((jar, StatusCode::UNAUTHORIZED)),
     };
     use crate::schema::Profile::dsl::*;
-    let prof = match Profile.find(acct.profile_id).select(FullProfile::as_select()).first(&mut conn).await.optional()? {
+    let prof = match Profile
+        .find(acct.profile_id)
+        .select(FullProfile::as_select())
+        .first(&mut conn)
+        .await
+        .optional()?
+    {
         Some(d) => d,
-        None => return Ok((jar, StatusCode::UNAUTHORIZED))
+        None => return Ok((jar, StatusCode::UNAUTHORIZED)),
     };
     if !check_password_hash(data.password, &acct.password) {
         return Ok((jar, StatusCode::UNAUTHORIZED));

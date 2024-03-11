@@ -1,9 +1,9 @@
+use crate::models::db::ModifiedScale;
+use crate::schema::Printer;
 use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde_derive::Serialize;
 use uuid::Uuid;
-use crate::models::db::ModifiedScale;
-use crate::schema::Printer;
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq, AsChangeset)]
 #[diesel(table_name = Printer)]
 pub struct CreatePrinter {
@@ -14,7 +14,7 @@ pub struct CreatePrinter {
     pub slicer_config: Option<String>,
     pub slicer_config_public: bool,
     pub description: Option<String>,
-    pub modified_scale: ModifiedScale
+    pub modified_scale: ModifiedScale,
 }
 
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq, Identifiable)]
@@ -30,5 +30,5 @@ pub struct FullPrinter {
     pub slicer_config: Option<String>,
     pub slicer_config_public: bool,
     pub description: Option<String>,
-    pub modified_scale: ModifiedScale
+    pub modified_scale: ModifiedScale,
 }

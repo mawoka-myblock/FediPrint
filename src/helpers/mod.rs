@@ -3,7 +3,6 @@ pub mod interactions;
 pub mod middleware;
 pub mod sign;
 
-
 use axum::body::Body;
 use axum::http::header::ToStrError;
 use axum::http::HeaderMap;
@@ -12,9 +11,9 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use bb8::{RunError};
-use s3::error::S3Error;
+use bb8::RunError;
 use diesel::result::Error as diesel_error;
+use s3::error::S3Error;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
@@ -27,8 +26,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-    where
-        E: std::error::Error,
+where
+    E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -67,14 +66,14 @@ impl IntoResponse for AppError {
                 diesel_error::NotFound => StatusCode::NOT_FOUND,
                 diesel_error::DatabaseError(e, ..) => match e {
                     diesel::result::DatabaseErrorKind::UniqueViolation => StatusCode::CONFLICT,
-                    _ => StatusCode::INTERNAL_SERVER_ERROR
+                    _ => StatusCode::INTERNAL_SERVER_ERROR,
                 },
-                _ => StatusCode::INTERNAL_SERVER_ERROR
-            }
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            },
             AppError::NotFound => StatusCode::NOT_FOUND,
             AppError::ToStrError(_) => StatusCode::BAD_REQUEST,
             AppError::S3Error(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            AppError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR
+            AppError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         status.into_response()

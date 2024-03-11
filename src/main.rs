@@ -11,8 +11,8 @@ use axum::{
     routing::{get, patch, post, put},
     Router,
 };
-use diesel_async::AsyncPgConnection;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::AsyncPgConnection;
 use s3::{Bucket, BucketConfiguration, Region};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
@@ -76,7 +76,9 @@ async fn main() {
         .bucket;
         bucket.set_path_style();
     }
-    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(config.database_url.clone());
+    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(
+        config.database_url.clone(),
+    );
     let pool = bb8::Pool::builder().build(pool_config).await.unwrap();
 
     let state = Arc::new(AppState {

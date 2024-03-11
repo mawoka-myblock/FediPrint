@@ -1,8 +1,8 @@
+use crate::schema::Profile;
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::{Queryable, Selectable, Insertable, Identifiable};
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use serde_derive::Serialize;
 use uuid::Uuid;
-use crate::schema::Profile;
 
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq)]
 #[diesel(table_name = Profile)]
@@ -15,7 +15,7 @@ pub struct CreateProfile {
     pub summary: String,
     pub inbox: String,
     pub outbox: String,
-    pub public_key: String
+    pub public_key: String,
 }
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq)]
 #[diesel(table_name = Profile)]
@@ -29,7 +29,7 @@ pub struct ExtendedCreateProfile {
     pub inbox: String,
     pub outbox: String,
     pub public_key: String,
-    pub registered_at: NaiveDate
+    pub registered_at: NaiveDate,
 }
 
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq, Identifiable)]
@@ -45,5 +45,5 @@ pub struct FullProfile {
     pub outbox: String,
     pub public_key: String,
     pub registered_at: NaiveDate,
-    pub updated_at: NaiveDateTime
+    pub updated_at: NaiveDateTime,
 }

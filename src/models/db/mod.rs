@@ -1,11 +1,11 @@
 use serde_derive::{Deserialize, Serialize};
 
-pub mod profile;
 pub mod account;
-pub mod note;
-pub mod model;
-pub mod printer;
 pub mod file;
+pub mod model;
+pub mod note;
+pub mod printer;
+pub mod profile;
 
 #[derive(diesel_derive_enum::DbEnum, Debug, Deserialize, Serialize, PartialEq)]
 #[ExistingTypePath = "crate::schema::sql_types::ModifiedScale"]
@@ -14,7 +14,7 @@ pub enum ModifiedScale {
     LightMods,
     MediumMods,
     HardMods,
-    NewPrinter
+    NewPrinter,
 }
 
 #[derive(diesel_derive_enum::DbEnum, Debug, Deserialize, Serialize, PartialEq)]
@@ -23,5 +23,5 @@ pub enum EventAudience {
     Public,
     Followers,
     Mentioned,
-    Nobody
+    Nobody,
 }

@@ -1,5 +1,6 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::{AppResult, internal_app_error};
+use crate::helpers::{internal_app_error, AppResult};
+use crate::models::db::file::{CreateFile, FullFile};
 use crate::models::storage::UpdateImageMetadata;
 use crate::AppState;
 use axum::body::Body;
@@ -7,17 +8,16 @@ use axum::extract::{Multipart, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
 use futures::TryStreamExt;
 use s3::Bucket;
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use std::{io, pin::Pin};
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
-use uuid::{Uuid};
-use crate::models::db::file::{CreateFile, FullFile};
+use uuid::Uuid;
 
 async fn put_file(
     bucket: &Bucket,
@@ -89,7 +89,7 @@ pub async fn upload_file(
             description: None,
             alt_text: None,
             file_for_model_id: None,
-            image_for_model_id: None
+            image_for_model_id: None,
         })
         .returning(FullFile::as_returning())
         .get_result(&mut conn)
@@ -109,12 +109,14 @@ pub async fn edit_file_metadata(
 ) -> AppResult<impl IntoResponse> {
     let mut conn = state.db.get().await.map_err(internal_app_error)?;
     use crate::schema::File::dsl::*;
-    let data = diesel::update(File).filter(profile_id.eq(claims.profile_id)).filter(id.eq(input.id))
+    let data = diesel::update(File)
+        .filter(profile_id.eq(claims.profile_id))
+        .filter(id.eq(input.id))
         .set((
             alt_text.eq(input.alt_text),
             description.eq(input.description),
-            thumbhash.eq(input.thumbhash)
-            ))
+            thumbhash.eq(input.thumbhash),
+        ))
         .returning(FullFile::as_returning())
         .get_result(&mut conn)
         .await?;
@@ -145,7 +147,8 @@ pub async fn list_own_files(
             .body(Body::from("page can't be less than 0"))
             .unwrap());
     }
-    let files = File.filter(profile_id.eq(claims.profile_id))
+    let files = File
+        .filter(profile_id.eq(claims.profile_id))
         .order(created_at.asc())
         .offset((&query.page * 20) as i64)
         .limit(20)

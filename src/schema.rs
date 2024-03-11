@@ -154,14 +154,5 @@ diesel::joinable!(_Mentions -> Note (note_id));
 diesel::joinable!(_Mentions -> Profile (profile_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    Account,
-    File,
-    Model,
-    Note,
-    Printer,
-    Profile,
-    _Boosts,
-    _Followers,
-    _Likes,
-    _Mentions,
+    Account, File, Model, Note, Printer, Profile, _Boosts, _Followers, _Likes, _Mentions,
 );

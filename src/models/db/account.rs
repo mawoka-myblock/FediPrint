@@ -1,10 +1,8 @@
-use diesel::{Queryable, Selectable, Insertable, Identifiable};
-use serde_derive::Serialize;
-use uuid::Uuid;
 use crate::schema::Account;
 use chrono::NaiveDateTime;
-
-
+use diesel::{Identifiable, Insertable, Queryable, Selectable};
+use serde_derive::Serialize;
+use uuid::Uuid;
 
 #[derive(Serialize, Insertable, Queryable, Selectable, Debug, PartialEq)]
 #[diesel(table_name = Account)]
@@ -28,4 +26,3 @@ pub struct FullAccount {
     pub profile_id: Uuid,
     pub private_key: String,
 }
-

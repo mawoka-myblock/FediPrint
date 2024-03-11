@@ -1,16 +1,16 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
-use crate::helpers::{Config};
+use crate::helpers::Config;
 use crate::models::activitypub::{FollowRequest, Profile};
 use crate::models::data::Webfinger;
 
-use anyhow::Context;
-use diesel::SelectableHelper;
-use diesel_async::{RunQueryDsl};
-use tracing::debug;
-use uuid::Uuid;
 use crate::models::db::profile::{ExtendedCreateProfile, FullProfile};
 use crate::Pool;
+use anyhow::Context;
+use diesel::SelectableHelper;
+use diesel_async::RunQueryDsl;
+use tracing::debug;
+use uuid::Uuid;
 
 pub async fn create_remote_profile(
     username: String,
@@ -21,9 +21,9 @@ pub async fn create_remote_profile(
     let webfinger_response = reqwest::get(format!(
         "https://{domain}/.well-known/webfinger?resource=acct:{username}@{domain}"
     ))
-        .await?
-        .json::<Webfinger>()
-        .await?;
+    .await?
+    .json::<Webfinger>()
+    .await?;
     let mut server_id = None;
     for link in webfinger_response.links {
         if link.rel != "self" {
@@ -59,9 +59,8 @@ pub async fn create_remote_profile(
             inbox: ap_profile_response.inbox,
             outbox: ap_profile_response.outbox,
             public_key: ap_profile_response.public_key.public_key_pem,
-            registered_at: chrono::DateTime::parse_from_rfc3339(
-                &*ap_profile_response.published,
-            )?.date_naive(),
+            registered_at: chrono::DateTime::parse_from_rfc3339(&*ap_profile_response.published)?
+                .date_naive(),
         })
         .returning(FullProfile::as_returning())
         .get_result(&mut conn)
