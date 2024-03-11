@@ -26,7 +26,7 @@ pub enum AppError {
     InternalServerError,
 }
 
-pub fn internal_app_error<E>(err: E) -> AppError
+pub fn internal_app_error<E>(_: E) -> AppError
     where
         E: std::error::Error,
 {
@@ -54,7 +54,7 @@ impl From<S3Error> for AppError {
 }
 
 impl From<RunError<()>> for AppError {
-    fn from(error: RunError<()>) -> Self {
+    fn from(_: RunError<()>) -> Self {
         AppError::InternalServerError
     }
 }

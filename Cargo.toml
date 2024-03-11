@@ -37,9 +37,6 @@ futures = "0.3.30"
 tokio-util = "0.7.10"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = "0.1"
-# Old db
-prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11" }
-prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11" }
 # new db
 bb8 = "0.8"
 diesel = {version =  "2" , features = ["uuid", "chrono"]}

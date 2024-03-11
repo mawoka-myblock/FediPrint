@@ -51,7 +51,7 @@ CREATE TABLE "Model"
     title        text                                                                NOT NULL,
     summary      text                                                                NOT NULL,
     description  text                                                                NOT NULL,
-    tags         text[],
+    tags         text[]                                                              NOT NULL DEFAULT '{}',
     "created_at" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP            NOT NULL,
     "updated_at" timestamp(3) without time zone                                      NOT NULL
 );
@@ -85,7 +85,7 @@ CREATE TABLE "Note"
     "updated_at"             timestamp(3) without time zone                                      NOT NULL,
     "server_id"              text UNIQUE,
     content                  text                                                                NOT NULL,
-    hashtags                 text[],
+    hashtags                 text[] NOT NULL DEFAULT '{}',
     audience                 "EventAudience"                                                     NOT NULL,
     "in_reply_to_comment_id" uuid                                                                REFERENCES "Note" (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
     "in_reply_to_note_id"    uuid                                                                REFERENCES "Note" (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,

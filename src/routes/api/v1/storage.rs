@@ -76,7 +76,7 @@ pub async fn upload_file(
         };
     }
     let s3_metadata = state.s3.head_object(&str_id).await?;
-    use crate::schema::Printer::table;
+    use crate::schema::File::table;
     let file_data = diesel::insert_into(table)
         .values(&CreateFile {
             id: Uuid::now_v7(),

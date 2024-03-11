@@ -52,7 +52,7 @@ diesel::table! {
         title -> Text,
         summary -> Text,
         description -> Text,
-        tags -> Nullable<Array<Nullable<Text>>>,
+        tags -> Array<Nullable<Text>>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
@@ -68,7 +68,7 @@ diesel::table! {
         updated_at -> Timestamp,
         server_id -> Nullable<Text>,
         content -> Text,
-        hashtags -> Nullable<Array<Nullable<Text>>>,
+        hashtags -> Array<Nullable<Text>>,
         audience -> EventAudience,
         in_reply_to_comment_id -> Nullable<Uuid>,
         in_reply_to_note_id -> Nullable<Uuid>,

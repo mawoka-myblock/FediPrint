@@ -46,7 +46,7 @@ pub async fn post_note(
             in_reply_to_note_id: None,
             actor_id: claims.profile_id,
             in_reply_to_comment_id: None
-        }).returning(FullNote::as_returning()).get_result(&mut conn).await?;
+        }).returning(FullNote::as_select()).get_result(&mut conn).await?;
     let s_id = format!(
         "{}/api/v1/notes/{}/{}",
         state.env.public_url, claims.username, &unfinished_note.id
