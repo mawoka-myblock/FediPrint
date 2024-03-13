@@ -7,8 +7,8 @@ pub mod note;
 pub mod printer;
 pub mod profile;
 
-#[derive(diesel_derive_enum::DbEnum, Debug, Deserialize, Serialize, PartialEq)]
-#[ExistingTypePath = "crate::schema::sql_types::ModifiedScale"]
+#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "modified_scale", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ModifiedScale {
     NoMods,
     LightMods,
@@ -17,8 +17,8 @@ pub enum ModifiedScale {
     NewPrinter,
 }
 
-#[derive(diesel_derive_enum::DbEnum, Debug, Deserialize, Serialize, PartialEq)]
-#[ExistingTypePath = "crate::schema::sql_types::EventAudience"]
+#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "event_audience", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum EventAudience {
     Public,
     Followers,

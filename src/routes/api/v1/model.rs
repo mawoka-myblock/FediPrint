@@ -1,5 +1,5 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::{internal_app_error, AppResult};
+use crate::helpers::AppResult;
 use crate::models::db::model::{CreateModel as DbCreateModel, FullModel};
 use crate::models::model::CreateModel;
 use crate::routes::api::v1::storage::PaginationQuery;
@@ -9,8 +9,6 @@ use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -35,32 +33,23 @@ pub async fn create_model(
     for f in input.files {
         files_vec.push(file::id::equals(f.to_string()))
     }*/
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Model::table;
-    let res = diesel::insert_into(table)
-        .values(&DbCreateModel {
-            server: state.env.base_domain.to_string(),
-            server_id: None,
-            profile_id: claims.profile_id,
-            published: false,
-            title: input.title,
-            summary: input.summary,
-            description: input.description,
-            tags: Some(input.tags),
-        })
-        .returning(FullModel::as_returning())
-        .get_result(&mut conn)
-        .await?;
+    let res = DbCreateModel {
+        server: state.env.base_domain.to_string(),
+        server_id: None,
+        profile_id: claims.profile_id,
+        published: false,
+        title: input.title,
+        summary: input.summary,
+        description: input.description,
+        tags: input.tags,
+    }
+    .create(state.pool.clone())
+    .await?;
     let s_id = format!(
         "{}/api/v1/models/{}/{}",
         state.env.public_url, claims.username, &res.id
     );
-    use crate::schema::Model::dsl::*;
-    let model = diesel::update(Model.find(res.id))
-        .set(server_id.eq(s_id))
-        .returning(FullModel::as_returning())
-        .get_result(&mut conn)
-        .await?;
+    let model = FullModel::update_server_id_and_return(&res.id, &s_id, state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
@@ -73,13 +62,7 @@ pub async fn list_own_models(
     Extension(claims): Extension<UserState>,
     State(state): State<Arc<AppState>>,
 ) -> AppResult<impl IntoResponse> {
-    use crate::schema::Model::dsl::*;
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let models = Model
-        .filter(profile_id.eq(claims.profile_id))
-        .select(FullModel::as_select())
-        .load(&mut conn)
-        .await?;
+    let models = FullModel::get_models_of_profile(&claims.profile_id, state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -99,16 +82,13 @@ pub async fn change_model_visibility(
     State(state): State<Arc<AppState>>,
     Json(input): Json<ChangeModelVisibilityInput>,
 ) -> AppResult<impl IntoResponse> {
-    use crate::schema::Model::dsl::*;
-    use crate::schema::Model::table;
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let model = diesel::update(table)
-        .filter(id.eq(input.model_id))
-        .filter(profile_id.eq(claims.profile_id))
-        .set(published.eq(input.public))
-        .returning(FullModel::as_returning())
-        .get_result(&mut conn)
-        .await?;
+    let model = FullModel::change_visibility_with_id_and_profile_id(
+        &input.public,
+        &input.model_id,
+        &claims.profile_id,
+        state.pool.clone(),
+    )
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -127,16 +107,12 @@ pub async fn get_newest_models(
             .body(Body::from("page can't be less than 0"))
             .unwrap());
     }
-    use crate::schema::Model::dsl::*;
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let models = Model
-        .filter(published.eq(true))
-        .order(created_at.asc())
-        .offset((&query.page * 20) as i64)
-        .limit(20)
-        .select(FullModel::as_select())
-        .load(&mut conn)
-        .await?;
+    let models = FullModel::get_newest_published_models_paginated(
+        &20i64,
+        &((&query.page * 20) as i64),
+        state.pool.clone(),
+    )
+    .await?;
     return Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::from(serde_json::to_string(&models).unwrap()))

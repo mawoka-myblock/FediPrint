@@ -5,8 +5,6 @@ use axum::{extract::Json, http::StatusCode, Form};
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 use base64::{engine::general_purpose, Engine as _};
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
 use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
 use openssl::symm::Cipher;
@@ -16,7 +14,6 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::helpers::auth::UserState;
-use crate::helpers::internal_app_error;
 use crate::models::db::account::{CreateAccount, FullAccount};
 use crate::models::db::profile::{CreateProfile, FullProfile};
 use crate::{
@@ -42,40 +39,33 @@ pub async fn create_user(
     let private_key = str::from_utf8(&rsa.private_key_to_pem().unwrap())
         .unwrap()
         .to_string();
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile;
-    let profile = diesel::insert_into(Profile::table)
-        .values(&CreateProfile {
-            id: Uuid::now_v7(),
-            username: input.username.clone(),
-            server: state.env.base_domain.to_string(),
-            server_id: format!("{}/api/v1/user/{}", state.env.public_url, input.username),
-            display_name: input.display_name,
-            inbox: format!(
-                "{}/api/v1/user/{}/inbox",
-                state.env.public_url, input.username
-            ),
-            outbox: format!(
-                "{}/api/v1/user/{}/outbox",
-                state.env.public_url, input.username
-            ),
-            summary: "".to_string(),
-            public_key,
-        })
-        .returning(CreateProfile::as_returning())
-        .get_result(&mut conn)
-        .await?;
-    use crate::schema::Account;
-    diesel::insert_into(Account::table)
-        .values(&CreateAccount {
-            password: &pw_hash,
-            email: &input.email,
-            private_key: &private_key,
-            profile_id: &profile.id,
-        })
-        .returning(CreateAccount::as_returning())
-        .execute(&mut conn)
-        .await?;
+    let profile = CreateProfile {
+        id: Uuid::now_v7(),
+        username: input.username.clone(),
+        server: state.env.base_domain.to_string(),
+        server_id: format!("{}/api/v1/user/{}", state.env.public_url, input.username),
+        display_name: input.display_name,
+        inbox: format!(
+            "{}/api/v1/user/{}/inbox",
+            state.env.public_url, input.username
+        ),
+        outbox: format!(
+            "{}/api/v1/user/{}/outbox",
+            state.env.public_url, input.username
+        ),
+        summary: "".to_string(),
+        public_key,
+    }
+    .create(state.pool.clone())
+    .await?;
+    CreateAccount {
+        password: &pw_hash,
+        email: &input.email,
+        private_key: &private_key,
+        profile_id: &profile.id,
+    }
+    .create(state.pool.clone())
+    .await?;
 
     Ok(StatusCode::OK)
 }
@@ -92,28 +82,13 @@ pub async fn login(
     jar: CookieJar,
     Form(data): Form<LogIn>,
 ) -> AppResult<(CookieJar, StatusCode)> {
-    use crate::schema::Account::dsl::*;
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let acct = match Account
-        .filter(email.eq(data.email))
-        .select(FullAccount::as_select())
-        .first(&mut conn)
-        .await
-        .optional()?
-    {
-        Some(d) => d,
-        None => return Ok((jar, StatusCode::UNAUTHORIZED)),
+    let acct = match FullAccount::get_by_email(&data.email, state.pool.clone()).await {
+        Ok(d) => d,
+        Err(_) => return Ok((jar, StatusCode::UNAUTHORIZED)),
     };
-    use crate::schema::Profile::dsl::*;
-    let prof = match Profile
-        .find(acct.profile_id)
-        .select(FullProfile::as_select())
-        .first(&mut conn)
-        .await
-        .optional()?
-    {
-        Some(d) => d,
-        None => return Ok((jar, StatusCode::UNAUTHORIZED)),
+    let prof: FullProfile = match FullProfile::get_by_id(&acct.id, state.pool.clone()).await {
+        Ok(d) => d,
+        Err(_) => return Ok((jar, StatusCode::UNAUTHORIZED)),
     };
     if !check_password_hash(data.password, &acct.password) {
         return Ok((jar, StatusCode::UNAUTHORIZED));

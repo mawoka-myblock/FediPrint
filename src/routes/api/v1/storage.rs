@@ -1,6 +1,6 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::{internal_app_error, AppResult};
-use crate::models::db::file::{CreateFile, FullFile};
+use crate::helpers::AppResult;
+use crate::models::db::file::{CreateFile, FullFile, UpdateFile};
 use crate::models::storage::UpdateImageMetadata;
 use crate::AppState;
 use axum::body::Body;
@@ -8,8 +8,6 @@ use axum::extract::{Multipart, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use futures::TryStreamExt;
 use s3::Bucket;
 use serde_derive::Deserialize;
@@ -39,7 +37,6 @@ pub async fn upload_file(
     State(state): State<Arc<AppState>>,
     mut multipart: Multipart,
 ) -> AppResult<impl IntoResponse> {
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
     let file_id = Uuid::new_v4();
     let str_id = file_id.to_string();
     let mut filename: String = String::new();
@@ -76,24 +73,21 @@ pub async fn upload_file(
         };
     }
     let s3_metadata = state.s3.head_object(&str_id).await?;
-    use crate::schema::File::table;
-    let file_data = diesel::insert_into(table)
-        .values(&CreateFile {
-            id: Uuid::now_v7(),
-            mime_type: content_type,
-            size: s3_metadata.0.content_length.unwrap(),
-            profile_id: claims.profile_id,
-            file_name: Some(filename),
-            preview_file_id: None,
-            thumbhash: None,
-            description: None,
-            alt_text: None,
-            file_for_model_id: None,
-            image_for_model_id: None,
-        })
-        .returning(FullFile::as_returning())
-        .get_result(&mut conn)
-        .await?;
+    let file_data = CreateFile {
+        id: Uuid::now_v7(),
+        mime_type: content_type,
+        size: s3_metadata.0.content_length.unwrap(),
+        profile_id: claims.profile_id,
+        file_name: Some(filename),
+        preview_file_id: None,
+        thumbhash: None,
+        description: None,
+        alt_text: None,
+        file_for_model_id: None,
+        image_for_model_id: None,
+    }
+    .create(state.pool.clone())
+    .await?;
     return Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
@@ -107,19 +101,15 @@ pub async fn edit_file_metadata(
     State(state): State<Arc<AppState>>,
     Json(input): Json<UpdateImageMetadata>,
 ) -> AppResult<impl IntoResponse> {
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::File::dsl::*;
-    let data = diesel::update(File)
-        .filter(profile_id.eq(claims.profile_id))
-        .filter(id.eq(input.id))
-        .set((
-            alt_text.eq(input.alt_text),
-            description.eq(input.description),
-            thumbhash.eq(input.thumbhash),
-        ))
-        .returning(FullFile::as_returning())
-        .get_result(&mut conn)
-        .await?;
+    let data = UpdateFile {
+        id: input.id,
+        thumbhash: input.thumbhash,
+        alt_text: input.alt_text,
+        file_name: input.file_name,
+        description: input.description,
+    }
+    .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
+    .await?;
 
     return Ok(Response::builder()
         .status(StatusCode::OK)
@@ -139,22 +129,19 @@ pub async fn list_own_files(
     State(state): State<Arc<AppState>>,
     query: Query<PaginationQuery>,
 ) -> AppResult<impl IntoResponse> {
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::File::dsl::*;
     if query.page < 0 {
         return Ok(Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::from("page can't be less than 0"))
             .unwrap());
     }
-    let files = File
-        .filter(profile_id.eq(claims.profile_id))
-        .order(created_at.asc())
-        .offset((&query.page * 20) as i64)
-        .limit(20)
-        .select(FullFile::as_select())
-        .load(&mut conn)
-        .await?;
+    let files = FullFile::get_newest_files_by_profile_paginated(
+        &claims.profile_id,
+        &20i64,
+        &((&query.page * 20) as i64),
+        state.pool.clone(),
+    )
+    .await?;
     return Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

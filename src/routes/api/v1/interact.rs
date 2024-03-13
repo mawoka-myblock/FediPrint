@@ -1,6 +1,6 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::{internal_app_error, AppResult};
-use crate::models::db::note::{CreateNote, FullNote, UserFacingNote};
+use crate::helpers::AppResult;
+use crate::models::db::note::{CreateNote, UserFacingNote};
 use crate::models::db::EventAudience;
 use crate::AppState;
 use axum::body::Body;
@@ -8,9 +8,6 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
-use diesel::ExpressionMethods;
-use diesel::{QueryDsl, SelectableHelper};
-use diesel_async::RunQueryDsl;
 use serde_derive::Deserialize;
 use std::sync::Arc;
 
@@ -33,32 +30,25 @@ pub async fn post_note(
     // for mention in input.mentions {
     //     mentions_vec.push(profile::server_id::equals(mention));
     // }
-    use crate::schema::Note::dsl::*;
-    use crate::schema::Note::table;
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    let unfinished_note = diesel::insert_into(table)
-        .values(&CreateNote {
-            server_id: None,
-            content: input.content,
-            hashtags: Some(input.hashtags),
-            audience: input.audience,
-            comment_of_model_id: None,
-            in_reply_to_note_id: None,
-            actor_id: claims.profile_id,
-            in_reply_to_comment_id: None,
-        })
-        .returning(FullNote::as_select())
-        .get_result(&mut conn)
-        .await?;
+
+    let unfinished_note = CreateNote {
+        server_id: None,
+        content: input.content,
+        hashtags: input.hashtags,
+        audience: input.audience,
+        comment_of_model_id: None,
+        in_reply_to_note_id: None,
+        actor_id: claims.profile_id,
+        in_reply_to_comment_id: None,
+    }
+    .create(state.pool.clone())
+    .await?;
     let s_id = format!(
         "{}/api/v1/notes/{}/{}",
         state.env.public_url, claims.username, &unfinished_note.id
     );
-    let note = diesel::update(Note.find(unfinished_note.id))
-        .set(server_id.eq(s_id))
-        .returning(UserFacingNote::as_returning())
-        .get_result(&mut conn)
-        .await?;
+    let note =
+        UserFacingNote::set_server_id(&unfinished_note.id, &s_id, state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::from(serde_json::to_string(&note).unwrap()))

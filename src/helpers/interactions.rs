@@ -5,19 +5,17 @@ use crate::models::activitypub::{FollowRequest, Profile};
 use crate::models::data::Webfinger;
 
 use crate::models::db::profile::{ExtendedCreateProfile, FullProfile};
-use crate::Pool;
 use anyhow::Context;
-use diesel::SelectableHelper;
-use diesel_async::RunQueryDsl;
+use chrono::DateTime;
+use sqlx::PgPool;
 use tracing::debug;
 use uuid::Uuid;
 
 pub async fn create_remote_profile(
     username: String,
     domain: String,
-    pool: Pool,
+    pool: PgPool,
 ) -> anyhow::Result<FullProfile> {
-    let mut conn = pool.get().await?;
     let webfinger_response = reqwest::get(format!(
         "https://{domain}/.well-known/webfinger?resource=acct:{username}@{domain}"
     ))
@@ -47,24 +45,22 @@ pub async fn create_remote_profile(
         .json::<Profile>()
         .await?;
     debug!("{:?}", ap_profile_response);
-    use crate::schema::Profile as diesel_profile;
-    Ok(diesel::insert_into(diesel_profile::table)
-        .values(&ExtendedCreateProfile {
-            id: Uuid::now_v7(),
-            username: ap_profile_response.preferred_username.clone(),
-            server: domain,
-            server_id: ap_profile_response.id,
-            display_name: ap_profile_response.name,
-            summary: "".to_string(),
-            inbox: ap_profile_response.inbox,
-            outbox: ap_profile_response.outbox,
-            public_key: ap_profile_response.public_key.public_key_pem,
-            registered_at: chrono::DateTime::parse_from_rfc3339(&*ap_profile_response.published)?
-                .date_naive(),
-        })
-        .returning(FullProfile::as_returning())
-        .get_result(&mut conn)
-        .await?)
+    Ok(ExtendedCreateProfile {
+        id: Uuid::now_v7(),
+        username: ap_profile_response.preferred_username.clone(),
+        server: domain,
+        server_id: ap_profile_response.id,
+        display_name: ap_profile_response.name,
+        summary: "".to_string(),
+        inbox: ap_profile_response.inbox,
+        outbox: ap_profile_response.outbox,
+        public_key: ap_profile_response.public_key.public_key_pem,
+        registered_at: DateTime::from(chrono::DateTime::parse_from_rfc3339(
+            &*ap_profile_response.published,
+        )?),
+    }
+    .create(pool.clone())
+    .await?)
 }
 
 pub async fn follow_user(

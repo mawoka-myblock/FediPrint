@@ -11,14 +11,13 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use bb8::RunError;
-use diesel::result::Error as diesel_error;
 use s3::error::S3Error;
+use sqlx::Error as SqlxError;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
 pub enum AppError {
-    DieselError(diesel_error),
+    SqlxError(SqlxError),
     ToStrError(ToStrError),
     S3Error(S3Error),
     NotFound,
@@ -34,9 +33,9 @@ where
 
 pub type AppResult<T> = Result<T, AppError>;
 
-impl From<diesel_error> for AppError {
-    fn from(error: diesel_error) -> Self {
-        AppError::DieselError(error)
+impl From<SqlxError> for AppError {
+    fn from(error: SqlxError) -> Self {
+        AppError::SqlxError(error)
     }
 }
 
@@ -52,22 +51,12 @@ impl From<S3Error> for AppError {
     }
 }
 
-impl From<RunError<()>> for AppError {
-    fn from(_: RunError<()>) -> Self {
-        AppError::InternalServerError
-    }
-}
-
 // This centralizes all different errors from our app in one place
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let status = match self {
-            AppError::DieselError(error) => match error {
-                diesel_error::NotFound => StatusCode::NOT_FOUND,
-                diesel_error::DatabaseError(e, ..) => match e {
-                    diesel::result::DatabaseErrorKind::UniqueViolation => StatusCode::CONFLICT,
-                    _ => StatusCode::INTERNAL_SERVER_ERROR,
-                },
+            AppError::SqlxError(error) => match error {
+                SqlxError::RowNotFound => StatusCode::NOT_FOUND,
                 _ => StatusCode::INTERNAL_SERVER_ERROR,
             },
             AppError::NotFound => StatusCode::NOT_FOUND,

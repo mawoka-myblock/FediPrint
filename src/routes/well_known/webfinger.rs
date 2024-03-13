@@ -1,4 +1,4 @@
-use crate::helpers::{internal_app_error, AppResult};
+use crate::helpers::AppResult;
 use crate::models::data::{Webfinger, WebfingerLink};
 use crate::models::db::profile::FullProfile;
 use crate::AppState;
@@ -7,10 +7,6 @@ use axum::debug_handler;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
-use diesel::SelectableHelper;
-use diesel_async::RunQueryDsl;
 use regex::Regex;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -33,7 +29,7 @@ pub async fn handler(
             return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Body::from(""))
-                .unwrap())
+                .unwrap());
         }
     };
     let username = match caps.get(1) {
@@ -42,7 +38,7 @@ pub async fn handler(
             return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Body::from(""))
-                .unwrap())
+                .unwrap());
         }
     };
     let domain = match caps.get(2) {
@@ -51,7 +47,7 @@ pub async fn handler(
             return Ok(Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body(Body::from(""))
-                .unwrap())
+                .unwrap());
         }
     };
     if domain != state.env.base_domain {
@@ -60,15 +56,13 @@ pub async fn handler(
             .body(Body::from(""))
             .unwrap());
     }
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{server, username as db_username, Profile};
 
-    let user = Profile
-        .filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain.clone()))
-        .select(FullProfile::as_select())
-        .first(&mut conn)
-        .await?;
+    let user = FullProfile::get_by_username_and_server(
+        username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
 
     let wf_data = Webfinger {
         subject: format!("acct:{}@{}", user.username, state.env.base_domain),

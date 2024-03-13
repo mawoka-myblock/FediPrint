@@ -7,4 +7,5 @@ pub struct UpdateImageMetadata {
     pub description: Option<String>,
     pub alt_text: Option<String>,
     pub thumbhash: Option<String>,
+    pub file_name: Option<String>,
 }

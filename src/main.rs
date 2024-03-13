@@ -1,6 +1,7 @@
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use helpers::Config;
 use std::sync::Arc;
+use std::time::Duration;
 
 use crate::helpers::middleware::auth_middleware;
 use crate::routes::api::v1;
@@ -11,9 +12,9 @@ use axum::{
     routing::{get, patch, post, put},
     Router,
 };
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use diesel_async::AsyncPgConnection;
 use s3::{Bucket, BucketConfiguration, Region};
+use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
@@ -22,14 +23,12 @@ use tracing_subscriber::util::SubscriberInitExt;
 pub mod helpers;
 pub mod models;
 pub mod routes;
-mod schema;
 
 pub struct AppState {
     env: Config,
-    db: Pool,
     s3: Bucket,
+    pool: PgPool,
 }
-pub type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
 
 #[tokio::main]
 async fn main() {
@@ -76,15 +75,17 @@ async fn main() {
         .bucket;
         bucket.set_path_style();
     }
-    let pool_config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(
-        config.database_url.clone(),
-    );
-    let pool = bb8::Pool::builder().build(pool_config).await.unwrap();
+    let sqlx_pool = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(3))
+        .connect(&config.database_url)
+        .await
+        .expect("can't connect to database");
 
     let state = Arc::new(AppState {
-        db: pool,
         env: config,
         s3: bucket,
+        pool: sqlx_pool,
     });
 
     let cors = CorsLayer::new()

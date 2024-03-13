@@ -24,7 +24,7 @@ oauth2 = "4.4.2"
 reqwest = { version = "0.11.24", features = ["json"] }
 uuid = { version = "1.7.0", features = ["serde", "v4", "fast-rng", "v7"] }
 jsonwebtoken = "9"
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 serde_derive = "1.0.196"
 regex = "1.10.3"
 anyhow = "1.0.79"
@@ -38,10 +38,10 @@ tokio-util = "0.7.10"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = "0.1"
 # new db
-bb8 = "0.8"
-diesel = {version =  "2" , features = ["uuid", "chrono"]}
-diesel-async = { version = "0.4", features = ["postgres", "bb8"] }
-diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
+sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros" ] }
 
 [profile.dev]
 debug = 0
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3

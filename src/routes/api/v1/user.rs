@@ -1,4 +1,4 @@
-use crate::helpers::{ensure_ap_header, internal_app_error, AppResult};
+use crate::helpers::{ensure_ap_header, AppResult};
 use crate::models::activitypub::Profile;
 use crate::models::activitypub::{
     AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, FocalPoint, IdentityKey,
@@ -11,10 +11,6 @@ use axum::debug_handler;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
-use chrono::{Local, NaiveTime, TimeZone};
-use diesel::SelectableHelper;
-use diesel::{ExpressionMethods, QueryDsl};
-use diesel_async::RunQueryDsl;
 use serde_derive::Deserialize;
 use std::sync::Arc;
 
@@ -28,15 +24,13 @@ pub async fn get_user_profile(
         Ok(_) => (),
         Err(e) => return Ok(e),
     };
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{server, username as db_username, Profile as db_Profile};
 
-    let user = db_Profile
-        .filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain.clone()))
-        .select(FullProfile::as_select())
-        .first(&mut conn)
-        .await?;
+    let user = FullProfile::get_by_username_and_server(
+        &username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
     let data = Profile {
         context: (
             "https://www.w3.org/ns/activitystreams".to_string(),
@@ -130,11 +124,7 @@ pub async fn get_user_profile(
             owner: format!("{}/api/v1/user/{}", state.env.public_url, user.username),
             public_key_pem: user.public_key,
         },
-        published: Local
-            .from_local_datetime(&user.registered_at.and_time(NaiveTime::default()))
-            .latest()
-            .unwrap()
-            .to_rfc3339(),
+        published: user.registered_at.to_rfc3339(),
         type_field: "Person".to_string(),
         url: format!("{}/@{}", state.env.public_url, user.username),
     };
@@ -189,15 +179,13 @@ pub async fn get_followers(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{server, username as db_username, Profile};
 
-    let user = Profile
-        .filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain.clone()))
-        .select(FullProfile::as_select())
-        .first(&mut conn)
-        .await?;
+    let user = FullProfile::get_by_username_and_server(
+        &username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
 
     /*    let user = match state
         .db
@@ -284,15 +272,12 @@ pub async fn get_following(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{server, username as db_username, Profile};
-
-    let user = Profile
-        .filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain.clone()))
-        .select(FullProfile::as_select())
-        .first(&mut conn)
-        .await?;
+    let user = FullProfile::get_by_username_and_server(
+        &username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
     /*    let user = match state
         .db
         .profile()
@@ -359,15 +344,13 @@ pub async fn get_outbox(
 
     // TODO get the count right
     let count: i64 = 12;
-    let mut conn = state.db.get().await.map_err(internal_app_error)?;
-    use crate::schema::Profile::dsl::{server, username as db_username, Profile};
 
-    let user = Profile
-        .filter(db_username.eq(username))
-        .filter(server.eq(state.env.base_domain.clone()))
-        .select(FullProfile::as_select())
-        .first(&mut conn)
-        .await?;
+    let user = FullProfile::get_by_username_and_server(
+        &username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
 
     if query.page.is_none() {
         let return_data = OrderedCollection {
