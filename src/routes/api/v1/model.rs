@@ -12,6 +12,7 @@ use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use uuid::Uuid;
+use crate::helpers::search::index_model;
 
 #[debug_handler]
 pub async fn create_model(
@@ -89,6 +90,7 @@ pub async fn change_model_visibility(
         state.pool.clone(),
     )
     .await?;
+    index_model(&model, &claims.profile_id, &state.ms).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

@@ -28,6 +28,7 @@ pub struct AppState {
     env: Config,
     s3: Bucket,
     pool: PgPool,
+    ms: meilisearch_sdk::Index
 }
 
 #[tokio::main]
@@ -82,10 +83,18 @@ async fn main() {
         .await
         .expect("can't connect to database");
 
+    let client = meilisearch_sdk::Client::new(&config.meilisearch_url, Some(&config.meilisearch_key));
+    // Make sure Meilisearch is more or less working as the client init doesn't do any checks
+    assert_eq!(client.health().await.unwrap().status, "available");
+    client.create_index("fedi_print", Some("id")).await.unwrap();
+    client.index("fedi_print").set_filterable_attributes(&["created_at", "tags", "record_type", "profile_id"]).await.unwrap();
+    client.index("fedi_print").set_sortable_attributes(&["created_at", "updated_at"]).await.unwrap();
+
     let state = Arc::new(AppState {
         env: config,
         s3: bucket,
         pool: sqlx_pool,
+        ms: client.index("fedi_print")
     });
 
     let cors = CorsLayer::new()

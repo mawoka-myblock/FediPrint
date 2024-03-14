@@ -2,6 +2,7 @@ pub mod auth;
 pub mod interactions;
 pub mod middleware;
 pub mod sign;
+pub mod search;
 
 use axum::body::Body;
 use axum::http::header::ToStrError;
@@ -13,6 +14,7 @@ use axum::{
 };
 use s3::error::S3Error;
 use sqlx::Error as SqlxError;
+use meilisearch_sdk::errors::Error as ms_error;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
@@ -20,13 +22,14 @@ pub enum AppError {
     SqlxError(SqlxError),
     ToStrError(ToStrError),
     S3Error(S3Error),
+    MeiliSearchError(ms_error),
     NotFound,
     InternalServerError,
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-where
-    E: std::error::Error,
+    where
+        E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -51,6 +54,10 @@ impl From<S3Error> for AppError {
     }
 }
 
+impl From<ms_error> for AppError {
+    fn from(error: ms_error) -> Self { AppError::MeiliSearchError(error) }
+}
+
 // This centralizes all different errors from our app in one place
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
@@ -59,6 +66,7 @@ impl IntoResponse for AppError {
                 SqlxError::RowNotFound => StatusCode::NOT_FOUND,
                 _ => StatusCode::INTERNAL_SERVER_ERROR,
             },
+            AppError::MeiliSearchError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::NotFound => StatusCode::NOT_FOUND,
             AppError::ToStrError(_) => StatusCode::BAD_REQUEST,
             AppError::S3Error(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -105,6 +113,8 @@ pub struct Config {
     pub s3_username: String,
     pub s3_password: String,
     pub s3_bucket_name: String,
+    pub meilisearch_url: String,
+    pub meilisearch_key: String,
 }
 
 impl Config {
@@ -118,6 +128,8 @@ impl Config {
         let s3_username = std::env::var("S3_USERNAME").expect("S3_USERNAME must be set");
         let s3_password = std::env::var("S3_PASSWORD").expect("S3_PASSWORD must be set");
         let s3_bucket_name = std::env::var("S3_BUCKET_NAME").unwrap_or("fediprint".to_string());
+        let meilisearch_url = std::env::var("MEILISEARCH_URL").expect("MEILISEARCH_URL must be set");
+        let meilisearch_key = std::env::var("MEILISEARCH_KEY").expect("MEILISEARCH_KEY must be set");
         Config {
             database_url,
             jwt_secret,
@@ -128,6 +140,8 @@ impl Config {
             s3_username,
             s3_password,
             s3_bucket_name,
+            meilisearch_url,
+            meilisearch_key,
         }
     }
 }

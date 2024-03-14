@@ -17,10 +17,10 @@ pub struct CreateModel {
 
 impl CreateModel {
     pub async fn create(self, pool: PgPool) -> Result<FullModel, Error> {
-        sqlx::query_as!(FullModel, r#"INSERT INTO model (server, server_id, profile_id, published, title, summary, description)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+        sqlx::query_as!(FullModel, r#"INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, created_at, updated_at"#,
-            self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description
+            self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags
         ).fetch_one(&pool).await
     }
 }
