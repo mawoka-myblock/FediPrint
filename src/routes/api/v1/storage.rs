@@ -13,8 +13,9 @@ use s3::Bucket;
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use std::{io, pin::Pin};
-use tokio::io::AsyncRead;
+use tokio::io::{AsyncRead};
 use tokio_util::io::StreamReader;
+use tracing::debug;
 use uuid::Uuid;
 
 async fn put_file(
@@ -27,6 +28,9 @@ async fn put_file(
         .put_object_stream_with_content_type(&mut reader, filename, content_type)
         .await
         .unwrap();
+    /*    let mut buffer = Vec::new();
+        reader.read_to_end(&mut buffer).await.unwrap();
+        debug!("length: {}", buffer.len());*/
 
     Ok(())
 }
@@ -37,7 +41,7 @@ pub async fn upload_file(
     State(state): State<Arc<AppState>>,
     mut multipart: Multipart,
 ) -> AppResult<impl IntoResponse> {
-    let file_id = Uuid::new_v4();
+    let file_id = Uuid::now_v7();
     let str_id = file_id.to_string();
     let mut filename: String = String::new();
     let mut content_type: String = String::new();
@@ -57,6 +61,8 @@ pub async fn upload_file(
                     .unwrap());
             }
         };
+        debug!("Filename: {}", &filename);
+        debug!("Content-Type: {}", &content_type);
         let body_with_io_error = field.map_err(|err| io::Error::new(io::ErrorKind::Other, err));
         let body_reader = StreamReader::new(body_with_io_error);
         futures::pin_mut!(body_reader);
@@ -64,7 +70,7 @@ pub async fn upload_file(
         match put_file(&state.s3, &str_id, &content_type, body_reader).await {
             Ok(_) => (),
             Err(e) => {
-                tracing::debug!("{:?}", e);
+                debug!("{:?}", e);
                 return Ok(Response::builder()
                     .status(StatusCode::BAD_REQUEST)
                     .body(Body::from(""))
@@ -74,7 +80,7 @@ pub async fn upload_file(
     }
     let s3_metadata = state.s3.head_object(&str_id).await?;
     let file_data = CreateFile {
-        id: Uuid::now_v7(),
+        id: file_id,
         mime_type: content_type,
         size: s3_metadata.0.content_length.unwrap(),
         profile_id: claims.profile_id,
@@ -86,8 +92,8 @@ pub async fn upload_file(
         file_for_model_id: None,
         image_for_model_id: None,
     }
-    .create(state.pool.clone())
-    .await?;
+        .create(state.pool.clone())
+        .await?;
     return Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
@@ -108,8 +114,8 @@ pub async fn edit_file_metadata(
         file_name: input.file_name,
         description: input.description,
     }
-    .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
-    .await?;
+        .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
+        .await?;
 
     return Ok(Response::builder()
         .status(StatusCode::OK)
@@ -141,10 +147,31 @@ pub async fn list_own_files(
         &((&query.page * 20) as i64),
         state.pool.clone(),
     )
-    .await?;
+        .await?;
     return Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&files).unwrap()))
+        .unwrap());
+}
+
+#[derive(Deserialize)]
+pub struct DeleteFileQuery {
+    pub id: Uuid,
+}
+
+#[debug_handler]
+pub async fn delete_file(
+    Extension(claims): Extension<UserState>,
+    State(state): State<Arc<AppState>>,
+    query: Query<DeleteFileQuery>,
+) -> AppResult<impl IntoResponse> {
+    let file = FullFile::get_by_id_and_profile_id(&query.id, &claims.profile_id, state.pool.clone()).await?;
+    let d = state.s3.delete_object(format!("/{}",file.id.to_string())).await?;
+    debug!("S3 Response: {:?}", d);
+    file.delete(state.pool.clone()).await?;
+    return Ok(Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::from(""))
         .unwrap());
 }

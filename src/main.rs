@@ -9,9 +9,10 @@ use awscreds::Credentials;
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{get, patch, post, put},
+    routing::{get, patch, post, put, delete},
     Router,
 };
+use axum::extract::DefaultBodyLimit;
 use s3::{Bucket, BucketConfiguration, Region};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -166,7 +167,7 @@ async fn main() {
         )
         .route(
             "/api/v1/storage/upload",
-            post(v1::storage::upload_file).route_layer(middleware::from_fn_with_state(
+            post(v1::storage::upload_file).layer(DefaultBodyLimit::max(52_428_800)).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),
@@ -181,6 +182,13 @@ async fn main() {
         .route(
             "/api/v1/storage/list",
             get(v1::storage::list_own_files).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/storage/delete",
+            delete(v1::storage::delete_file).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),

@@ -15,6 +15,7 @@ use axum::{
 use s3::error::S3Error;
 use sqlx::Error as SqlxError;
 use meilisearch_sdk::errors::Error as ms_error;
+use tracing::debug;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
@@ -38,6 +39,7 @@ pub type AppResult<T> = Result<T, AppError>;
 
 impl From<SqlxError> for AppError {
     fn from(error: SqlxError) -> Self {
+        debug!("{:?}", &error);
         AppError::SqlxError(error)
     }
 }
@@ -50,6 +52,7 @@ impl From<ToStrError> for AppError {
 
 impl From<S3Error> for AppError {
     fn from(error: S3Error) -> Self {
+        debug!("{:?}", &error);
         AppError::S3Error(error)
     }
 }

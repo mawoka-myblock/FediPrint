@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
-use sqlx::{Error, PgPool};
+use sqlx::{Error, FromRow, PgPool};
 use uuid::Uuid;
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -53,7 +53,7 @@ impl UpdateFile {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq, FromRow, sqlx::Decode)]
 pub struct FullFile {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,
@@ -83,5 +83,24 @@ impl FullFile {
         ORDER BY created_at DESC OFFSET $2 LIMIT $3;"#,
             profile_id, offset, limit
         ).fetch_all(&pool).await
+    }
+
+    pub async fn get_by_id_and_profile_id(id: &Uuid, profile_id: &Uuid, pool: PgPool) -> Result<FullFile, Error> {
+        sqlx::query_as!(FullFile, r#"SELECT id, created_at, updated_at, mime_type, size, file_name, description, alt_text, thumbhash, preview_file_id, to_be_deleted_at, profile_id, file_for_model_id, image_for_model_id FROM file
+        WHERE id = $1 AND profile_id = $2;"#,
+            id, profile_id
+        ).fetch_one(&pool).await
+    }
+
+    pub async fn delete(self, pool: PgPool) -> Result<(), Error> {
+        let _ = sqlx::query!(r#"DELETE from file WHERE id = $1"#,
+        self.id).execute(&pool).await?;
+        Ok(())
+    }
+
+    pub async fn delete_by_id_and_profile_id(id: &Uuid, profile_id: &Uuid, pool: PgPool) -> Result<(), Error> {
+        let _ = sqlx::query!(r#"DELETE from file WHERE id = $1 AND profile_id = $2"#,
+        id, profile_id).execute(&pool).await?;
+        Ok(())
     }
 }

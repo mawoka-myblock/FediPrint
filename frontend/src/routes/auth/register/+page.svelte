@@ -2,7 +2,6 @@
 
 <script lang="ts">
 	import '@fontsource/marck-script';
-	
 
 	let data = $state({
 		email: '',
@@ -67,7 +66,7 @@
 		if (!valid.valid) {
 			return;
 		}
-		loading = true
+		loading = true;
 		const res = await fetch('/api/v1/auth/create', {
 			method: 'POST',
 			headers: {
@@ -92,7 +91,7 @@
 				display_name: ''
 			};
 		}
-		loading = false
+		loading = false;
 	};
 </script>
 

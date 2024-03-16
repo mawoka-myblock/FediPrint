@@ -15,6 +15,7 @@ use serde::Serialize;
 use crate::helpers::auth::{
     check_if_token_was_valid, generate_jwt, read_jwt, InputClaims, UserState,
 };
+use crate::models::db::account::FullAccount;
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
@@ -44,7 +45,11 @@ pub async fn auth_middleware(
     tracing::debug!("Checking if token was valid");
     let invalid_claims = match check_if_token_was_valid(token, data.env.jwt_secret.clone()) {
         Ok(d) => d,
-        Err(_) => return Err(StatusCode::NOT_FOUND),
+        Err(_) => return Err(StatusCode::UNAUTHORIZED),
+    };
+    match FullAccount::get_by_id(&invalid_claims.sub, data.pool.clone()).await {
+        Ok(_) => (),
+        Err(_) => return Err(StatusCode::UNAUTHORIZED)
     };
     tracing::debug!("Renewing jwt token");
 

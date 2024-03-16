@@ -43,7 +43,9 @@ pub async fn create_model(
         summary: input.summary,
         description: input.description,
         tags: input.tags,
-        license: input.license
+        license: input.license,
+        files: input.files,
+        images: input.images
     }
     .create(state.pool.clone())
     .await?;
