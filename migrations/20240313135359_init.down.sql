@@ -13,4 +13,5 @@ DROP TABLE account;
 DROP TABLE profile;
 DROP TYPE modified_scale;
 DROP TYPE event_audience;
+DROP TYPE model_license;
 DROP EXTENSION pg_uuidv7;

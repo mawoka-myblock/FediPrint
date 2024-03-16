@@ -25,3 +25,21 @@ pub enum EventAudience {
     Mentioned,
     Nobody,
 }
+
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "model_license", rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ModelLicense {
+    CcPd,
+    CcAttr,
+    CcAttrSa,
+    CcAttrNd,
+    CcAttrNc,
+    CcAttrNcSa,
+    CcAttrNcNd,
+    Gpl2,
+    Gpl3,
+    GnuLesser,
+    Bsd,
+    Sdfl
+}

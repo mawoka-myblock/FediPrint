@@ -37,55 +37,71 @@ CREATE TYPE modified_scale AS ENUM (
     'NEW_PRINTER'
     );
 
+CREATE TYPE model_license AS ENUM (
+    'CC_PD',
+    'CC_ATTR',
+    'CC_ATTR_SA',
+    'CC_ATTR_ND',
+    'CC_ATTR_NC',
+    'CC_ATTR_NC_SA',
+    'CC_ATTR_NC_ND',
+    'GPL2',
+    'GPL3',
+    'GNU_LESSER',
+    'BSD',
+    'SDFL'
+    );
+
 CREATE TABLE profile
 (
-    id              uuid DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
-    username        text                            NOT NULL,
-    server          text                            NOT NULL,
-    server_id       text                            NOT NULL UNIQUE,
-    "display_name"  text                            NOT NULL,
-    summary         text DEFAULT ''                 NOT NULL,
-    inbox           text                            NOT NULL,
-    outbox          text                            NOT NULL,
-    "public_key"    text                            NOT NULL,
+    id              uuid        DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
+    username        text                                   NOT NULL,
+    server          text                                   NOT NULL,
+    server_id       text                                   NOT NULL UNIQUE,
+    "display_name"  text                                   NOT NULL,
+    summary         text        DEFAULT ''                 NOT NULL,
+    inbox           text                                   NOT NULL,
+    outbox          text                                   NOT NULL,
+    "public_key"    text                                   NOT NULL,
     "registered_at" timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL,
     "updated_at"    timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL
 );
 
 CREATE TABLE account
 (
-    id              uuid DEFAULT uuid_generate_v7()                                   NOT NULL PRIMARY KEY,
-    "registered_at" timestamptz DEFAULT CURRENT_TIMESTAMP                                    NOT NULL,
-    "updated_at"    timestamptz DEFAULT CURRENT_TIMESTAMP                                    NOT NULL,
+    id              uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
+    "registered_at" timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    "updated_at"    timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
     password        text                                                              NOT NULL,
     email           text                                                              NOT NULL UNIQUE,
-    verified        text DEFAULT uuid_generate_v7(),
+    verified        text        DEFAULT uuid_generate_v7(),
     "profile_id"    uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL UNIQUE,
     "private_key"   text                                                              NOT NULL
 );
 
 CREATE TABLE model
 (
-    id           uuid    DEFAULT uuid_generate_v7()                                NOT NULL PRIMARY KEY,
+    id           uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
     server       text                                                              NOT NULL,
     "server_id"  text UNIQUE,
     "profile_id" uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL,
-    published    boolean DEFAULT false                                             NOT NULL,
+    published    boolean     DEFAULT false                                         NOT NULL,
     title        text                                                              NOT NULL,
     summary      text                                                              NOT NULL,
     description  text                                                              NOT NULL,
     tags         text[]                                                            NOT NULL DEFAULT '{}',
-    "created_at" timestamptz    DEFAULT CURRENT_TIMESTAMP                                 NOT NULL,
-    "updated_at" timestamptz    DEFAULT CURRENT_TIMESTAMP                                 NOT NULL
+    license      model_license                                                     NOT NULL,
+    "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL
 );
 
 
 
 CREATE TABLE file
 (
-    id                   uuid DEFAULT uuid_generate_v7()                                   NOT NULL PRIMARY KEY,
-    "created_at"         timestamptz DEFAULT CURRENT_TIMESTAMP                                    NOT NULL,
-    "updated_at"         timestamptz DEFAULT CURRENT_TIMESTAMP                                    NOT NULL,
+    id                   uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
+    "created_at"         timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    "updated_at"         timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
     "mime_type"          text                                                              NOT NULL,
     size                 bigint                                                            NOT NULL,
     "file_name"          text,
@@ -103,9 +119,9 @@ CREATE TABLE file
 
 CREATE TABLE note
 (
-    id                       uuid DEFAULT uuid_generate_v7()                                   NOT NULL PRIMARY KEY,
-    "created_at"             timestamptz DEFAULT CURRENT_TIMESTAMP                                    NOT NULL,
-    "updated_at"             timestamptz DEFAULT CURRENT_TIMESTAMP                                    NOT NULL,
+    id                       uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
+    "created_at"             timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    "updated_at"             timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
     "server_id"              text UNIQUE,
     content                  text                                                              NOT NULL,
     hashtags                 text[]                                                            NOT NULL DEFAULT '{}',
@@ -121,8 +137,8 @@ CREATE TABLE note
 CREATE TABLE printer
 (
     id                     uuid           DEFAULT uuid_generate_v7()                         NOT NULL PRIMARY KEY,
-    "created_at"           timestamptz           DEFAULT CURRENT_TIMESTAMP                          NOT NULL,
-    "updated_at"           timestamptz           DEFAULT CURRENT_TIMESTAMP                          NOT NULL,
+    "created_at"           timestamptz    DEFAULT CURRENT_TIMESTAMP                          NOT NULL,
+    "updated_at"           timestamptz    DEFAULT CURRENT_TIMESTAMP                          NOT NULL,
     name                   text                                                              NOT NULL,
     manufacturer           text                                                              NOT NULL,
     "profile_id"           uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL,
@@ -130,7 +146,7 @@ CREATE TABLE printer
     "slicer_config"        text,
     "slicer_config_public" boolean        DEFAULT true                                       NOT NULL,
     description            text,
-    "modified_scale"       modified_scale DEFAULT 'NO_MODS'::modified_scale                   NOT NULL
+    "modified_scale"       modified_scale DEFAULT 'NO_MODS'::modified_scale                  NOT NULL
 );
 
 

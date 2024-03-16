@@ -28,7 +28,7 @@ pub struct AppState {
     env: Config,
     s3: Bucket,
     pool: PgPool,
-    ms: meilisearch_sdk::Index
+    ms: meilisearch_sdk::Index,
 }
 
 #[tokio::main]
@@ -59,7 +59,7 @@ async fn main() {
         None,
         None,
     )
-    .expect("S3 credentials invalid");
+        .expect("S3 credentials invalid");
     let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone())
         .expect("S3 Bucket initialization failed");
     bucket.set_path_style();
@@ -71,9 +71,9 @@ async fn main() {
             s3_creds,
             BucketConfiguration::default(),
         )
-        .await
-        .unwrap()
-        .bucket;
+            .await
+            .unwrap()
+            .bucket;
         bucket.set_path_style();
     }
     let sqlx_pool = PgPoolOptions::new()
@@ -94,7 +94,7 @@ async fn main() {
         env: config,
         s3: bucket,
         pool: sqlx_pool,
-        ms: client.index("fedi_print")
+        ms: client.index("fedi_print"),
     });
 
     let cors = CorsLayer::new()
@@ -208,14 +208,11 @@ async fn main() {
         )
         .route(
             "/api/v1/model/public/newest",
-            get(v1::model::get_newest_models).route_layer(middleware::from_fn_with_state(
-                state.clone(),
-                auth_middleware,
-            )),
+            get(v1::model::get_newest_models),
         )
         .with_state(state)
         .layer(TraceLayer::new_for_http());
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

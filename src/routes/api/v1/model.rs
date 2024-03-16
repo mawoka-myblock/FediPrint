@@ -43,6 +43,7 @@ pub async fn create_model(
         summary: input.summary,
         description: input.description,
         tags: input.tags,
+        license: input.license
     }
     .create(state.pool.clone())
     .await?;
@@ -117,6 +118,7 @@ pub async fn get_newest_models(
     .await?;
     return Ok(Response::builder()
         .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&models).unwrap()))
         .unwrap());
 }

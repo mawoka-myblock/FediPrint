@@ -1,0 +1,5 @@
+:8080 {
+	reverse_proxy /* localhost:3000
+	reverse_proxy /api* localhost:8000
+	reverse_proxy /.well-known* localhost:8000
+}

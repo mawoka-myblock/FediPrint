@@ -20,6 +20,12 @@ services:
     environment:
       MEILI_NO_ANALYTICS: "true"
       MEILI_MASTER_KEY: MASTER_KEY
+  caddy:
+    image: caddy:alpine
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    network_mode: "host"
+    privileged: true
 volumes:
   db:
   search:
