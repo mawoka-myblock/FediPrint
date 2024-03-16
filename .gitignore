@@ -4,3 +4,4 @@ src/prisma.rs
 .idea
 /prusaslicer/target/
 temp.json
+.env
