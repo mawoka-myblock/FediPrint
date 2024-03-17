@@ -6,13 +6,13 @@ use std::time::Duration;
 use crate::helpers::middleware::auth_middleware;
 use crate::routes::api::v1;
 use awscreds::Credentials;
+use axum::extract::DefaultBodyLimit;
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{get, patch, post, put, delete},
+    routing::{delete, get, patch, post, put},
     Router,
 };
-use axum::extract::DefaultBodyLimit;
 use s3::{Bucket, BucketConfiguration, Region};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -60,7 +60,7 @@ async fn main() {
         None,
         None,
     )
-        .expect("S3 credentials invalid");
+    .expect("S3 credentials invalid");
     let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone())
         .expect("S3 Bucket initialization failed");
     bucket.set_path_style();
@@ -72,9 +72,9 @@ async fn main() {
             s3_creds,
             BucketConfiguration::default(),
         )
-            .await
-            .unwrap()
-            .bucket;
+        .await
+        .unwrap()
+        .bucket;
         bucket.set_path_style();
     }
     let sqlx_pool = PgPoolOptions::new()
@@ -84,12 +84,21 @@ async fn main() {
         .await
         .expect("can't connect to database");
 
-    let client = meilisearch_sdk::Client::new(&config.meilisearch_url, Some(&config.meilisearch_key));
+    let client =
+        meilisearch_sdk::Client::new(&config.meilisearch_url, Some(&config.meilisearch_key));
     // Make sure Meilisearch is more or less working as the client init doesn't do any checks
     assert_eq!(client.health().await.unwrap().status, "available");
     client.create_index("fedi_print", Some("id")).await.unwrap();
-    client.index("fedi_print").set_filterable_attributes(&["created_at", "tags", "record_type", "profile_id"]).await.unwrap();
-    client.index("fedi_print").set_sortable_attributes(&["created_at", "updated_at"]).await.unwrap();
+    client
+        .index("fedi_print")
+        .set_filterable_attributes(&["created_at", "tags", "record_type", "profile_id"])
+        .await
+        .unwrap();
+    client
+        .index("fedi_print")
+        .set_sortable_attributes(&["created_at", "updated_at"])
+        .await
+        .unwrap();
 
     let state = Arc::new(AppState {
         env: config,
@@ -167,10 +176,12 @@ async fn main() {
         )
         .route(
             "/api/v1/storage/upload",
-            post(v1::storage::upload_file).layer(DefaultBodyLimit::max(52_428_800)).route_layer(middleware::from_fn_with_state(
-                state.clone(),
-                auth_middleware,
-            )),
+            post(v1::storage::upload_file)
+                .layer(DefaultBodyLimit::max(52_428_800))
+                .route_layer(middleware::from_fn_with_state(
+                    state.clone(),
+                    auth_middleware,
+                )),
         )
         .route(
             "/api/v1/storage/edit",
@@ -218,6 +229,7 @@ async fn main() {
             "/api/v1/model/public/newest",
             get(v1::model::get_newest_models),
         )
+        .route("/api/v1/model", get(v1::model::get_model))
         .with_state(state)
         .layer(TraceLayer::new_for_http());
     // run our app with hyper, listening globally on port 3000

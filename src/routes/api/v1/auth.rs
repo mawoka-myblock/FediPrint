@@ -86,7 +86,8 @@ pub async fn login(
         Ok(d) => d,
         Err(_) => return Ok((jar, StatusCode::UNAUTHORIZED)),
     };
-    let prof: FullProfile = match FullProfile::get_by_id(&acct.profile_id, state.pool.clone()).await {
+    let prof: FullProfile = match FullProfile::get_by_id(&acct.profile_id, state.pool.clone()).await
+    {
         Ok(d) => d,
         Err(_) => return Ok((jar, StatusCode::UNAUTHORIZED)),
     };

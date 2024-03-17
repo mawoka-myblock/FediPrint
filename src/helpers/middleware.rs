@@ -49,7 +49,7 @@ pub async fn auth_middleware(
     };
     match FullAccount::get_by_id(&invalid_claims.sub, data.pool.clone()).await {
         Ok(_) => (),
-        Err(_) => return Err(StatusCode::UNAUTHORIZED)
+        Err(_) => return Err(StatusCode::UNAUTHORIZED),
     };
     tracing::debug!("Renewing jwt token");
 

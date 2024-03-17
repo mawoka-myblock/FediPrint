@@ -26,7 +26,6 @@ pub enum EventAudience {
     Nobody,
 }
 
-
 #[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type)]
 #[sqlx(type_name = "model_license", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ModelLicense {
@@ -41,5 +40,5 @@ pub enum ModelLicense {
     Gpl3,
     GnuLesser,
     Bsd,
-    Sdfl
+    Sdfl,
 }

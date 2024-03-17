@@ -1,9 +1,9 @@
+use crate::models::db::ModelLicense;
 use chrono::{DateTime, Utc};
 use serde_derive::Serialize;
-use sqlx::{Error, PgPool};
+use sqlx::{Error, FromRow, PgPool};
+use std::collections::HashSet;
 use uuid::Uuid;
-use crate::models::db::file::FullFile;
-use crate::models::db::ModelLicense;
 
 #[derive(Serialize, Debug, PartialEq)]
 pub struct CreateModel {
@@ -27,8 +27,20 @@ impl CreateModel {
             RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at"#,
             self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _
         ).fetch_one(&pool).await?;
-        sqlx::query!(r#"UPDATE file SET file_for_model_id = $1 WHERE id = ANY($2);"#, &ret_data.id, &self.files).execute(&pool).await?;
-        sqlx::query!(r#"UPDATE file SET image_for_model_id = $1 WHERE id = ANY($2);"#, &ret_data.id, &self.images).execute(&pool).await?;
+        sqlx::query!(
+            r#"UPDATE file SET file_for_model_id = $1 WHERE id = ANY($2);"#,
+            &ret_data.id,
+            &self.files
+        )
+        .execute(&pool)
+        .await?;
+        sqlx::query!(
+            r#"UPDATE file SET image_for_model_id = $1 WHERE id = ANY($2);"#,
+            &ret_data.id,
+            &self.images
+        )
+        .execute(&pool)
+        .await?;
         return Ok(ret_data);
     }
 }
@@ -88,15 +100,48 @@ impl FullModel {
         pool: PgPool,
     ) -> Result<Vec<FullModel>, Error> {
         sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at FROM model
-            ORDER BY created_at DESC OFFSET $1 LIMIT $2
+            WHERE published = true ORDER BY created_at DESC OFFSET $1 LIMIT $2
             "#,
             offset, limit
         ).fetch_all(&pool).await
     }
 }
 
-#[derive(Serialize, Debug, PartialEq)]
-pub struct FullModelWithRelations {
+fn remove_duplicates_from_list_of_models(models: &mut Vec<FullModelWithRelationsIds>) {
+    for model in models {
+        remove_duplicates(model)
+    }
+}
+fn remove_duplicates(model: &mut FullModelWithRelationsIds) {
+    if let Some(files) = &model.files {
+        if let Some(unique_files) = remove_duplicates_from_vec(files.clone()) {
+            model.files = Some(unique_files);
+        }
+    }
+    if let Some(images) = &model.images {
+        if let Some(unique_images) = remove_duplicates_from_vec(images.clone()) {
+            model.images = Some(unique_images);
+        }
+    }
+}
+// Helper function to remove duplicates from a vector
+fn remove_duplicates_from_vec<T: Eq + std::hash::Hash + Clone>(vec: Vec<T>) -> Option<Vec<T>> {
+    let mut set: HashSet<_> = HashSet::new();
+    let mut unique_vec = Vec::new();
+    for item in vec {
+        if set.insert(item.clone()) {
+            unique_vec.push(item);
+        }
+    }
+    if unique_vec.is_empty() {
+        None
+    } else {
+        Some(unique_vec)
+    }
+}
+
+#[derive(Serialize, Debug, PartialEq, FromRow)]
+pub struct FullModelWithRelationsIds {
     pub id: Uuid,
     pub server: String,
     pub server_id: Option<String>,
@@ -109,21 +154,56 @@ pub struct FullModelWithRelations {
     pub license: ModelLicense,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub files: Vec<FullFile>,
-    pub images: Vec<FullFile>,
+    pub files: Option<Vec<Uuid>>,
+    pub images: Option<Vec<Uuid>>,
 }
 
-impl FullModelWithRelations {
-    pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullModelWithRelations, Error> {
-        sqlx::query_as!(FullModelWithRelations,
-            r#"SELECT (f.id,f.created_at,f.updated_at,f.mime_type,f.size,f.file_name,f.description,f.alt_text,f.thumbhash,f.preview_file_id,f.to_be_deleted_at,f.profile_id,f.file_for_model_id,f.image_for_model_id) AS "images!: Vec<FullFile>",
-            (i.id,i.created_at,i.updated_at,i.mime_type,i.size,i.file_name,i.description,i.alt_text,i.thumbhash,i.preview_file_id,i.to_be_deleted_at,i.profile_id,i.file_for_model_id,i.image_for_model_id) AS "files!: Vec<FullFile>",
-            m.id,server,server_id,published,title,summary,m.description,tags,license AS "license!: ModelLicense",m.created_at,m.updated_at, m.profile_id
-                FROM file f
-                JOIN model m ON f.file_for_model_id = m.id
-                LEFT JOIN file i ON i.image_for_model_id = m.id
-                WHERE m.id = $1"#,
+impl FullModelWithRelationsIds {
+    pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullModelWithRelationsIds, Error> {
+        let model_query = sqlx::query_as!(
+            FullModelWithRelationsIds,
+            r#"
+        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        FROM
+            model AS m
+        LEFT JOIN
+            file AS f ON m.id = f.file_for_model_id
+        LEFT JOIN
+            file AS i ON m.id = i.image_for_model_id
+        WHERE
+            m.id = $1
+        GROUP BY
+            m.id;
+        "#,
             id
-        ).fetch_one(&pool).await
+        );
+
+        let mut model_with_relations: FullModelWithRelationsIds =
+            model_query.fetch_one(&pool).await?;
+        remove_duplicates(&mut model_with_relations);
+        Ok(model_with_relations)
+    }
+    pub async fn get_newest_published_models_paginated(
+        limit: &i64,
+        offset: &i64,
+        pool: PgPool,
+    ) -> Result<Vec<FullModelWithRelationsIds>, Error> {
+        let mut res = sqlx::query_as!(FullModelWithRelationsIds, r#"SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        FROM
+            model AS m
+        LEFT JOIN
+            file AS f ON m.id = f.file_for_model_id
+        LEFT JOIN
+            file AS i ON m.id = i.image_for_model_id
+        WHERE
+            m.published = true
+        GROUP BY
+            m.id
+        ORDER BY created_at DESC OFFSET $1 LIMIT $2;
+            "#,
+            offset, limit
+        ).fetch_all(&pool).await?;
+        remove_duplicates_from_list_of_models(&mut res);
+        Ok(res)
     }
 }

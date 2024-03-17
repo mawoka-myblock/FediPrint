@@ -1,6 +1,9 @@
 use crate::helpers::auth::UserState;
+use crate::helpers::search::index_model;
 use crate::helpers::AppResult;
-use crate::models::db::model::{CreateModel as DbCreateModel, FullModel};
+use crate::models::db::model::{
+    CreateModel as DbCreateModel, FullModel, FullModelWithRelationsIds,
+};
 use crate::models::model::CreateModel;
 use crate::routes::api::v1::storage::PaginationQuery;
 use crate::AppState;
@@ -12,7 +15,6 @@ use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use uuid::Uuid;
-use crate::helpers::search::index_model;
 
 #[debug_handler]
 pub async fn create_model(
@@ -45,7 +47,7 @@ pub async fn create_model(
         tags: input.tags,
         license: input.license,
         files: input.files,
-        images: input.images
+        images: input.images,
     }
     .create(state.pool.clone())
     .await?;
@@ -112,7 +114,7 @@ pub async fn get_newest_models(
             .body(Body::from("page can't be less than 0"))
             .unwrap());
     }
-    let models = FullModel::get_newest_published_models_paginated(
+    let models = FullModelWithRelationsIds::get_newest_published_models_paginated(
         &20i64,
         &((&query.page * 20) as i64),
         state.pool.clone(),
@@ -122,5 +124,23 @@ pub async fn get_newest_models(
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&models).unwrap()))
+        .unwrap());
+}
+
+#[derive(Deserialize)]
+pub struct GetModelQuery {
+    pub id: Uuid,
+}
+
+#[debug_handler]
+pub async fn get_model(
+    State(state): State<Arc<AppState>>,
+    query: Query<GetModelQuery>,
+) -> AppResult<impl IntoResponse> {
+    let model = FullModelWithRelationsIds::get_by_id(&query.id, state.pool.clone()).await?;
+    return Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Body::from(serde_json::to_string(&model).unwrap()))
         .unwrap());
 }

@@ -4,7 +4,7 @@ use crate::models::activitypub::{
     AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, FocalPoint, IdentityKey,
     OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, PeopleDataPage, PublicKey,
 };
-use crate::models::db::profile::FullProfile;
+use crate::models::db::profile::{FullProfile, FullProfileWithFollower, FullProfileWithFollowing};
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
@@ -154,10 +154,15 @@ pub async fn get_followers(
     };
     let page = query.page;
 
-    // TODO get the count right
-    let count: i64 = 12;
+    let user = FullProfile::get_by_username_and_server(
+        &username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
+    let count: i64 =
+        FullProfileWithFollowing::count_following(&user.id, state.pool.clone()).await?;
 
-    // TODO get 404 handling
     if page.is_none() {
         let return_data = OrderedCollection {
             context: "https://www.w3.org/ns/activitystreams".to_string(),
@@ -180,48 +185,17 @@ pub async fn get_followers(
             .unwrap());
     }
 
-    let user = FullProfile::get_by_username_and_server(
-        &username,
-        &state.env.base_domain,
-        state.pool.clone(),
-    )
-    .await?;
-
-    /*    let user = match state
-        .db
-        .profile()
-        .find_first(vec![
-            prisma::profile::username::equals(username),
-            prisma::profile::server::equals("local".to_string()),
-        ])
-        .include(prisma::profile::include!({
-            followers: select
-            {
-                server_id
-            }
-        }))
-        .exec()
-        .await?
-    {
-        Some(d) => d,
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(""))
-                .unwrap());
-        }
-    };*/
-    // Data { id: "ff928bab-96ea-485b-9d40-667e79a19dcc", username: "Mawoka", server: "local", display_name: "Mawoka", summary: "", public_key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3OV1S2zNjE0OPICeA9pC\nm3pi5x6u9NLYyY51OSutpLpCFLEA50HjXKvqCaXVNtRXzmQmMg5lsrimm+/nJT3a\nrKuLhecXo6HrOV6GQ2+4n/kRRk75Uymk80upeAH5uI6CFBGB+1114JZp5MonuHQx\nt1um+DR3gtFkp8TLiJp5xk/L4/OQMBDfJROCKRw3OFFmEiWM9JlMxHOhekXkl9uc\nljVoese7xVaw+lD0R7sxdqLBHgjDDgf3A6dAQ/fTG+7DGUbMZvubvpQu7taCpevi\nLTtAi94R8RcLcg6/yAACXe2+gn2fGTeT2MncJgNuwTnZjNWmEfRNvX0cZ32qUc99\nfQIDAQAB\n-----END PUBLIC KEY-----\n", registered_at: 2024-02-18T00:00:00+00:00, followers: [Data { server_id: "http://localhost:3000/api/v1/user/Mawoka" }] }
+    let data = FullProfileWithFollower::get_by_id(&user.id, state.pool.clone()).await?;
 
     let data = PeopleDataPage {
         context: "https://www.w3.org/ns/activitystreams".to_string(),
         id: format!("{}/followers?page={}", user.server_id, page.unwrap()),
         next: format!("{}/followers?page={}", user.server_id, page.unwrap() + 1),
-        ordered_items: /*user
+        ordered_items: data
             .followers
             .iter()
-            .map(|server| server.server_id.to_string())
-            .collect(),*/ vec!["PLACEHOLDER".to_string()],
+            .map(|d| d.server_id.to_string())
+            .collect(),
         part_of: format!("{}/followers", user.server_id),
         total_items: count,
         type_field: "OrderedCollectionPage".to_string(),
@@ -247,10 +221,15 @@ pub async fn get_following(
     };
     let page = query.page;
 
-    // TODO get the count right
-    let count: i64 = 12;
+    let user = FullProfile::get_by_username_and_server(
+        &username,
+        &state.env.base_domain,
+        state.pool.clone(),
+    )
+    .await?;
+    let count: i64 =
+        FullProfileWithFollowing::count_following(&user.id, state.pool.clone()).await?;
 
-    // TODO get 404 handling
     if page.is_none() {
         let return_data = OrderedCollection {
             context: "https://www.w3.org/ns/activitystreams".to_string(),
@@ -272,47 +251,17 @@ pub async fn get_following(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-    let user = FullProfile::get_by_username_and_server(
-        &username,
-        &state.env.base_domain,
-        state.pool.clone(),
-    )
-    .await?;
-    /*    let user = match state
-        .db
-        .profile()
-        .find_first(vec![
-            prisma::profile::username::equals(username),
-            prisma::profile::server::equals("local".to_string()),
-        ])
-        .include(prisma::profile::include!({
-            following: select
-            {
-                server_id
-            }
-        }))
-        .exec()
-        .await?
-    {
-        Some(d) => d,
-        None => {
-            return Ok(Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(""))
-                .unwrap());
-        }
-    }; */
-    // Data { id: "ff928bab-96ea-485b-9d40-667e79a19dcc", username: "Mawoka", server: "local", display_name: "Mawoka", summary: "", public_key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3OV1S2zNjE0OPICeA9pC\nm3pi5x6u9NLYyY51OSutpLpCFLEA50HjXKvqCaXVNtRXzmQmMg5lsrimm+/nJT3a\nrKuLhecXo6HrOV6GQ2+4n/kRRk75Uymk80upeAH5uI6CFBGB+1114JZp5MonuHQx\nt1um+DR3gtFkp8TLiJp5xk/L4/OQMBDfJROCKRw3OFFmEiWM9JlMxHOhekXkl9uc\nljVoese7xVaw+lD0R7sxdqLBHgjDDgf3A6dAQ/fTG+7DGUbMZvubvpQu7taCpevi\nLTtAi94R8RcLcg6/yAACXe2+gn2fGTeT2MncJgNuwTnZjNWmEfRNvX0cZ32qUc99\nfQIDAQAB\n-----END PUBLIC KEY-----\n", registered_at: 2024-02-18T00:00:00+00:00, following: [Data { server_id: "http://localhost:3000/api/v1/user/Mawoka" }] }
+    let data = FullProfileWithFollowing::get_by_id(&user.id, state.pool.clone()).await?;
 
     let data = PeopleDataPage {
         context: "https://www.w3.org/ns/activitystreams".to_string(),
         id: format!("{}/following?page={}", user.server_id, page.unwrap()),
         next: format!("{}/following?page={}", user.server_id, page.unwrap() + 1),
-        ordered_items: /*user
+        ordered_items: data
             .following
             .iter()
-            .map(|server| server.server_id.to_string())
-            .collect(),*/vec!["PLACEHOLDER".to_string()],
+            .map(|follower| follower.server_id.to_string())
+            .collect(),
         part_of: format!("{}/following", user.server_id),
         total_items: count,
         type_field: "OrderedCollectionPage".to_string(),

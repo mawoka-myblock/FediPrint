@@ -80,3 +80,85 @@ impl FullProfile {
             username, server).fetch_one(&pool).await
     }
 }
+
+#[derive(Serialize, Debug, PartialEq, sqlx::FromRow)]
+pub struct BarebonesProfile {
+    pub id: Uuid,
+    pub username: String,
+    pub server: String,
+    pub server_id: String,
+    pub display_name: String,
+    pub summary: String,
+}
+
+#[derive(Serialize, Debug, PartialEq, sqlx::FromRow)]
+pub struct FullProfileWithFollower {
+    pub profile: FullProfile,
+    pub followers: Vec<BarebonesProfile>,
+}
+
+impl FullProfileWithFollower {
+    pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullProfileWithFollower, Error> {
+        let profile = FullProfile::get_by_id(id, pool.clone()).await?;
+        let followers = sqlx::query_as!(
+            BarebonesProfile,
+            r#"SELECT p.id, p.username, p.server, p.server_id, p.display_name, p.summary
+                FROM _followers f
+                JOIN profile p ON p.id = f.follower_id
+                WHERE f.profile_id = $1;"#,
+            id
+        )
+        .fetch_all(&pool)
+        .await?;
+        Ok(FullProfileWithFollower { profile, followers })
+    }
+
+    pub async fn count_followers(id: &Uuid, pool: PgPool) -> Result<i64, Error> {
+        let c: Option<i64> = sqlx::query_scalar!(
+            r#"SELECT COUNT(p.id)
+                FROM _followers f
+                JOIN profile p ON p.id = f.follower_id
+                WHERE f.profile_id = $1;"#,
+            id
+        )
+        .fetch_one(&pool)
+        .await?;
+        Ok(c.unwrap())
+    }
+}
+
+#[derive(Serialize, Debug, PartialEq, sqlx::FromRow)]
+pub struct FullProfileWithFollowing {
+    pub profile: FullProfile,
+    pub following: Vec<BarebonesProfile>,
+}
+
+impl FullProfileWithFollowing {
+    pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullProfileWithFollowing, Error> {
+        let profile = FullProfile::get_by_id(id, pool.clone()).await?;
+        let following = sqlx::query_as!(
+            BarebonesProfile,
+            r#"SELECT p.id, p.username, p.server, p.server_id, p.display_name, p.summary
+                FROM _followers f
+                JOIN profile p ON p.id = f.follower_id
+                WHERE f.follower_id = $1;"#,
+            id
+        )
+        .fetch_all(&pool)
+        .await?;
+        Ok(FullProfileWithFollowing { profile, following })
+    }
+
+    pub async fn count_following(id: &Uuid, pool: PgPool) -> Result<i64, Error> {
+        let c: Option<i64> = sqlx::query_scalar!(
+            r#"SELECT COUNT(p.id)
+                FROM _followers f
+                JOIN profile p ON p.id = f.follower_id
+                WHERE f.follower_id = $1;"#,
+            id
+        )
+        .fetch_one(&pool)
+        .await?;
+        Ok(c.unwrap())
+    }
+}

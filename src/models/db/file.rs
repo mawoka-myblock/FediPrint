@@ -53,7 +53,7 @@ impl UpdateFile {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq, FromRow, sqlx::Decode)]
+#[derive(Serialize, Debug, PartialEq, FromRow)]
 pub struct FullFile {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,
@@ -70,7 +70,6 @@ pub struct FullFile {
     pub file_for_model_id: Option<Uuid>,
     pub image_for_model_id: Option<Uuid>,
 }
-
 impl FullFile {
     pub async fn get_newest_files_by_profile_paginated(
         profile_id: &Uuid,
@@ -85,7 +84,11 @@ impl FullFile {
         ).fetch_all(&pool).await
     }
 
-    pub async fn get_by_id_and_profile_id(id: &Uuid, profile_id: &Uuid, pool: PgPool) -> Result<FullFile, Error> {
+    pub async fn get_by_id_and_profile_id(
+        id: &Uuid,
+        profile_id: &Uuid,
+        pool: PgPool,
+    ) -> Result<FullFile, Error> {
         sqlx::query_as!(FullFile, r#"SELECT id, created_at, updated_at, mime_type, size, file_name, description, alt_text, thumbhash, preview_file_id, to_be_deleted_at, profile_id, file_for_model_id, image_for_model_id FROM file
         WHERE id = $1 AND profile_id = $2;"#,
             id, profile_id
@@ -93,14 +96,24 @@ impl FullFile {
     }
 
     pub async fn delete(self, pool: PgPool) -> Result<(), Error> {
-        let _ = sqlx::query!(r#"DELETE from file WHERE id = $1"#,
-        self.id).execute(&pool).await?;
+        let _ = sqlx::query!(r#"DELETE from file WHERE id = $1"#, self.id)
+            .execute(&pool)
+            .await?;
         Ok(())
     }
 
-    pub async fn delete_by_id_and_profile_id(id: &Uuid, profile_id: &Uuid, pool: PgPool) -> Result<(), Error> {
-        let _ = sqlx::query!(r#"DELETE from file WHERE id = $1 AND profile_id = $2"#,
-        id, profile_id).execute(&pool).await?;
+    pub async fn delete_by_id_and_profile_id(
+        id: &Uuid,
+        profile_id: &Uuid,
+        pool: PgPool,
+    ) -> Result<(), Error> {
+        let _ = sqlx::query!(
+            r#"DELETE from file WHERE id = $1 AND profile_id = $2"#,
+            id,
+            profile_id
+        )
+        .execute(&pool)
+        .await?;
         Ok(())
     }
 }

@@ -13,7 +13,7 @@ use s3::Bucket;
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use std::{io, pin::Pin};
-use tokio::io::{AsyncRead};
+use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
 use tracing::debug;
 use uuid::Uuid;
@@ -29,8 +29,8 @@ async fn put_file(
         .await
         .unwrap();
     /*    let mut buffer = Vec::new();
-        reader.read_to_end(&mut buffer).await.unwrap();
-        debug!("length: {}", buffer.len());*/
+    reader.read_to_end(&mut buffer).await.unwrap();
+    debug!("length: {}", buffer.len());*/
 
     Ok(())
 }
@@ -92,8 +92,8 @@ pub async fn upload_file(
         file_for_model_id: None,
         image_for_model_id: None,
     }
-        .create(state.pool.clone())
-        .await?;
+    .create(state.pool.clone())
+    .await?;
     return Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
@@ -114,8 +114,8 @@ pub async fn edit_file_metadata(
         file_name: input.file_name,
         description: input.description,
     }
-        .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
-        .await?;
+    .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
+    .await?;
 
     return Ok(Response::builder()
         .status(StatusCode::OK)
@@ -147,7 +147,7 @@ pub async fn list_own_files(
         &((&query.page * 20) as i64),
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     return Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -166,8 +166,13 @@ pub async fn delete_file(
     State(state): State<Arc<AppState>>,
     query: Query<DeleteFileQuery>,
 ) -> AppResult<impl IntoResponse> {
-    let file = FullFile::get_by_id_and_profile_id(&query.id, &claims.profile_id, state.pool.clone()).await?;
-    let d = state.s3.delete_object(format!("/{}",file.id.to_string())).await?;
+    let file =
+        FullFile::get_by_id_and_profile_id(&query.id, &claims.profile_id, state.pool.clone())
+            .await?;
+    let d = state
+        .s3
+        .delete_object(format!("/{}", file.id.to_string()))
+        .await?;
     debug!("S3 Response: {:?}", d);
     file.delete(state.pool.clone()).await?;
     return Ok(Response::builder()
