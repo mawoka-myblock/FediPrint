@@ -39,6 +39,11 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = "0.1"
 # new db
 sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros" ] }
+# email
+lettre = "0.11"
+lettre_email = "0.9"
+email_address = "0.2"
+# search
 meilisearch-sdk = "0.25.0"
 
 [profile.dev]

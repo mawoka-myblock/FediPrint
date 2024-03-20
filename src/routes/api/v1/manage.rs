@@ -9,6 +9,8 @@ use axum::{debug_handler, Extension, Json};
 use regex::Regex;
 use serde::Deserialize;
 use std::sync::Arc;
+use crate::helpers::interactions::{create_remote_profile, follow_user};
+use crate::models::db::profile::FullProfile;
 
 #[derive(Deserialize)]
 pub struct FollowUser {
@@ -17,8 +19,8 @@ pub struct FollowUser {
 
 #[debug_handler]
 pub async fn follow_user_route(
-    Extension(_claims): Extension<UserState>,
-    State(_state): State<Arc<AppState>>,
+    Extension(claims): Extension<UserState>,
+    State(state): State<Arc<AppState>>,
     Json(input): Json<FollowUser>,
 ) -> AppResult<impl IntoResponse> {
     let user_regex = Regex::new(r"@?(.*)@(.*\..{2,})").unwrap();
@@ -32,32 +34,24 @@ pub async fn follow_user_route(
             return bad_request;
         }
     };
-    let _username = match caps.get(1) {
+    let username = match caps.get(1) {
         Some(d) => d.as_str(),
         None => {
             return bad_request;
         }
     };
-    let _domain = match caps.get(2) {
+    let domain = match caps.get(2) {
         Some(d) => d.as_str(),
         None => {
             return bad_request;
         }
     };
-    // TODO
-    /*    let to_follow = match state
-        .db
-        .profile()
-        .find_first(vec![
-            prisma::profile::username::equals(username.to_string()),
-            prisma::profile::server::equals(domain.to_string()),
-        ])
-        .exec()
-        .await?
+    let to_follow: FullProfile = match FullProfile::get_by_username_and_server(username, domain, state.pool.clone())
+        .await
     {
-        Some(d) => d,
-        None => {
-            match create_remote_profile(username.to_string(), domain.to_string(), &state.db).await {
+        Ok(d) => d,
+        Err(_) => {
+            match create_remote_profile(username.to_string(), domain.to_string(), state.pool.clone()).await {
                 Ok(d) => d,
                 Err(e) => {
                     return Ok(Response::builder()
@@ -77,7 +71,7 @@ pub async fn follow_user_route(
                 .unwrap());
         }
     }
-    */
+
 
     Ok(Response::builder()
         .status(StatusCode::OK)

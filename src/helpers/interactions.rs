@@ -64,7 +64,7 @@ pub async fn create_remote_profile(
 }
 
 pub async fn follow_user(
-    to_follow: FullProfile,
+    to_follow: &FullProfile,
     claims: &UserState,
     env: &Config,
 ) -> anyhow::Result<()> {
