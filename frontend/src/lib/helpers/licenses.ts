@@ -1,16 +1,16 @@
 export enum Licenses {
-	CcPd = "CcPd",
-	CcAttr = "CcAttr",
-	CcAttrSa = "CcAttrSa",
-	CcAttrNd = "CcAttrNd",
-	CcAttrNc = "CcAttrNc",
-	CcAttrNcSa = "CcAttrNcSa",
-	CcAttrNcNd = "CcAttrNcNd",
-	Gpl2 = "Gpl2",
-	Gpl3 = "Gpl3",
-	GnuLesser = "GnuLesser",
-	Bsd = "Bsd",
-	Sdfl = "Sdfl"
+	CcPd = 'CcPd',
+	CcAttr = 'CcAttr',
+	CcAttrSa = 'CcAttrSa',
+	CcAttrNd = 'CcAttrNd',
+	CcAttrNc = 'CcAttrNc',
+	CcAttrNcSa = 'CcAttrNcSa',
+	CcAttrNcNd = 'CcAttrNcNd',
+	Gpl2 = 'Gpl2',
+	Gpl3 = 'Gpl3',
+	GnuLesser = 'GnuLesser',
+	Bsd = 'Bsd',
+	Sdfl = 'Sdfl'
 }
 export const name_to_license: { name: string; value: Licenses }[] = [
 	{

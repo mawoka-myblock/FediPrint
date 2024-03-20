@@ -129,7 +129,10 @@ async fn main() {
             "/.well-known/webfinger",
             get(routes::well_known::webfinger::handler),
         )
-        .route("/api/v1/user/:username", get(v1::activitypub::profile::get_user_profile))
+        .route(
+            "/api/v1/user/:username",
+            get(v1::activitypub::profile::get_user_profile),
+        )
         .route(
             "/api/v1/user/:username/followers",
             get(v1::activitypub::profile::get_followers),
@@ -152,7 +155,10 @@ async fn main() {
                 auth_middleware,
             )),
         )
-        .route("/api/v1/user/:username/outbox", get(v1::activitypub::boxes::get_outbox))
+        .route(
+            "/api/v1/user/:username/outbox",
+            get(v1::activitypub::boxes::get_outbox),
+        )
         .route(
             "/api/v1/printers/create",
             post(v1::printers::create_printer).route_layer(middleware::from_fn_with_state(

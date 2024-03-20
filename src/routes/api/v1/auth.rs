@@ -1,3 +1,4 @@
+use axum::body::Body;
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension};
@@ -5,14 +6,13 @@ use axum::{extract::Json, http::StatusCode, Form};
 use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 use base64::{engine::general_purpose, Engine as _};
+use email_address::EmailAddress;
 use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
 use openssl::symm::Cipher;
 use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
-use axum::body::Body;
-use email_address::EmailAddress;
 use uuid::Uuid;
 
 use crate::helpers::auth::UserState;
@@ -37,7 +37,7 @@ pub async fn create_user(
         return Ok(Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::from("Email is invalid"))
-            .unwrap())
+            .unwrap());
     }
     let pw_hash = get_password_hash(input.password);
     let rsa = Rsa::generate(2048).unwrap();

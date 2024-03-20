@@ -71,20 +71,20 @@
 
 	const submit = async () => {
 		if (!valid) return;
-		console.log(data)
-		const res = await fetch("/api/v1/model/create", {
-			method: "POST",
+		console.log(data);
+		const res = await fetch('/api/v1/model/create', {
+			method: 'POST',
 			headers: {
-				"Content-Type": "application/json"
+				'Content-Type': 'application/json'
 			},
 
 			body: JSON.stringify(data)
-		})
+		});
 		if (res.ok) {
-			const d = await res.json()
-			window.location.assign(`/models/${d.id}`)
+			const d = await res.json();
+			window.location.assign(`/models/${d.id}`);
 		} else {
-			alert("Error creating model!")
+			alert('Error creating model!');
 		}
 	};
 
@@ -126,10 +126,10 @@
 				// this server file id is then used later on when reverting or restoring a file
 				// so your server knows which file to return without exposing that info to the client
 				request.onload = function () {
-					console.log(request.status)
+					console.log(request.status);
 					if (request.status >= 200 && request.status < 300) {
 						// the load method accepts either a string (id) or an object
-						console.log("File uploaded!")
+						console.log('File uploaded!');
 						const d = JSON.parse(request.responseText);
 						const fileType = file.type;
 						if (fileType.includes('image')) {
@@ -137,7 +137,7 @@
 						} else {
 							data.files.push(d.id);
 						}
-					
+
 						console.log(d, data.images, data.files);
 						load(d.id);
 					} else {
@@ -146,8 +146,6 @@
 					}
 				};
 				request.send(formData);
-
-
 
 				// Should expose an abort method so the request can be cancelled
 				return {
@@ -161,8 +159,8 @@
 				};
 			},
 			revert: async (uniqueFileId, load, error) => {
-				data.images = data.images.filter(e => e !== uniqueFileId)
-				data.files = data.files.filter(e => e !== uniqueFileId)
+				data.images = data.images.filter((e) => e !== uniqueFileId);
+				data.files = data.files.filter((e) => e !== uniqueFileId);
 				const res = await fetch(`/api/v1/storage/delete?id=${uniqueFileId}`, { method: 'DELETE' });
 				if (!res.ok) {
 					error('Error deleting');

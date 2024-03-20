@@ -1,16 +1,19 @@
-use serde_json::json;
-use std::sync::Arc;
+use crate::helpers::{ensure_ap_header, AppResult};
+use crate::models::activitypub::{
+    FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, OrderedCollection,
+    OrderedItem, OutboxContext, OutboxDataPage,
+};
+use crate::models::db::note::BoxNote;
+use crate::models::db::profile::FullProfile;
+use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde_derive::Deserialize;
+use serde_json::json;
+use std::sync::Arc;
 use uuid::Uuid;
-use crate::AppState;
-use crate::helpers::{AppResult, ensure_ap_header};
-use crate::models::activitypub::{FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage};
-use crate::models::db::note::BoxNote;
-use crate::models::db::profile::FullProfile;
 
 #[derive(Deserialize)]
 pub struct GetBox {
@@ -37,7 +40,7 @@ pub async fn get_outbox(
         &state.env.base_domain,
         state.pool.clone(),
     )
-        .await?;
+    .await?;
 
     if query.page.is_none() {
         let return_data = OrderedCollection {
@@ -92,11 +95,15 @@ pub async fn get_outbox(
                 to,
                 cc,
                 content: item.content,
-                tag: item.hashtags.iter().map(|h| json!({
-                    "type": "Hashtag",
-                    "name": format!("#{}", h),
-                    "href": format!("{}/api/v1/tags/{}", state.env.public_url, h)
-                })).collect(),
+                tag: item
+                    .hashtags
+                    .iter()
+                    .map(|h| json!({
+                        "type": "Hashtag",
+                        "name": format!("#{}", h),
+                        "href": format!("{}/api/v1/tags/{}", state.env.public_url, h)
+                    }))
+                    .collect(),
                 replies: NoteBoxItemReplies {
                     id: format!(
                         "{}/api/v1/user/{}/statuses/{}/replies",
@@ -126,7 +133,7 @@ pub async fn get_outbox(
                 in_reply_to: serde_json::Value::String("PLACEHOLDER".to_string())
             }),
         })
-    };
+    }
 
     let data = OutboxDataPage {
         context: (

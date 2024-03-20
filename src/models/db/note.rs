@@ -89,8 +89,9 @@ pub struct BoxNote {
 
 impl BoxNote {
     pub async fn get_by_profile_id(id: &Uuid, pool: PgPool) -> Result<Vec<BoxNote>, Error> {
-        sqlx::query_as!(BoxNote,
-        r#"
+        sqlx::query_as!(
+            BoxNote,
+            r#"
 SELECT n.id,
        n.created_at,
        n.updated_at,
@@ -112,6 +113,10 @@ FROM note AS n
          JOIN note comment_n ON comment_n.id = n.in_reply_to_note_id
 WHERE n.actor_id = $1
 GROUP BY n.id, comment_r.server_id, comment_n.server_id;
-        "#, id).fetch_all(&pool).await
+        "#,
+            id
+        )
+        .fetch_all(&pool)
+        .await
     }
 }

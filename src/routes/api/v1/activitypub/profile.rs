@@ -30,7 +30,7 @@ pub async fn get_user_profile(
         &state.env.base_domain,
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     let data = Profile {
         context: (
             "https://www.w3.org/ns/activitystreams".to_string(),
@@ -158,7 +158,7 @@ pub async fn get_followers(
         &state.env.base_domain,
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     let count: i64 =
         FullProfileWithFollowing::count_following(&user.id, state.pool.clone()).await?;
 
@@ -225,7 +225,7 @@ pub async fn get_following(
         &state.env.base_domain,
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     let count: i64 =
         FullProfileWithFollowing::count_following(&user.id, state.pool.clone()).await?;
 
@@ -272,4 +272,3 @@ pub async fn get_following(
         .body(Body::from(serde_json::to_string(&data).unwrap()))
         .unwrap())
 }
-
