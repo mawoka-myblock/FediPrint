@@ -4,6 +4,7 @@ pub mod middleware;
 pub mod search;
 pub mod sign;
 
+use std::str::FromStr;
 use axum::body::Body;
 use axum::http::header::ToStrError;
 use axum::http::HeaderMap;
@@ -29,8 +30,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-where
-    E: std::error::Error,
+    where
+        E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -120,6 +121,7 @@ pub struct Config {
     pub s3_bucket_name: String,
     pub meilisearch_url: String,
     pub meilisearch_key: String,
+    pub registration_disabled: bool,
 }
 
 impl Config {
@@ -133,6 +135,7 @@ impl Config {
         let s3_username = std::env::var("S3_USERNAME").expect("S3_USERNAME must be set");
         let s3_password = std::env::var("S3_PASSWORD").expect("S3_PASSWORD must be set");
         let s3_bucket_name = std::env::var("S3_BUCKET_NAME").unwrap_or("fediprint".to_string());
+        let registration_disabled = bool::from_str(&std::env::var("REGISTRATION_DISABLED").unwrap_or("false".to_string())).expect("REGISTRATION_DISABLED no valid boolean");
         let meilisearch_url =
             std::env::var("MEILISEARCH_URL").expect("MEILISEARCH_URL must be set");
         let meilisearch_key =
@@ -149,6 +152,7 @@ impl Config {
             s3_bucket_name,
             meilisearch_url,
             meilisearch_key,
+            registration_disabled
         }
     }
 }
