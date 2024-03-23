@@ -26,7 +26,7 @@ pub enum EventAudience {
     Nobody,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type, Clone)]
 #[sqlx(type_name = "model_license", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ModelLicense {
     CcPd,

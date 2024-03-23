@@ -1,8 +1,8 @@
 use crate::helpers::{ensure_ap_header, AppResult};
 use crate::models::activitypub::Profile;
 use crate::models::activitypub::{
-    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, FocalPoint, IdentityKey,
-    OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, PeopleDataPage, PublicKey,
+    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, IdentityKey, OrderedCollection,
+    PeopleDataPage, PublicKey,
 };
 use crate::models::db::profile::{FullProfile, FullProfileWithFollower, FullProfileWithFollowing};
 use crate::AppState;

@@ -1,7 +1,7 @@
 use crate::helpers::{ensure_ap_header, AppResult};
 use crate::models::activitypub::{
     FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, OrderedCollection,
-    OrderedItem, OutboxContext, OutboxDataPage,
+    OrderedItem, OutboxContext, OutboxDataPage, Tag,
 };
 use crate::models::db::note::BoxNote;
 use crate::models::db::profile::FullProfile;
@@ -95,15 +95,7 @@ pub async fn get_outbox(
                 to,
                 cc,
                 content: item.content,
-                tag: item
-                    .hashtags
-                    .iter()
-                    .map(|h| json!({
-                        "type": "Hashtag",
-                        "name": format!("#{}", h),
-                        "href": format!("{}/api/v1/tags/{}", state.env.public_url, h)
-                    }))
-                    .collect(),
+                tag: Tag::from_strs(item.hashtags, &state.env.public_url),
                 replies: NoteBoxItemReplies {
                     id: format!(
                         "{}/api/v1/user/{}/statuses/{}/replies",

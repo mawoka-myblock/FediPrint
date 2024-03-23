@@ -1,6 +1,10 @@
+use crate::models::db::ModelLicense;
+use chrono::{DateTime, Utc};
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
+use sqlx::{Error, PgPool};
+use uuid::Uuid;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -159,10 +163,14 @@ pub struct MovedTo {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Attachment {
+    pub blurhash: Option<String>,
+    pub height: Option<i64>,
+    pub width: Option<i64>,
+    pub media_type: String,
     pub name: String,
     #[serde(rename = "type")]
     pub type_field: String,
-    pub value: String,
+    pub url: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -195,6 +203,19 @@ pub struct Tag {
     pub name: String,
     #[serde(rename = "type")]
     pub type_field: String,
+}
+
+impl Tag {
+    pub fn from_str(tag: &str, base_url: &str) -> Tag {
+        Tag {
+            name: format!("#{}", tag),
+            href: format!("{}/api/v1/tags/{}", base_url, tag),
+            type_field: String::from("Hashtag"),
+        }
+    }
+    pub fn from_strs(tags: Vec<String>, base_url: &str) -> Vec<Tag> {
+        tags.iter().map(|h| Tag::from_str(h, base_url)).collect()
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -261,6 +282,7 @@ pub struct OrderedItem {
     pub cc: Vec<String>,
     pub object: Value,
 }
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteBoxItemRoot {
@@ -293,8 +315,8 @@ pub struct NoteBoxItemObject {
     // pub conversation: String,
     pub content: String,
     // pub content_map: ContentMap,
-    pub attachment: Vec<Value>,
-    pub tag: Vec<Value>,
+    pub attachment: Vec<Attachment>,
+    pub tag: Vec<Tag>,
     pub updated: Option<String>,
     pub replies: NoteBoxItemReplies,
 }
@@ -332,4 +354,69 @@ pub struct OutboxContext {
     pub hashtag: String,
     pub blurhash: String,
     pub focal_point: FocalPoint,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NoteJoinedModel {
+    pub profile_server_id: String,
+    pub profile_id: Uuid,
+    pub note_id: Option<Uuid>,
+    pub model_id: Option<Uuid>,
+    pub hashtags: Vec<String>,
+    pub content: String,
+    pub summary: Option<String>,
+    pub server_id: Option<String>,
+    pub license: Option<ModelLicense>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl NoteJoinedModel {
+    pub async fn get_by_profile_id(id: &Uuid, pool: PgPool) -> Result<Vec<NoteJoinedModel>, Error> {
+        // Type overrides necessary, as sqlx wants everything to be Option<> in Rust which just isn't
+        // true in this case. Let's see when I'll have to fix this query.
+        // https://github.com/launchbadge/sqlx/issues/1266
+        sqlx::query_as!(
+            NoteJoinedModel,
+            r#"
+SELECT p.server_id  AS "profile_server_id!",
+       p.id         AS "profile_id!",
+       n.id         AS note_id,
+       NULL         AS model_id,
+       n.hashtags   AS "hashtags!",
+       n.content    AS "content!",
+       NULL         AS summary,
+       n.server_id  AS server_id,
+       NULL         AS "license!: Option<ModelLicense>",
+       n.created_at AS "created_at!",
+       n.updated_at AS "updated_at!"
+FROM profile AS p
+         LEFT JOIN note AS n ON p.id = n.actor_id
+WHERE p.id = $1
+  AND n.id IS NOT NULL
+
+UNION ALL
+SELECT p.server_id   AS "profile_server_id!",
+       p.id          AS "profile_id!",
+       NULL          AS note_id,
+       m.id          AS model_id,
+       m.tags        AS "hashtags!",
+       m.description AS "content!",
+       m.summary     AS summary,
+       m.server_id   AS server_id,
+       m.license     AS "license!: Option<ModelLicense>",
+       m.created_at  AS "created_at!",
+       m.updated_at  AS "updated_at!"
+
+FROM profile AS p
+         LEFT JOIN model AS m ON p.id = m.profile_id
+WHERE p.id = $1
+  AND m.id IS NOT NULL
+ORDER BY "created_at!";
+       "#,
+            id
+        )
+        .fetch_all(&pool)
+        .await
+    }
 }

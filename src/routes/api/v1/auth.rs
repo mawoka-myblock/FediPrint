@@ -33,6 +33,12 @@ pub async fn create_user(
     State(state): State<Arc<AppState>>,
     Json(input): Json<CreateUserInput>,
 ) -> AppResult<impl IntoResponse> {
+    if state.env.registration_disabled {
+        return Ok(Response::builder()
+            .status(StatusCode::NOT_ACCEPTABLE)
+            .body(Body::from("Registration is disabled"))
+            .unwrap());
+    }
     if !EmailAddress::is_valid(&input.email) {
         return Ok(Response::builder()
             .status(StatusCode::BAD_REQUEST)
@@ -75,7 +81,10 @@ pub async fn create_user(
     .create(state.pool.clone())
     .await?;
 
-    Ok(StatusCode::OK)
+    return Ok(Response::builder()
+        .status(StatusCode::CREATED)
+        .body(Body::from(""))
+        .unwrap());
 }
 
 #[derive(Deserialize)]
