@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use serde_derive::Serialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct CreateUserInput {
     pub password: String,
     pub email: String,

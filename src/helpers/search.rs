@@ -2,17 +2,18 @@ use crate::models::db::model::FullModel;
 use crate::models::db::note::FullNote;
 use crate::models::db::EventAudience;
 use chrono::{DateTime, Utc};
-use meilisearch_sdk::{errors::Error, Index, SearchResults};
+use meilisearch_sdk::{errors::Error, Index, SearchResult, SearchResults};
 use serde_derive::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use uuid::Uuid;
 
-#[derive(Deserialize, Serialize, PartialEq)]
+#[derive(Deserialize, Serialize, PartialEq, Clone)]
 pub enum RecordType {
     Model,
     Note,
 }
 
-#[derive(Deserialize, Serialize, PartialEq)]
+#[derive(Deserialize, Serialize, PartialEq, Clone)]
 pub struct MsModel {
     pub id: Uuid,
     pub title: Option<String>,
@@ -97,17 +98,67 @@ pub async fn index_note(note: &FullNote, profile_id: &Uuid, index: &Index) -> Re
     Ok(())
 }
 
+#[derive(Deserialize, Serialize, PartialEq)]
+pub struct SafeSearchResult {
+    pub result: MsModel,
+    pub formatted_result: Option<Map<String, Value>>,
+    pub ranking_score: Option<f64>,
+}
+impl SafeSearchResult {
+    pub fn from_ms(d: &SearchResult<MsModel>) -> SafeSearchResult {
+        SafeSearchResult {
+            result: d.result.clone(),
+            formatted_result: d.formatted_result.clone(),
+            ranking_score: d.ranking_score,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, PartialEq)]
+pub struct SafeSearchResults {
+    pub hits: Vec<SafeSearchResult>,
+    pub offset: Option<usize>,
+    pub limit: Option<usize>,
+    pub estimated_total_hits: Option<usize>,
+    pub page: Option<usize>,
+    pub hits_per_page: Option<usize>,
+    pub total_hits: Option<usize>,
+    pub total_pages: Option<usize>,
+    pub processing_time_ms: usize,
+}
+
+impl SafeSearchResults {
+    pub fn from_ms(d: SearchResults<MsModel>) -> SafeSearchResults {
+        SafeSearchResults {
+            hits: d
+                .hits
+                .iter()
+                .map(|a| SafeSearchResult::from_ms(a))
+                .collect(),
+            offset: d.offset,
+            limit: d.limit,
+            estimated_total_hits: d.estimated_total_hits,
+            page: d.page,
+            hits_per_page: d.hits_per_page,
+            total_hits: d.total_hits,
+            total_pages: d.total_pages,
+            processing_time_ms: d.processing_time_ms,
+        }
+    }
+}
+
 pub async fn search(
     query: &str,
     page: i64,
     page_size: i64,
     index: &Index,
-) -> Result<SearchResults<MsModel>, Error> {
-    Ok(index
+) -> Result<SafeSearchResults, Error> {
+    let resp: SearchResults<MsModel> = index
         .search()
         .with_query(query)
         .with_hits_per_page(page_size as usize)
         .with_page(page as usize)
         .execute()
-        .await?)
+        .await?;
+    Ok(SafeSearchResults::from_ms(resp))
 }

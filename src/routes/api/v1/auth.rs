@@ -12,6 +12,7 @@ use openssl::rsa::Rsa;
 use openssl::symm::Cipher;
 use serde::Deserialize;
 use std::str;
+use std::str::FromStr;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -146,4 +147,130 @@ pub async fn get_me_handler(
     });
 
     Ok((StatusCode::OK, Json(json_response)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::get_state;
+    use crate::models::users::CreateUserInput;
+    use axum::http::StatusCode;
+    use sqlx::PgPool;
+
+    #[sqlx::test]
+    async fn test_create_user(pool: PgPool) {
+        let state = get_state(Some(pool)).await;
+        let res = create_user(
+            State(state),
+            Json(CreateUserInput {
+                email: "test@mawoka.eu".to_string(),
+                password: "password".to_string(),
+                username: "testuser".to_string(),
+                display_name: "testuser".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert_eq!(res.status(), StatusCode::CREATED);
+    }
+
+    #[sqlx::test]
+    async fn test_failing_create_user(pool: PgPool) {
+        let state = get_state(Some(pool)).await;
+        let res = create_user(
+            State(state.clone()),
+            Json(CreateUserInput {
+                email: "testdsads@asdas_".to_string(), // https://github.com/johnstonskj/rust-email_address/issues/23
+                password: "password".to_string(),
+                username: "testuser".to_string(),
+                display_name: "testuser".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert_eq!(res.status(), StatusCode::CREATED);
+        let res = create_user(
+            State(state.clone()),
+            Json(CreateUserInput {
+                email: "testdsads".to_string(),
+                password: "password".to_string(),
+                username: "testuser".to_string(),
+                display_name: "testuser".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST)
+    }
+
+    #[sqlx::test]
+    async fn test_login_user(pool: PgPool) {
+        let state = get_state(Some(pool)).await;
+        let res = create_user(
+            State(state.clone()),
+            Json(CreateUserInput {
+                email: "test@mawoka.eu".to_string(),
+                password: "password".to_string(),
+                username: "testuser".to_string(),
+                display_name: "testuser".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert_eq!(res.status(), StatusCode::CREATED);
+        let cookie_jar = CookieJar::new();
+        let res = login(
+            State(state.clone()),
+            cookie_jar,
+            Form(LogIn {
+                email: "test@mawoka.eu".to_string(),
+                password: "password".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert!(res
+            .headers()
+            .get("set-cookie")
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .contains("ey"));
+        // Test wrong email
+        let cookie_jar = CookieJar::new();
+        let res = login(
+            State(state.clone()),
+            cookie_jar,
+            Form(LogIn {
+                email: "test@mawoka".to_string(),
+                password: "password".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert!(res.headers().is_empty());
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+        // Test wrong password
+        let cookie_jar = CookieJar::new();
+        let res = login(
+            State(state.clone()),
+            cookie_jar,
+            Form(LogIn {
+                email: "test@mawoka.eu".to_string(),
+                password: "passwordFALSE".to_string(),
+            }),
+        )
+        .await
+        .unwrap()
+        .into_response();
+        assert!(res.headers().is_empty());
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+    }
 }

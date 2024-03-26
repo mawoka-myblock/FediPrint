@@ -337,7 +337,7 @@ pub struct NoteBoxItemFirst {
     pub type_field: String,
     pub next: String,
     pub part_of: String,
-    pub items: Vec<Value>,
+    pub items: Vec<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -369,6 +369,7 @@ pub struct NoteJoinedModel {
     pub license: Option<ModelLicense>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub first_reply_server_id: Option<String>,
 }
 
 impl NoteJoinedModel {
@@ -379,40 +380,46 @@ impl NoteJoinedModel {
         sqlx::query_as!(
             NoteJoinedModel,
             r#"
-SELECT p.server_id  AS "profile_server_id!",
-       p.id         AS "profile_id!",
+SELECT p.server_id  AS "profile_server_id!: String",
+       p.id         AS "profile_id!: Uuid",
        n.id         AS note_id,
        NULL         AS model_id,
-       n.hashtags   AS "hashtags!",
-       n.content    AS "content!",
+       n.hashtags   AS "hashtags!: Vec<String>",
+       n.content    AS "content!: String",
        NULL         AS summary,
        n.server_id  AS server_id,
        NULL         AS "license!: Option<ModelLicense>",
-       n.created_at AS "created_at!",
-       n.updated_at AS "updated_at!"
+       n.created_at AS "created_at!: DateTime<Utc>",
+       n.updated_at AS "updated_at!: DateTime<Utc>",
+       r.server_id  AS "first_reply_server_id!: Option<String>"
 FROM profile AS p
          LEFT JOIN note AS n ON p.id = n.actor_id
+         LEFT JOIN note AS r ON n.id = r.in_reply_to_note_id
 WHERE p.id = $1
   AND n.id IS NOT NULL
+  AND n.audience = 'PUBLIC'
 
 UNION ALL
-SELECT p.server_id   AS "profile_server_id!",
-       p.id          AS "profile_id!",
+SELECT p.server_id   AS "profile_server_id!: String",
+       p.id          AS "profile_id!: Uuid",
        NULL          AS note_id,
        m.id          AS model_id,
-       m.tags        AS "hashtags!",
-       m.description AS "content!",
+       m.tags        AS "hashtags!: Vec<String>",
+       m.description AS "content!: String",
        m.summary     AS summary,
        m.server_id   AS server_id,
        m.license     AS "license!: Option<ModelLicense>",
-       m.created_at  AS "created_at!",
-       m.updated_at  AS "updated_at!"
-
+       m.created_at  AS "created_at!: DateTime<Utc>",
+       m.updated_at  AS "updated_at!: DateTime<Utc>",
+       r.server_id   AS "first_reply_server_id!: Option<String>"
 FROM profile AS p
          LEFT JOIN model AS m ON p.id = m.profile_id
+         LEFT JOIN note AS r ON m.id = r.in_reply_to_model_id
+         LEFT JOIN file AS f ON f.image_for_model_id = m.id
 WHERE p.id = $1
   AND m.id IS NOT NULL
-ORDER BY "created_at!";
+ORDER BY "created_at!: DateTime<Utc>"
+LIMIT 15;
        "#,
             id
         )

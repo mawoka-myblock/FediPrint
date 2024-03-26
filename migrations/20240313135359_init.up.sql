@@ -128,6 +128,7 @@ CREATE TABLE note
     audience                 event_audience                                                    NOT NULL,
     "in_reply_to_comment_id" uuid                                                              REFERENCES note (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
     "in_reply_to_note_id"    uuid                                                              REFERENCES note (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
+    "in_reply_to_model_id"   uuid                                                              REFERENCES model (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
     "actor_id"               uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL UNIQUE,
     "comment_of_model_id"    uuid                                                              REFERENCES model (id) ON UPDATE CASCADE ON DELETE SET NULL
 );
@@ -149,32 +150,38 @@ CREATE TABLE printer
     "modified_scale"       modified_scale DEFAULT 'NO_MODS'::modified_scale                  NOT NULL
 );
 
+CREATE TABLE likes
+(
+    id         uuid        DEFAULT uuid_generate_v7()                           NOT NULL PRIMARY KEY,
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP                            NOT NULL,
+    profile_id uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,
+    model_id   uuid REFERENCES model (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    note_id    uuid REFERENCES note (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 
 -- MANY TO MANY
-CREATE TABLE _likes
-(
-    profile_id uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    note_id    uuid REFERENCES note (id) ON UPDATE CASCADE,
-    CONSTRAINT likes_pkey PRIMARY KEY (profile_id, note_id)
-);
+
 
 CREATE TABLE _mentions
 (
     profile_id uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    note_id    uuid REFERENCES note (id) ON UPDATE CASCADE,
+    note_id    uuid REFERENCES note (id) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT mentions_pkey PRIMARY KEY (profile_id, note_id)
 );
 
-CREATE TABLE _boosts
+CREATE TABLE boosts
 (
+    id         uuid        DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
     profile_id uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    note_id    uuid REFERENCES note (id) ON UPDATE CASCADE,
-    CONSTRAINT boosts_pkey PRIMARY KEY (profile_id, note_id)
+    note_id    uuid REFERENCES note (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL
 );
 
-CREATE TABLE _followers
+CREATE TABLE followers
 (
+    id          uuid        DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
     profile_id  uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    follower_id uuid REFERENCES profile (id) ON UPDATE CASCADE,
-    CONSTRAINT followers_pkey PRIMARY KEY (profile_id, follower_id)
+    follower_id uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    created_at  timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL
 )

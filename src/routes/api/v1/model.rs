@@ -1,5 +1,5 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::search::index_model;
+use crate::helpers::search::{index_model, search};
 use crate::helpers::AppResult;
 use crate::models::db::model::{
     CreateModel as DbCreateModel, FullModel, FullModelWithRelationsIds,
@@ -12,7 +12,7 @@ use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
-use serde_derive::Deserialize;
+use serde_derive::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -144,3 +144,31 @@ pub async fn get_model(
         .body(Body::from(serde_json::to_string(&model).unwrap()))
         .unwrap());
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct SearchModelsQuery {
+    pub q: String,
+    pub page: i64,
+}
+
+#[debug_handler]
+pub async fn search_models(
+    State(state): State<Arc<AppState>>,
+    query: Query<SearchModelsQuery>,
+) -> AppResult<impl IntoResponse> {
+    let data = search(&query.q, query.page, 20i64, &state.ms).await?;
+    return Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/json")
+        .body(Body::from(serde_json::to_string(&data).unwrap()))
+        .unwrap());
+}
+
+/*#[cfg(test)]
+mod tests {
+    use axum::http::{self, Request, StatusCode};
+
+    #[tokio::test]
+    async fn create_models() {}
+
+}*/

@@ -70,7 +70,7 @@ impl UserFacingNote {
     }
 }
 
-pub struct BoxNote {
+pub struct BoxNoteAttachment {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -87,10 +87,13 @@ pub struct BoxNote {
     pub comment_n_server_id: Option<String>,
 }
 
-impl BoxNote {
-    pub async fn get_by_profile_id(id: &Uuid, pool: PgPool) -> Result<Vec<BoxNote>, Error> {
+impl BoxNoteAttachment {
+    pub async fn get_by_profile_id(
+        id: &Uuid,
+        pool: PgPool,
+    ) -> Result<Vec<BoxNoteAttachment>, Error> {
         sqlx::query_as!(
-            BoxNote,
+            BoxNoteAttachment,
             r#"
 SELECT n.id,
        n.created_at,

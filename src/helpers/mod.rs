@@ -20,6 +20,7 @@ use tracing::debug;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
+#[derive(Debug)]
 pub enum AppError {
     SqlxError(SqlxError),
     ToStrError(ToStrError),

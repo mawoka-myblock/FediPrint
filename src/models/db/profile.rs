@@ -103,7 +103,7 @@ impl FullProfileWithFollower {
         let followers = sqlx::query_as!(
             BarebonesProfile,
             r#"SELECT p.id, p.username, p.server, p.server_id, p.display_name, p.summary
-                FROM _followers f
+                FROM followers f
                 JOIN profile p ON p.id = f.follower_id
                 WHERE f.profile_id = $1;"#,
             id
@@ -116,7 +116,7 @@ impl FullProfileWithFollower {
     pub async fn count_followers(id: &Uuid, pool: PgPool) -> Result<i64, Error> {
         let c: Option<i64> = sqlx::query_scalar!(
             r#"SELECT COUNT(p.id)
-                FROM _followers f
+                FROM followers f
                 JOIN profile p ON p.id = f.follower_id
                 WHERE f.profile_id = $1;"#,
             id
@@ -139,7 +139,7 @@ impl FullProfileWithFollowing {
         let following = sqlx::query_as!(
             BarebonesProfile,
             r#"SELECT p.id, p.username, p.server, p.server_id, p.display_name, p.summary
-                FROM _followers f
+                FROM followers f
                 JOIN profile p ON p.id = f.follower_id
                 WHERE f.follower_id = $1;"#,
             id
@@ -152,7 +152,7 @@ impl FullProfileWithFollowing {
     pub async fn count_following(id: &Uuid, pool: PgPool) -> Result<i64, Error> {
         let c: Option<i64> = sqlx::query_scalar!(
             r#"SELECT COUNT(p.id)
-                FROM _followers f
+                FROM followers f
                 JOIN profile p ON p.id = f.follower_id
                 WHERE f.follower_id = $1;"#,
             id

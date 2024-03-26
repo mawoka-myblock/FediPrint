@@ -32,22 +32,9 @@ pub struct AppState {
     ms: meilisearch_sdk::Index,
 }
 
-#[tokio::main]
-async fn main() {
+pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
     dotenv().ok();
-
     let config = Config::init();
-
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                // axum logs rejections from built-in extractors with the `axum::rejection`
-                // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "fedi_print=debug,tower_http=debug,axum::rejection=trace".into()
-            }),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
 
     let s3_region = Region::Custom {
         region: config.s3_region.clone(),
@@ -77,12 +64,15 @@ async fn main() {
         .bucket;
         bucket.set_path_style();
     }
-    let sqlx_pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .connect(&config.database_url)
-        .await
-        .expect("can't connect to database");
+    let sqlx_pool = match pool {
+        Some(d) => d,
+        None => PgPoolOptions::new()
+            .max_connections(5)
+            .acquire_timeout(Duration::from_secs(3))
+            .connect(&config.database_url)
+            .await
+            .expect("can't connect to database"),
+    };
 
     let client =
         meilisearch_sdk::Client::new(&config.meilisearch_url, Some(&config.meilisearch_key));
@@ -100,12 +90,16 @@ async fn main() {
         .await
         .unwrap();
 
-    let state = Arc::new(AppState {
+    Arc::new(AppState {
         env: config,
         s3: bucket,
         pool: sqlx_pool,
         ms: client.index("fedi_print"),
-    });
+    })
+}
+
+pub async fn get_server() -> Router {
+    let state = get_state(None).await;
 
     let cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource
@@ -113,7 +107,7 @@ async fn main() {
         // allow requests from any origin
         .allow_origin(Any);
     // build our application with a single route
-    let app = Router::new()
+    Router::new()
         // .route("/", get(|| async { "Hello, World!" }))
         .layer(cors)
         .route("/api/v1/auth/create", post(v1::auth::create_user))
@@ -236,9 +230,25 @@ async fn main() {
             get(v1::model::get_newest_models),
         )
         .route("/api/v1/model", get(v1::model::get_model))
+        .route("/api/v1/search/model", get(v1::model::search_models))
         .with_state(state)
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+}
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                // axum logs rejections from built-in extractors with the `axum::rejection`
+                // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
+                "fedi_print=debug,tower_http=debug,axum::rejection=trace".into()
+            }),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, get_server().await).await.unwrap();
 }

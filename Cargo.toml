@@ -37,14 +37,21 @@ futures = "0.3.30"
 tokio-util = "0.7.10"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = "0.1"
+http-body-util = "0.1"
+mime = "0.3.17"
+
 # new db
-sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros" ] }
+sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros", "migrate" ] }
 # email
 lettre = "0.11"
 lettre_email = "0.9"
 email_address = "0.2"
 # search
 meilisearch-sdk = "0.25.0"
+
+
+[dev-dependencies]
+tower = { version = "0.4", features = ["util"] }
 
 [profile.dev]
 debug = 0

@@ -1,9 +1,8 @@
 use crate::helpers::{ensure_ap_header, AppResult};
 use crate::models::activitypub::{
-    FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, OrderedCollection,
-    OrderedItem, OutboxContext, OutboxDataPage, Tag,
+    FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteJoinedModel,
+    OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, Tag,
 };
-use crate::models::db::note::BoxNote;
 use crate::models::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
@@ -66,12 +65,10 @@ pub async fn get_outbox(
             .body(Body::from(serde_json::to_string(&return_data).unwrap()))
             .unwrap());
     }
-    let data = BoxNote::get_by_profile_id(&user.id, state.pool.clone()).await?;
+    let data = NoteJoinedModel::get_by_profile_id(&user.id, state.pool.clone()).await?;
     let mut ordered_items: Vec<OrderedItem> = vec![];
     for item in data {
-        let to = vec![
-            "https://www.w3.org/ns/activitystreams#Public".to_string(), // TODO Implement check for Audience
-        ];
+        let to = vec!["https://www.w3.org/ns/activitystreams#Public".to_string()];
         let cc = vec![format!(
             "{}/api/v1/user/{}/followers",
             state.env.public_url, &user.username
@@ -80,7 +77,9 @@ pub async fn get_outbox(
             type_field: "Create".to_string(),
             id: format!(
                 "{}/api/v1/user/{}/statuses/{}/activity",
-                state.env.public_url, &user.username, &item.id
+                state.env.public_url,
+                &user.username,
+                &item.note_id.or_else(|| item.model_id).unwrap()
             ),
             actor: user.server_id.to_string(),
             published: item.created_at.to_string(),
@@ -89,7 +88,9 @@ pub async fn get_outbox(
             object: json!(NoteBoxItemObject {
                 id: format!(
                     "{}/api/v1/user/{}/statuses/{}",
-                    state.env.public_url, &user.username, &item.id
+                    state.env.public_url,
+                    &user.username,
+                    &item.note_id.or_else(|| item.model_id).unwrap()
                 ),
                 type_field: "Note".to_string(),
                 to,
@@ -99,18 +100,26 @@ pub async fn get_outbox(
                 replies: NoteBoxItemReplies {
                     id: format!(
                         "{}/api/v1/user/{}/statuses/{}/replies",
-                        state.env.public_url, &user.username, &item.id
+                        state.env.public_url,
+                        &user.username,
+                        &item.note_id.or_else(|| item.model_id).unwrap()
                     ),
                     type_field: "Collection".to_string(),
                     first: NoteBoxItemFirst {
                         type_field: "CollectionPage".to_string(),
-                        next: "TO_BE_IMPLEMENTED".to_string(), // TODO
-                        // Example: https://mastodon.online/users/Mawoka/statuses/111952053623777585/replies?only_other_accounts=true&page=true
+                        next: format!(
+                            "{}/api/v1/user/{}/statuses/{}/replies?page=true",
+                            state.env.public_url,
+                            &user.username,
+                            &item.note_id.or_else(|| item.model_id).unwrap()
+                        ),
                         part_of: format!(
                             "{}/api/v1/user/{}/statuses/{}/replies",
-                            state.env.public_url, &user.username, &item.id
+                            state.env.public_url,
+                            &user.username,
+                            &item.note_id.or_else(|| item.model_id).unwrap()
                         ),
-                        items: vec![]
+                        items: item.first_reply_server_id.map_or(Vec::new(), |s| vec![s])
                     }
                 },
                 attachment: vec![],
@@ -119,7 +128,9 @@ pub async fn get_outbox(
                 published: item.created_at.to_string(),
                 url: format!(
                     "{}/@{}/statuses/{}",
-                    state.env.public_url, &user.username, &item.id
+                    state.env.public_url,
+                    &user.username,
+                    &item.note_id.or_else(|| item.model_id).unwrap()
                 ),
                 // in_reply_to: matchitem.in_reply_to_comment_id
                 in_reply_to: serde_json::Value::String("PLACEHOLDER".to_string())
