@@ -20,6 +20,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+#[cfg(test)]
 use uuid::{Uuid, uuid};
 
 pub mod helpers;

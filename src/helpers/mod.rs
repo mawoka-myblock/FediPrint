@@ -32,8 +32,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-where
-    E: std::error::Error,
+    where
+        E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -73,9 +73,9 @@ impl IntoResponse for AppError {
         let status = match self {
             AppError::SqlxError(error) => match error {
                 SqlxError::RowNotFound => StatusCode::NOT_FOUND,
-                SqlxError::Database(d) => match d.code() {
-                    Some(unique_error) => StatusCode::CONFLICT,
-                    _ => StatusCode::INTERNAL_SERVER_ERROR
+                SqlxError::Database(d) => {
+                    let e = d.code();
+                    if e == Some(unique_error) { StatusCode::CONFLICT } else { StatusCode::INTERNAL_SERVER_ERROR }
                 }
                 _ => StatusCode::INTERNAL_SERVER_ERROR,
             },

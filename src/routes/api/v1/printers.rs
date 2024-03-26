@@ -90,6 +90,7 @@ mod tests {
     use super::*;
     use crate::get_state;
     use axum::http::StatusCode;
+    use http_body_util::BodyExt;
     use sqlx::PgPool;
     use crate::models::db::ModifiedScale;
 
@@ -120,5 +121,21 @@ mod tests {
         );
         let res = create_printer(ext.clone(), State(state.clone()), Json(too_big)).await.into_response();
         assert_eq!(res.status(), StatusCode::PAYLOAD_TOO_LARGE)
+    }
+
+    use std::clone::Clone;
+    use serde_json::Value;
+
+
+    #[sqlx::test(fixtures("basic_user", "private_printers"))]
+    async fn test_get_all_printers(pool: PgPool) {
+        let state = State(get_state(Some(pool.clone())).await);
+        let ext: Extension<UserState> = Extension(UserState::get_fake(pool.clone()).await);
+        let res = get_all_printers(ext.clone(), state.clone()).await.into_response();
+        assert_eq!(res.status(), StatusCode::OK);
+        let b = res.into_body();
+        let j: Value = serde_json::from_slice(&*b.collect().await.unwrap().to_bytes()).unwrap();
+        let j_s = j.to_string();
+        assert!(j_s.contains("Printer") && j_s.contains("Printer2"))
     }
 }

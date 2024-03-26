@@ -9,12 +9,18 @@ use jsonwebtoken::{
 use openssl::pkey::{PKey, Private};
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use openssl::rsa::Rsa;
-use sqlx::PgPool;
 use uuid::Uuid;
-use crate::models::db::account::FullAccount;
-use crate::models::db::profile::FullProfile;
+
+#[cfg(test)]
+use openssl::rsa::Rsa;
+#[cfg(test)]
+use sqlx::PgPool;
+#[cfg(test)]
 use crate::{TEST_ACCOUNT_UUID, TEST_PROFILE_UUID};
+#[cfg(test)]
+use crate::models::db::account::FullAccount;
+#[cfg(test)]
+use crate::models::db::profile::FullProfile;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
