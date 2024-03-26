@@ -4,7 +4,7 @@ services:
 #      context: pg_uuidv7
 #      args:
 #        PG_MAJOR_VERSION: 16
-    image: postgres-uuidv7:latest
+    image: ghcr.io/mawoka-myblock/pg_uuidv7:main
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fedi_print
