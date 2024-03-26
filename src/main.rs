@@ -20,6 +20,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use uuid::{Uuid, uuid};
 
 pub mod helpers;
 pub mod models;
@@ -31,6 +32,11 @@ pub struct AppState {
     pool: PgPool,
     ms: meilisearch_sdk::Index,
 }
+
+#[cfg(test)]
+pub static TEST_ACCOUNT_UUID: Uuid = uuid!("018e7b20-51e5-79c2-878e-02d01f941165");
+#[cfg(test)]
+pub static TEST_PROFILE_UUID: Uuid = uuid!("018e7b20-51bd-703a-96c6-9c70cc723c67");
 
 pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
     dotenv().ok();

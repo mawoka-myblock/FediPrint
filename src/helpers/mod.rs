@@ -4,6 +4,7 @@ pub mod middleware;
 pub mod search;
 pub mod sign;
 
+use std::borrow::Cow;
 use axum::body::Body;
 use axum::http::header::ToStrError;
 use axum::http::HeaderMap;
@@ -68,9 +69,14 @@ impl From<ms_error> for AppError {
 // This centralizes all different errors from our app in one place
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
+        let unique_error = Cow::from("23505");
         let status = match self {
             AppError::SqlxError(error) => match error {
                 SqlxError::RowNotFound => StatusCode::NOT_FOUND,
+                SqlxError::Database(d) => match d.code() {
+                    Some(unique_error) => StatusCode::CONFLICT,
+                    _ => StatusCode::INTERNAL_SERVER_ERROR
+                }
                 _ => StatusCode::INTERNAL_SERVER_ERROR,
             },
             AppError::MeiliSearchError(_) => StatusCode::INTERNAL_SERVER_ERROR,

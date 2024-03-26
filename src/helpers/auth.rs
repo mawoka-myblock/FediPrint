@@ -9,7 +9,12 @@ use jsonwebtoken::{
 use openssl::pkey::{PKey, Private};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use openssl::rsa::Rsa;
+use sqlx::PgPool;
 use uuid::Uuid;
+use crate::models::db::account::FullAccount;
+use crate::models::db::profile::FullProfile;
+use crate::{TEST_ACCOUNT_UUID, TEST_PROFILE_UUID};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
@@ -48,6 +53,7 @@ pub struct UserState {
     pub private_key: PKey<Private>,
 }
 
+
 impl UserState {
     pub fn from_claims(input: Claims, key: &str) -> anyhow::Result<UserState> {
         use base64::{engine::general_purpose, Engine as _};
@@ -64,6 +70,24 @@ impl UserState {
             exp: input.exp,
             private_key,
         })
+    }
+    #[cfg(test)]
+    pub async fn get_fake(pool: PgPool) -> UserState {
+        let account = FullAccount::get_by_id(&TEST_ACCOUNT_UUID, pool.clone()).await.unwrap();
+        let profile = FullProfile::get_by_id(&TEST_PROFILE_UUID, pool.clone()).await.unwrap();
+        let rsa_key = Rsa::private_key_from_pem(account.private_key.as_ref()).unwrap();
+        let pkey = PKey::from_rsa(rsa_key).unwrap();
+        UserState {
+            sub: account.id,
+            email: account.email,
+            username: profile.username,
+            display_name: profile.display_name,
+            profile_id: profile.id,
+            server_id: profile.server_id,
+            iat: 123456i64,
+            exp: 123456i64,
+            private_key: pkey,
+        }
     }
 }
 
@@ -85,7 +109,7 @@ pub fn generate_jwt(input_claims: InputClaims, secret: String) -> String {
         &claims,
         &EncodingKey::from_secret(secret.as_ref()),
     )
-    .unwrap()
+        .unwrap()
 }
 
 pub fn read_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, errors::Error> {
@@ -104,6 +128,7 @@ impl fmt::Display for FailedToCheckToken {
         write!(f, "FailedToCheckToken")
     }
 }
+
 impl std::error::Error for FailedToCheckToken {}
 
 pub fn check_if_token_was_valid(jwt: String, secret: String) -> Result<Claims, FailedToCheckToken> {

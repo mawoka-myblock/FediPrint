@@ -7,7 +7,7 @@ pub mod note;
 pub mod printer;
 pub mod profile;
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type, Clone)]
 #[sqlx(type_name = "modified_scale", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ModifiedScale {
     NoMods,

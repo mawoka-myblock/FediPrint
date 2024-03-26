@@ -2,7 +2,7 @@ use crate::models::db::ModifiedScale;
 use serde_derive::Deserialize;
 use uuid::Uuid;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct CreatePrinter {
     pub name: String,
     pub manufacturer: String,

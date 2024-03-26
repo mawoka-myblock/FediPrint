@@ -149,6 +149,7 @@ CREATE TABLE printer
     description            text,
     "modified_scale"       modified_scale DEFAULT 'NO_MODS'::modified_scale                  NOT NULL
 );
+ALTER TABLE printer ADD UNIQUE (name, manufacturer, profile_id);
 
 CREATE TABLE likes
 (
