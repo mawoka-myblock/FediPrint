@@ -1,9 +1,10 @@
 services:
   db:
-    build:
-      context: pg_uuidv7
-      args:
-        PG_MAJOR_VERSION: 16
+#    build:
+#      context: pg_uuidv7
+#      args:
+#        PG_MAJOR_VERSION: 16
+    image: postgres-uuidv7:latest
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fedi_print
