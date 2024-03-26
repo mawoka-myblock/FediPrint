@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Compile Custom Postgres
         uses: docker/build-push-action@v5
         with:
