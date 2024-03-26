@@ -7,6 +7,7 @@ on:
       - "Cargo.lock"
       - "prusaslicer/**"
       - "migrations/**"
+      - ".github/workflows/run-tests.yaml"
   workflow_dispatch:
 
 jobs:
@@ -20,6 +21,8 @@ jobs:
         with:
           submodules: true
       - run: rustup update stable && rustup default stable
+      - name: Setup .env
+        run: cp .env.example .env
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-tarpaulin
