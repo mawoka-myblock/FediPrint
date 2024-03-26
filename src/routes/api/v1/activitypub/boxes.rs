@@ -79,7 +79,7 @@ pub async fn get_outbox(
                 "{}/api/v1/user/{}/statuses/{}/activity",
                 state.env.public_url,
                 &user.username,
-                &item.note_id.or_else(|| item.model_id).unwrap()
+                &item.note_id.or(item.model_id).unwrap()
             ),
             actor: user.server_id.to_string(),
             published: item.created_at.to_string(),
@@ -90,7 +90,7 @@ pub async fn get_outbox(
                     "{}/api/v1/user/{}/statuses/{}",
                     state.env.public_url,
                     &user.username,
-                    &item.note_id.or_else(|| item.model_id).unwrap()
+                    &item.note_id.or(item.model_id).unwrap()
                 ),
                 type_field: "Note".to_string(),
                 to,
@@ -102,7 +102,7 @@ pub async fn get_outbox(
                         "{}/api/v1/user/{}/statuses/{}/replies",
                         state.env.public_url,
                         &user.username,
-                        &item.note_id.or_else(|| item.model_id).unwrap()
+                        &item.note_id.or(item.model_id).unwrap()
                     ),
                     type_field: "Collection".to_string(),
                     first: NoteBoxItemFirst {
@@ -111,13 +111,13 @@ pub async fn get_outbox(
                             "{}/api/v1/user/{}/statuses/{}/replies?page=true",
                             state.env.public_url,
                             &user.username,
-                            &item.note_id.or_else(|| item.model_id).unwrap()
+                            &item.note_id.or(item.model_id).unwrap()
                         ),
                         part_of: format!(
                             "{}/api/v1/user/{}/statuses/{}/replies",
                             state.env.public_url,
                             &user.username,
-                            &item.note_id.or_else(|| item.model_id).unwrap()
+                            &item.note_id.or(item.model_id).unwrap()
                         ),
                         items: item.first_reply_server_id.map_or(Vec::new(), |s| vec![s])
                     }
@@ -130,7 +130,7 @@ pub async fn get_outbox(
                     "{}/@{}/statuses/{}",
                     state.env.public_url,
                     &user.username,
-                    &item.note_id.or_else(|| item.model_id).unwrap()
+                    &item.note_id.or(item.model_id).unwrap()
                 ),
                 // in_reply_to: matchitem.in_reply_to_comment_id
                 in_reply_to: serde_json::Value::String("PLACEHOLDER".to_string())

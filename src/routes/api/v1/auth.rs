@@ -81,10 +81,10 @@ pub async fn create_user(
     .create(state.pool.clone())
     .await?;
 
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::CREATED)
         .body(Body::from(""))
-        .unwrap());
+        .unwrap())
 }
 
 #[derive(Deserialize)]

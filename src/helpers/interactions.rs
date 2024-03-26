@@ -56,7 +56,7 @@ pub async fn create_remote_profile(
         outbox: ap_profile_response.outbox,
         public_key: ap_profile_response.public_key.public_key_pem,
         registered_at: DateTime::from(chrono::DateTime::parse_from_rfc3339(
-            &*ap_profile_response.published,
+            &ap_profile_response.published,
         )?),
     }
     .create(pool.clone())

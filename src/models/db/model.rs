@@ -41,7 +41,7 @@ impl CreateModel {
         )
         .execute(&pool)
         .await?;
-        return Ok(ret_data);
+        Ok(ret_data)
     }
 }
 

@@ -55,9 +55,9 @@ pub async fn auth_middleware(
 
     let new_jwt = generate_jwt(
         InputClaims {
-            sub: invalid_claims.sub.clone(),
+            sub: invalid_claims.sub,
             email: invalid_claims.email.clone(),
-            profile_id: invalid_claims.profile_id.clone(),
+            profile_id: invalid_claims.profile_id,
             username: invalid_claims.username.clone(),
             display_name: invalid_claims.display_name.clone(),
             server_id: invalid_claims.server_id.clone(),
@@ -76,9 +76,9 @@ pub async fn auth_middleware(
         .insert(UserState::from_claims(invalid_claims, &data.env.jwt_secret).unwrap());
     let mut resp = next.run(req).await;
     resp.headers_mut()
-        .insert(SET_COOKIE, HeaderValue::from_str(&*auth_cookie).unwrap());
+        .insert(SET_COOKIE, HeaderValue::from_str(&auth_cookie).unwrap());
 
-    return Ok(resp);
+    Ok(resp)
 
     /*    let user_id = uuid::Uuid::parse_str(&claims.sub).map_err(|_| {
         let json_error = ErrorResponse {

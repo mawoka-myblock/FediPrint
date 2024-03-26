@@ -23,7 +23,7 @@ pub async fn create_model(
     Json(input): Json<CreateModel>,
 ) -> AppResult<impl IntoResponse> {
     // let mut images_vec: Vec<file::UniqueWhereParam> = vec![];
-    if input.images.len() < 1 || input.files.len() < 1 {
+    if input.images.is_empty() || input.files.is_empty() {
         return Ok(Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(Body::from("Images and/or files are missing"))
@@ -120,11 +120,11 @@ pub async fn get_newest_models(
         state.pool.clone(),
     )
     .await?;
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&models).unwrap()))
-        .unwrap());
+        .unwrap())
 }
 
 #[derive(Deserialize)]
@@ -138,11 +138,11 @@ pub async fn get_model(
     query: Query<GetModelQuery>,
 ) -> AppResult<impl IntoResponse> {
     let model = FullModelWithRelationsIds::get_by_id(&query.id, state.pool.clone()).await?;
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&model).unwrap()))
-        .unwrap());
+        .unwrap())
 }
 
 #[derive(Deserialize, Serialize)]
@@ -157,11 +157,11 @@ pub async fn search_models(
     query: Query<SearchModelsQuery>,
 ) -> AppResult<impl IntoResponse> {
     let data = search(&query.q, query.page, 20i64, &state.ms).await?;
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&data).unwrap()))
-        .unwrap());
+        .unwrap())
 }
 
 /*#[cfg(test)]

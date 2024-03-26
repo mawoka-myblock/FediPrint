@@ -10,7 +10,7 @@ fn sign_data_to_base64(key: PKey<Private>, data: &[u8]) -> anyhow::Result<String
     let mut signer = Signer::new(MessageDigest::sha256(), &key)?;
     signer.update(data)?;
     let signature_vec = signer.sign_to_vec()?;
-    Ok(general_purpose::STANDARD.encode(&signature_vec))
+    Ok(general_purpose::STANDARD.encode(signature_vec))
 }
 
 fn get_now_in_format() -> String {
@@ -39,13 +39,13 @@ pub fn sign_get_request_by_url(
     key: PKey<Private>,
     key_id: String,
 ) -> anyhow::Result<String> {
-    let url = Url::parse(&*url)?;
+    let url = Url::parse(&url)?;
     let host = match url.host_str() {
         Some(d) => d,
         None => bail!("Host is none"),
     };
     let path = url.path();
-    Ok(sign_get_request_by_details(path, host, key, key_id)?)
+    sign_get_request_by_details(path, host, key, key_id)
 }
 
 pub fn sign_post_request_with_hash(
@@ -76,7 +76,7 @@ pub fn sign_post_request_with_body(
     let mut hasher = sha::Sha256::new();
     hasher.update(body_hash);
     let hash = general_purpose::STANDARD.encode(hasher.finish());
-    let url = Url::parse(&*url)?;
+    let url = Url::parse(url)?;
     let host = match url.host_str() {
         Some(d) => d,
         None => bail!("Host is none"),

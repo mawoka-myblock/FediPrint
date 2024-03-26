@@ -17,7 +17,7 @@ pub async fn create_printer(
     State(state): State<Arc<AppState>>,
     Json(input): Json<CreatePrinter>,
 ) -> AppResult<impl IntoResponse> {
-    if (&input.slicer_config).is_some() && input.slicer_config.as_ref().unwrap().len() > 60000 {
+    if input.slicer_config.is_some() && input.slicer_config.as_ref().unwrap().len() > 60000 {
         return Ok(Response::builder()
             .status(StatusCode::PAYLOAD_TOO_LARGE)
             .body(Body::from("Slicer Config bigger than 60KB."))
@@ -60,7 +60,7 @@ pub async fn update_printer(
     State(state): State<Arc<AppState>>,
     Json(input): Json<UpdatePrinter>,
 ) -> AppResult<impl IntoResponse> {
-    if (&input.slicer_config).is_some() && input.slicer_config.as_ref().unwrap().len() > 60000 {
+    if input.slicer_config.is_some() && input.slicer_config.as_ref().unwrap().len() > 60000 {
         return Ok(Response::builder()
             .status(StatusCode::PAYLOAD_TOO_LARGE)
             .body(Body::from("Slicer Config bigger than 60KB."))

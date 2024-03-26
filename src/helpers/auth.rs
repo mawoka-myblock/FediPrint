@@ -8,6 +8,7 @@ use jsonwebtoken::{
 };
 use openssl::pkey::{PKey, Private};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -95,7 +96,17 @@ pub fn read_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, errors
     )
 }
 
-pub fn check_if_token_was_valid(jwt: String, secret: String) -> Result<Claims, ()> {
+#[derive(Debug)]
+pub struct FailedToCheckToken;
+
+impl fmt::Display for FailedToCheckToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "FailedToCheckToken")
+    }
+}
+impl std::error::Error for FailedToCheckToken {}
+
+pub fn check_if_token_was_valid(jwt: String, secret: String) -> Result<Claims, FailedToCheckToken> {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = false;
     let jwt_data = match decode::<Claims>(
@@ -103,20 +114,17 @@ pub fn check_if_token_was_valid(jwt: String, secret: String) -> Result<Claims, (
         &DecodingKey::from_secret(secret.as_ref()),
         &validation,
     ) {
-        Err(_) => return Err(()),
+        Err(_) => return Err(FailedToCheckToken),
         Ok(d) => d,
     };
     let expiration_timestamp = jwt_data.claims.exp;
     let six_months_ago = Utc::now() - Duration::days(30);
-    let exp_ts: i64 = match expiration_timestamp.try_into() {
-        Ok(d) => d,
-        Err(_) => return Err(()),
-    };
-    return if exp_ts >= six_months_ago.timestamp() {
+    let exp_ts: i64 = expiration_timestamp;
+    if exp_ts >= six_months_ago.timestamp() {
         Ok(jwt_data.claims)
     } else {
-        Err(())
-    };
+        Err(FailedToCheckToken)
+    }
 }
 
 pub fn get_password_hash(password: String) -> String {

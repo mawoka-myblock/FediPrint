@@ -66,7 +66,7 @@ pub async fn index_model(model: &FullModel, profile_id: &Uuid, index: &Index) ->
         content: model.description.clone(),
         summary: Some(model.summary.clone()),
         tags: model.tags.clone(),
-        profile_id: profile_id.clone(),
+        profile_id: *profile_id,
         created_at: model.created_at,
         updated_at: model.updated_at,
         record_type: RecordType::Note,
@@ -90,7 +90,7 @@ pub async fn index_note(note: &FullNote, profile_id: &Uuid, index: &Index) -> Re
         tags: note.hashtags.clone(),
         updated_at: note.updated_at,
         created_at: note.created_at,
-        profile_id: profile_id.clone(),
+        profile_id: *profile_id,
         record_type: RecordType::Note,
     }
     .index(index)
@@ -130,11 +130,7 @@ pub struct SafeSearchResults {
 impl SafeSearchResults {
     pub fn from_ms(d: SearchResults<MsModel>) -> SafeSearchResults {
         SafeSearchResults {
-            hits: d
-                .hits
-                .iter()
-                .map(|a| SafeSearchResult::from_ms(a))
-                .collect(),
+            hits: d.hits.iter().map(SafeSearchResult::from_ms).collect(),
             offset: d.offset,
             limit: d.limit,
             estimated_total_hits: d.estimated_total_hits,

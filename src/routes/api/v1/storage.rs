@@ -94,11 +94,11 @@ pub async fn upload_file(
     }
     .create(state.pool.clone())
     .await?;
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&file_data).unwrap()))
-        .unwrap());
+        .unwrap())
 }
 
 #[debug_handler]
@@ -117,11 +117,11 @@ pub async fn edit_file_metadata(
     .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
     .await?;
 
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&data).unwrap()))
-        .unwrap());
+        .unwrap())
 }
 
 #[derive(Deserialize)]
@@ -148,11 +148,11 @@ pub async fn list_own_files(
         state.pool.clone(),
     )
     .await?;
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
         .body(Body::from(serde_json::to_string(&files).unwrap()))
-        .unwrap());
+        .unwrap())
 }
 
 #[derive(Deserialize)]
@@ -169,14 +169,11 @@ pub async fn delete_file(
     let file =
         FullFile::get_by_id_and_profile_id(&query.id, &claims.profile_id, state.pool.clone())
             .await?;
-    let d = state
-        .s3
-        .delete_object(format!("/{}", file.id.to_string()))
-        .await?;
+    let d = state.s3.delete_object(format!("/{}", file.id)).await?;
     debug!("S3 Response: {:?}", d);
     file.delete(state.pool.clone()).await?;
-    return Ok(Response::builder()
+    Ok(Response::builder()
         .status(StatusCode::OK)
         .body(Body::from(""))
-        .unwrap());
+        .unwrap())
 }
