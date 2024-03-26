@@ -32,6 +32,7 @@ jobs:
           cache-from: type=gha
           push: false
           cache-to: type=gha,mode=max
+          outputs: imageid=postgres-uuidv7:latest
       - run: rustup update stable && rustup default stable
       - name: Setup .env
         run: cp .env.example .env
