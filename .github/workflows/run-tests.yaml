@@ -1,0 +1,43 @@
+name: Cargo Test
+on:
+  push:
+    paths:
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "prusaslicer/**"
+      - "migrations/**"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+          - nightly
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
+      - name: Deoply docker deps
+        run: docker compose -f "docker-compose.yml" up -d --build
+#      - run: cargo build --verbose
+#      - run: cargo test --verbose
+      - uses: Swatinem/rust-cache@v2
+      - name: Run tests & Coverage
+        run: cargo tarpaulin --all-features --workspace --out Xml --engine=llvm
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: mawoka-myblock/FediPrint
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down

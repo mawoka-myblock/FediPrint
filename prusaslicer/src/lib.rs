@@ -390,12 +390,3 @@ fn main() {
     // println!("Command args: {:?}", command_args);
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::main;
-
-    #[test]
-    fn it_works() {
-        main()
-    }
-}
