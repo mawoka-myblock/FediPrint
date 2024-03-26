@@ -26,11 +26,15 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-tarpaulin
-      - name: Deoply docker deps
+      - name: Deploy docker deps
         run: docker compose -f "docker-compose.yml" up -d --build
 #      - run: cargo build --verbose
 #      - run: cargo test --verbose
       - uses: Swatinem/rust-cache@v2
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
+      - name: Apply migrations
+        run: sqlx mig run
       - name: Run tests & Coverage
         run: cargo tarpaulin --all-features --workspace --out Xml --engine=llvm
       - name: Upload coverage reports to Codecov
