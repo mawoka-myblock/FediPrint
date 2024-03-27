@@ -48,7 +48,7 @@ impl ExtendedCreateProfile {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq, sqlx::FromRow)]
+#[derive(Serialize, Debug, PartialEq, sqlx::FromRow, Clone)]
 pub struct FullProfile {
     pub id: Uuid,
     pub username: String,
@@ -86,12 +86,15 @@ impl FullProfile {
         printables_profile: &str,
         pool: PgPool,
     ) -> Result<FullProfile, Error> {
-        sqlx::query_as!(
-            FullProfile,
+        sqlx::query!(
             r#"UPDATE profile SET linked_printables_profile = $1 WHERE id = $2;"#,
             printables_profile,
             self.id
-        )
+        ).execute(&pool).await?;
+        let mut profile = self.clone();
+        profile.linked_printables_profile = Some(printables_profile.to_string());
+        Ok(profile)
+
     }
 }
 

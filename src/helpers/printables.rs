@@ -1,10 +1,7 @@
-use crate::models::db::profile::FullProfile;
-use anyhow::bail;
 use reqwest::header::CONTENT_TYPE;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
-use std::fmt;
 use uuid::Uuid;
 
 const PROFILE_QUERY: &str = r#"{\"query\":\"query UserProfileSocial($id: ID) {\\n\\tuser(id: $id) {\\n\\t\\tid\\n\\t\\tpublicUsername\\n\\t\\tavatarFilePath\\n\\t\\thandle\\n\\t\\thandle\\n\\t\\tpublicUsername\\n\\t\\temail\\n\\t\\tmakesCount\\n\\t\\tdateCreated\\n\\t\\tbio\\n\\t\\tsocialLinks {\\n\\t\\t\\tid\\n\\t\\t\\tsocialType\\n\\t\\t\\turl\\n\\t\\t}\\n\\t\\tprinters {\\n\\t\\t\\tid\\n\\t\\t\\tname\\n\\t\\t}\\n\\t}\\n}\\n\",\"operationName\":\"UserProfileSocial\",\"variables\":{\"id\":\"@_USERNAME_\"}}"#;
@@ -39,14 +36,14 @@ pub struct Printer {
     pub name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CheckPrintablesProfile {
     UserNotFound,
     LinkNotFound,
     IsOk,
 }
 
-pub async fn get_printables_profile(printables_username: &str) -> anyhow::Result<Option<User>> {
+pub async fn get_printables_profile(printables_username: &str) -> Result<Option<User>, reqwest::Error> {
     let gql_query = PROFILE_QUERY.replace("_USERNAME_", printables_username);
     let client = reqwest::Client::new();
     let res = client
@@ -61,15 +58,18 @@ pub async fn get_printables_profile(printables_username: &str) -> anyhow::Result
         Some(d) => d.get("user").unwrap(),
         None => return Ok(None),
     };
-    Ok(Some(serde_json::from_value::<User>(data.clone())?))
+    Ok(serde_json::from_value::<User>(data.clone()).ok())
 }
 
 pub async fn check_printables_profile(
     printables_username: &str,
     profile_id: &Uuid,
     base_url: &str,
-) -> anyhow::Result<CheckPrintablesProfile> {
-    let user: User = get_printables_profile(printables_username)?;
+) -> Result<CheckPrintablesProfile, reqwest::Error> {
+    let user: User = match get_printables_profile(printables_username).await? {
+        Some(d) => d,
+        None => return Ok(CheckPrintablesProfile::UserNotFound)
+    };
     let wanted_url = format!("{}/links/printables/{}", base_url, profile_id);
     for l in user.social_links {
         if wanted_url == l.url {
