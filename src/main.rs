@@ -21,7 +21,7 @@ use tower_http::trace::TraceLayer;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 #[cfg(test)]
-use uuid::{Uuid, uuid};
+use uuid::{uuid, Uuid};
 
 pub mod helpers;
 pub mod models;

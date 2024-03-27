@@ -4,7 +4,6 @@ pub mod middleware;
 pub mod search;
 pub mod sign;
 
-use std::borrow::Cow;
 use axum::body::Body;
 use axum::http::header::ToStrError;
 use axum::http::HeaderMap;
@@ -16,6 +15,7 @@ use axum::{
 use meilisearch_sdk::errors::Error as ms_error;
 use s3::error::S3Error;
 use sqlx::Error as SqlxError;
+use std::borrow::Cow;
 use std::str::FromStr;
 use tracing::debug;
 
@@ -32,8 +32,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-    where
-        E: std::error::Error,
+where
+    E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -75,7 +75,11 @@ impl IntoResponse for AppError {
                 SqlxError::RowNotFound => StatusCode::NOT_FOUND,
                 SqlxError::Database(d) => {
                     let e = d.code();
-                    if e == Some(unique_error) { StatusCode::CONFLICT } else { StatusCode::INTERNAL_SERVER_ERROR }
+                    if e == Some(unique_error) {
+                        StatusCode::CONFLICT
+                    } else {
+                        StatusCode::INTERNAL_SERVER_ERROR
+                    }
                 }
                 _ => StatusCode::INTERNAL_SERVER_ERROR,
             },

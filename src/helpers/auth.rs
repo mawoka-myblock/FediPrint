@@ -12,15 +12,15 @@ use std::fmt;
 use uuid::Uuid;
 
 #[cfg(test)]
-use openssl::rsa::Rsa;
-#[cfg(test)]
-use sqlx::PgPool;
-#[cfg(test)]
-use crate::{TEST_ACCOUNT_UUID, TEST_PROFILE_UUID};
-#[cfg(test)]
 use crate::models::db::account::FullAccount;
 #[cfg(test)]
 use crate::models::db::profile::FullProfile;
+#[cfg(test)]
+use crate::{TEST_ACCOUNT_UUID, TEST_PROFILE_UUID};
+#[cfg(test)]
+use openssl::rsa::Rsa;
+#[cfg(test)]
+use sqlx::PgPool;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
@@ -59,7 +59,6 @@ pub struct UserState {
     pub private_key: PKey<Private>,
 }
 
-
 impl UserState {
     pub fn from_claims(input: Claims, key: &str) -> anyhow::Result<UserState> {
         use base64::{engine::general_purpose, Engine as _};
@@ -79,8 +78,12 @@ impl UserState {
     }
     #[cfg(test)]
     pub async fn get_fake(pool: PgPool) -> UserState {
-        let account = FullAccount::get_by_id(&TEST_ACCOUNT_UUID, pool.clone()).await.unwrap();
-        let profile = FullProfile::get_by_id(&TEST_PROFILE_UUID, pool.clone()).await.unwrap();
+        let account = FullAccount::get_by_id(&TEST_ACCOUNT_UUID, pool.clone())
+            .await
+            .unwrap();
+        let profile = FullProfile::get_by_id(&TEST_PROFILE_UUID, pool.clone())
+            .await
+            .unwrap();
         let rsa_key = Rsa::private_key_from_pem(account.private_key.as_ref()).unwrap();
         let pkey = PKey::from_rsa(rsa_key).unwrap();
         UserState {
@@ -115,7 +118,7 @@ pub fn generate_jwt(input_claims: InputClaims, secret: String) -> String {
         &claims,
         &EncodingKey::from_secret(secret.as_ref()),
     )
-        .unwrap()
+    .unwrap()
 }
 
 pub fn read_jwt(jwt: String, secret: String) -> Result<TokenData<Claims>, errors::Error> {

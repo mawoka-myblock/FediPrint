@@ -105,3 +105,84 @@ pub async fn handler(
         .body(Body::from(serde_json::to_string(&wf_data).unwrap()))
         .unwrap())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::get_state;
+    use axum::http::StatusCode;
+    use http_body_util::BodyExt;
+    use sqlx::PgPool;
+    use std::clone::Clone;
+
+    #[sqlx::test(fixtures("../api/v1/fixtures/basic_user.sql"))]
+    async fn test_webfinger_handler(pool: PgPool) {
+        let state = State(get_state(Some(pool.clone())).await);
+        // let ext: Extension<UserState> = Extension(UserState::get_fake(pool.clone()).await);
+        // Get simple user
+        let res = handler(
+            state.clone(),
+            Query(WebfingerQuery {
+                resource: "acct:testuser@localhost.local".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(
+            res.headers().get("Content-Type").unwrap(),
+            "application/jrd+json; charset=utf-8"
+        );
+        let j: Webfinger =
+            serde_json::from_slice(&*res.into_body().collect().await.unwrap().to_bytes()).unwrap();
+        assert_eq!(j.subject, "acct:testuser@localhost.local");
+        // Check correctness of server
+        let res = handler(
+            state.clone(),
+            Query(WebfingerQuery {
+                resource: "acct:testuser@mastodon.online".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        // Check existance of username
+        let res = handler(
+            state.clone(),
+            Query(WebfingerQuery {
+                resource: "acct:@mastodon.online".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        let res = handler(
+            state.clone(),
+            Query(WebfingerQuery {
+                resource: "acct:mastodon.online".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        // Check existance of Server
+        let res = handler(
+            state.clone(),
+            Query(WebfingerQuery {
+                resource: "acct:testuser@".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        let res = handler(
+            state.clone(),
+            Query(WebfingerQuery {
+                resource: "acct:testuser".to_string(),
+            }),
+        )
+        .await
+        .into_response();
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+}

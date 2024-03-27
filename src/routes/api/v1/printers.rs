@@ -33,8 +33,8 @@ pub async fn create_printer(
         description: input.description,
         modified_scale: input.modified_scale,
     }
-        .create(state.pool.clone())
-        .await?;
+    .create(state.pool.clone())
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
@@ -76,8 +76,8 @@ pub async fn update_printer(
         description: input.description,
         modified_scale: input.modified_scale,
     }
-        .update_by_id_and_profile_id(&input.id, &claims.profile_id, state.pool.clone())
-        .await?;
+    .update_by_id_and_profile_id(&input.id, &claims.profile_id, state.pool.clone())
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -89,12 +89,12 @@ pub async fn update_printer(
 mod tests {
     use super::*;
     use crate::get_state;
+    use crate::models::db::ModifiedScale;
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
-    use sqlx::PgPool;
-    use crate::models::db::ModifiedScale;
-    use std::clone::Clone;
     use serde_json::Value;
+    use sqlx::PgPool;
+    use std::clone::Clone;
     use uuid::uuid;
 
     #[sqlx::test(fixtures("basic_user"))]
@@ -110,28 +110,36 @@ mod tests {
             public: true,
             slicer_config_public: true,
         };
-        let res = create_printer(ext.clone(), State(state.clone()), Json(printer.clone())).await.into_response();
+        let res = create_printer(ext.clone(), State(state.clone()), Json(printer.clone()))
+            .await
+            .into_response();
         assert_eq!(res.status(), StatusCode::CREATED);
         // Test duplicate
-        let res = create_printer(ext.clone(), State(state.clone()), Json(printer.clone())).await.into_response();
+        let res = create_printer(ext.clone(), State(state.clone()), Json(printer.clone()))
+            .await
+            .into_response();
         assert_eq!(res.status(), StatusCode::CONFLICT);
         // Test slicer_config too big
         let mut too_big = printer.clone();
-        too_big.slicer_config = Some(std::iter::repeat("x")
-            .take(70 * 1000)
-            .map(|c| c.parse::<char>().unwrap())
-            .collect()
+        too_big.slicer_config = Some(
+            std::iter::repeat("x")
+                .take(70 * 1000)
+                .map(|c| c.parse::<char>().unwrap())
+                .collect(),
         );
-        let res = create_printer(ext.clone(), State(state.clone()), Json(too_big)).await.into_response();
+        let res = create_printer(ext.clone(), State(state.clone()), Json(too_big))
+            .await
+            .into_response();
         assert_eq!(res.status(), StatusCode::PAYLOAD_TOO_LARGE)
     }
-
 
     #[sqlx::test(fixtures("basic_user", "private_printers"))]
     async fn test_get_all_printers(pool: PgPool) {
         let state = State(get_state(Some(pool.clone())).await);
         let ext: Extension<UserState> = Extension(UserState::get_fake(pool.clone()).await);
-        let res = get_all_printers(ext.clone(), state.clone()).await.into_response();
+        let res = get_all_printers(ext.clone(), state.clone())
+            .await
+            .into_response();
         assert_eq!(res.status(), StatusCode::OK);
         let b = res.into_body();
         let j: Value = serde_json::from_slice(&*b.collect().await.unwrap().to_bytes()).unwrap();
@@ -153,19 +161,31 @@ mod tests {
             description: Some("UpdatedDescription".to_string()),
             manufacturer: "UpdatedManufacturer".to_string(),
         };
-        let res = update_printer(ext.clone(), state.clone(), Json(update_data.clone())).await.into_response();
+        let res = update_printer(ext.clone(), state.clone(), Json(update_data.clone()))
+            .await
+            .into_response();
         assert_eq!(res.status(), StatusCode::OK);
-        let j: Value = serde_json::from_slice(&*res.into_body().collect().await.unwrap().to_bytes()).unwrap();
-        assert_eq!(j.get("name"), Some(Value::from(update_data.name.clone())).as_ref());
-        assert_eq!(j.get("id"), Some(Value::from(update_data.id.to_string())).as_ref());
+        let j: Value =
+            serde_json::from_slice(&*res.into_body().collect().await.unwrap().to_bytes()).unwrap();
+        assert_eq!(
+            j.get("name"),
+            Some(Value::from(update_data.name.clone())).as_ref()
+        );
+        assert_eq!(
+            j.get("id"),
+            Some(Value::from(update_data.id.to_string())).as_ref()
+        );
         // Test Payload too large
         let mut too_big = update_data.clone();
-        too_big.slicer_config = Some(std::iter::repeat("x")
-            .take(70 * 1000)
-            .map(|c| c.parse::<char>().unwrap())
-            .collect()
+        too_big.slicer_config = Some(
+            std::iter::repeat("x")
+                .take(70 * 1000)
+                .map(|c| c.parse::<char>().unwrap())
+                .collect(),
         );
-        let res = update_printer(ext.clone(), state.clone(), Json(too_big)).await.into_response();
+        let res = update_printer(ext.clone(), state.clone(), Json(too_big))
+            .await
+            .into_response();
         assert_eq!(res.status(), StatusCode::PAYLOAD_TOO_LARGE);
     }
 }
