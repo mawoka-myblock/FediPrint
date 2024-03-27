@@ -1,11 +1,11 @@
-use std::fmt;
+use crate::models::db::profile::FullProfile;
 use anyhow::bail;
 use reqwest::header::CONTENT_TYPE;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
+use std::fmt;
 use uuid::Uuid;
-use crate::models::db::profile::FullProfile;
 
 const PROFILE_QUERY: &str = r#"{\"query\":\"query UserProfileSocial($id: ID) {\\n\\tuser(id: $id) {\\n\\t\\tid\\n\\t\\tpublicUsername\\n\\t\\tavatarFilePath\\n\\t\\thandle\\n\\t\\thandle\\n\\t\\tpublicUsername\\n\\t\\temail\\n\\t\\tmakesCount\\n\\t\\tdateCreated\\n\\t\\tbio\\n\\t\\tsocialLinks {\\n\\t\\t\\tid\\n\\t\\t\\tsocialType\\n\\t\\t\\turl\\n\\t\\t}\\n\\t\\tprinters {\\n\\t\\t\\tid\\n\\t\\t\\tname\\n\\t\\t}\\n\\t}\\n}\\n\",\"operationName\":\"UserProfileSocial\",\"variables\":{\"id\":\"@_USERNAME_\"}}"#;
 
@@ -46,25 +46,29 @@ pub enum CheckPrintablesProfile {
     IsOk,
 }
 
-pub async fn get_printables_profile(printables_username: &str) -> anyhow::Result<User> {
+pub async fn get_printables_profile(printables_username: &str) -> anyhow::Result<Option<User>> {
     let gql_query = PROFILE_QUERY.replace("_USERNAME_", printables_username);
     let client = reqwest::Client::new();
-    let res = client.post("https://api.printables.com/graphql/")
+    let res = client
+        .post("https://api.printables.com/graphql/")
         .header(CONTENT_TYPE, "application/json")
         .body(gql_query)
         .send()
         .await?
-        .json::<Value>().await?;
+        .json::<Value>()
+        .await?;
     let data = match res.get("data") {
-        Ok(d) => d.get("user").unwrap(),
-        Err(_) => Ok(CheckPrintablesProfile::UserNotFound)
+        Some(d) => d.get("user").unwrap(),
+        None => return Ok(None),
     };
-    serde_json::from_value(data.clone())
-
+    Ok(Some(serde_json::from_value::<User>(data.clone())?))
 }
 
-
-pub async fn check_printables_profile(printables_username: &str, profile_id: &Uuid, base_url: &str) -> anyhow::Result<CheckPrintablesProfile> {
+pub async fn check_printables_profile(
+    printables_username: &str,
+    profile_id: &Uuid,
+    base_url: &str,
+) -> anyhow::Result<CheckPrintablesProfile> {
     let user: User = get_printables_profile(printables_username)?;
     let wanted_url = format!("{}/links/printables/{}", base_url, profile_id);
     for l in user.social_links {
@@ -73,5 +77,4 @@ pub async fn check_printables_profile(printables_username: &str, profile_id: &Uu
         }
     }
     Ok(CheckPrintablesProfile::LinkNotFound)
-
 }

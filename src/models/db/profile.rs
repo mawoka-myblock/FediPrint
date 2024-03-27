@@ -81,10 +81,16 @@ impl FullProfile {
             username, server).fetch_one(&pool).await
     }
 
-    pub async fn link_printables_profile(self, printables_profile: &str, pool: PgPool) -> Result<FullProfile, Error> {
-        sqlx::query_as!(FullProfile,
+    pub async fn link_printables_profile(
+        self,
+        printables_profile: &str,
+        pool: PgPool,
+    ) -> Result<FullProfile, Error> {
+        sqlx::query_as!(
+            FullProfile,
             r#"UPDATE profile SET linked_printables_profile = $1 WHERE id = $2;"#,
-            printables_profile, self.id
+            printables_profile,
+            self.id
         )
     }
 }
@@ -116,8 +122,8 @@ impl FullProfileWithFollower {
                 WHERE f.profile_id = $1;"#,
             id
         )
-            .fetch_all(&pool)
-            .await?;
+        .fetch_all(&pool)
+        .await?;
         Ok(FullProfileWithFollower { profile, followers })
     }
 
@@ -129,8 +135,8 @@ impl FullProfileWithFollower {
                 WHERE f.profile_id = $1;"#,
             id
         )
-            .fetch_one(&pool)
-            .await?;
+        .fetch_one(&pool)
+        .await?;
         Ok(c.unwrap())
     }
 }
@@ -152,8 +158,8 @@ impl FullProfileWithFollowing {
                 WHERE f.follower_id = $1;"#,
             id
         )
-            .fetch_all(&pool)
-            .await?;
+        .fetch_all(&pool)
+        .await?;
         Ok(FullProfileWithFollowing { profile, following })
     }
 
@@ -165,8 +171,8 @@ impl FullProfileWithFollowing {
                 WHERE f.follower_id = $1;"#,
             id
         )
-            .fetch_one(&pool)
-            .await?;
+        .fetch_one(&pool)
+        .await?;
         Ok(c.unwrap())
     }
 }
