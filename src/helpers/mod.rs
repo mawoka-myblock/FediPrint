@@ -3,6 +3,7 @@ pub mod interactions;
 pub mod middleware;
 pub mod search;
 pub mod sign;
+pub mod printables;
 
 use axum::body::Body;
 use axum::http::header::ToStrError;

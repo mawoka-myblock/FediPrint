@@ -54,17 +54,18 @@ CREATE TYPE model_license AS ENUM (
 
 CREATE TABLE profile
 (
-    id              uuid        DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
-    username        text                                   NOT NULL,
-    server          text                                   NOT NULL,
-    server_id       text                                   NOT NULL UNIQUE,
-    "display_name"  text                                   NOT NULL,
-    summary         text        DEFAULT ''                 NOT NULL,
-    inbox           text                                   NOT NULL,
-    outbox          text                                   NOT NULL,
-    "public_key"    text                                   NOT NULL,
-    "registered_at" timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL,
-    "updated_at"    timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL
+    id                          uuid        DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
+    username                    text                                   NOT NULL,
+    server                      text                                   NOT NULL,
+    server_id                   text                                   NOT NULL UNIQUE,
+    "display_name"              text                                   NOT NULL,
+    summary                     text        DEFAULT ''                 NOT NULL,
+    inbox                       text                                   NOT NULL,
+    outbox                      text                                   NOT NULL,
+    "public_key"                text                                   NOT NULL,
+    "registered_at"             timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL,
+    "updated_at"                timestamptz DEFAULT CURRENT_TIMESTAMP  NOT NULL,
+    "linked_printables_profile" text        DEFAULT Null UNIQUE
 );
 
 CREATE TABLE account
@@ -149,7 +150,8 @@ CREATE TABLE printer
     description            text,
     "modified_scale"       modified_scale DEFAULT 'NO_MODS'::modified_scale                  NOT NULL
 );
-ALTER TABLE printer ADD UNIQUE (name, manufacturer, profile_id);
+ALTER TABLE printer
+    ADD UNIQUE (name, manufacturer, profile_id);
 
 CREATE TABLE likes
 (

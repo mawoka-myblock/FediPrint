@@ -61,12 +61,13 @@ pub struct FullProfile {
     pub public_key: String,
     pub registered_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub linked_printables_profile: Option<String>,
 }
 
 impl FullProfile {
     pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
-            r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at
+            r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile
             FROM profile WHERE id = $1"#,
             id).fetch_one(&pool).await
     }
@@ -75,9 +76,16 @@ impl FullProfile {
         server: &str,
         pool: PgPool,
     ) -> Result<FullProfile, Error> {
-        sqlx::query_as!(FullProfile, r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at
+        sqlx::query_as!(FullProfile, r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile
         FROM profile WHERE username = $1 and server = $2"#,
             username, server).fetch_one(&pool).await
+    }
+
+    pub async fn link_printables_profile(self, printables_profile: &str, pool: PgPool) -> Result<FullProfile, Error> {
+        sqlx::query_as!(FullProfile,
+            r#"UPDATE profile SET linked_printables_profile = $1 WHERE id = $2;"#,
+            printables_profile, self.id
+        )
     }
 }
 
@@ -108,8 +116,8 @@ impl FullProfileWithFollower {
                 WHERE f.profile_id = $1;"#,
             id
         )
-        .fetch_all(&pool)
-        .await?;
+            .fetch_all(&pool)
+            .await?;
         Ok(FullProfileWithFollower { profile, followers })
     }
 
@@ -121,8 +129,8 @@ impl FullProfileWithFollower {
                 WHERE f.profile_id = $1;"#,
             id
         )
-        .fetch_one(&pool)
-        .await?;
+            .fetch_one(&pool)
+            .await?;
         Ok(c.unwrap())
     }
 }
@@ -144,8 +152,8 @@ impl FullProfileWithFollowing {
                 WHERE f.follower_id = $1;"#,
             id
         )
-        .fetch_all(&pool)
-        .await?;
+            .fetch_all(&pool)
+            .await?;
         Ok(FullProfileWithFollowing { profile, following })
     }
 
@@ -157,8 +165,8 @@ impl FullProfileWithFollowing {
                 WHERE f.follower_id = $1;"#,
             id
         )
-        .fetch_one(&pool)
-        .await?;
+            .fetch_one(&pool)
+            .await?;
         Ok(c.unwrap())
     }
 }

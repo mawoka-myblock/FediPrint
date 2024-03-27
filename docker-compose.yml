@@ -32,9 +32,12 @@ services:
     environment:
       MINIO_ROOT_USER: fediprint
       MINIO_ROOT_PASSWORD: fediprint
+    volumes:
+      - minio:/bitnami/minio/data
     ports:
       - 9000:9000
       - 9001:9001
 volumes:
   db:
   search:
+  minio:
