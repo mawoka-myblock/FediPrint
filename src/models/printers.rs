@@ -13,7 +13,7 @@ pub struct CreatePrinter {
     pub public: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct UpdatePrinter {
     pub id: Uuid,
     pub name: String,
