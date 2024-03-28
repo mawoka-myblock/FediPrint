@@ -21,7 +21,7 @@ axum-extra = { version = "0.9.2", features = ["cookie"] }
 chrono = { version = "0.4.34", features = ["clock", "serde"] }
 tower-http = { version = "0.5.1", features = ["cors", "fs", "trace"] }
 oauth2 = "4.4.2"
-reqwest = { version = "0.11.24", features = ["json"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
 uuid = { version = "1.7.0", features = ["serde", "v4", "fast-rng", "v7"] }
 jsonwebtoken = "9"
 dotenvy = "0.15.7"

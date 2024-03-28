@@ -24,7 +24,7 @@ impl CreateModel {
     pub async fn create(self, pool: PgPool) -> Result<FullModel, Error> {
         let ret_data = sqlx::query_as!(FullModel, r#"INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at"#,
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
             self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _
         ).fetch_one(&pool).await?;
         sqlx::query!(
@@ -59,6 +59,7 @@ pub struct FullModel {
     pub license: ModelLicense,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub printables_url: Option<String>,
 }
 
 impl FullModel {
@@ -68,7 +69,7 @@ impl FullModel {
         pool: PgPool,
     ) -> Result<FullModel, Error> {
         sqlx::query_as!(FullModel, r#"UPDATE model SET server_id = $1 WHERE id = $2
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at"#,
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
             server_id, id
         ).fetch_one(&pool).await
     }
@@ -77,7 +78,7 @@ impl FullModel {
         profile_id: &Uuid,
         pool: PgPool,
     ) -> Result<Vec<FullModel>, Error> {
-        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at FROM model
+        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url FROM model
             WHERE profile_id = $1"#,
             profile_id
         ).fetch_all(&pool).await
@@ -90,7 +91,7 @@ impl FullModel {
         pool: PgPool,
     ) -> Result<FullModel, Error> {
         sqlx::query_as!(FullModel, r#"UPDATE model SET published = $1 WHERE id = $2 AND profile_id = $3
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at"#,
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
             published, id, profile_id
         ).fetch_one(&pool).await
     }
@@ -99,11 +100,18 @@ impl FullModel {
         offset: &i64,
         pool: PgPool,
     ) -> Result<Vec<FullModel>, Error> {
-        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at FROM model
+        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url FROM model
             WHERE published = true ORDER BY created_at DESC OFFSET $1 LIMIT $2
             "#,
             offset, limit
         ).fetch_all(&pool).await
+    }
+    pub async fn create(self, pool: PgPool) -> Result<Self, Error> {
+        sqlx::query_as!(FullModel, r#"INSERT INTO model (id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, printables_url)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
+            self.id, self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _, self.created_at, self.updated_at, self.printables_url
+        ).fetch_one(&pool).await
     }
 }
 

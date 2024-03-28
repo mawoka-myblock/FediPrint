@@ -14,11 +14,11 @@ use axum::{
     Json,
 };
 use meilisearch_sdk::errors::Error as ms_error;
+use reqwest::Error;
 use s3::error::S3Error;
 use sqlx::Error as SqlxError;
 use std::borrow::Cow;
 use std::str::FromStr;
-use reqwest::Error;
 use tracing::debug;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
@@ -34,8 +34,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-    where
-        E: std::error::Error,
+where
+    E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -69,7 +69,9 @@ impl From<ms_error> for AppError {
 }
 
 impl From<reqwest::Error> for AppError {
-    fn from(_: Error) -> Self { AppError::InternalServerError }
+    fn from(_: Error) -> Self {
+        AppError::InternalServerError
+    }
 }
 
 // This centralizes all different errors from our app in one place

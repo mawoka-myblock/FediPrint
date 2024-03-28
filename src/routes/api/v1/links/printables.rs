@@ -1,22 +1,20 @@
-use std::sync::Arc;
-use axum::{debug_handler, Extension, Json};
+use crate::helpers::auth::UserState;
+use crate::helpers::printables::{check_printables_profile, CheckPrintablesProfile};
+use crate::helpers::AppResult;
+use crate::models::db::profile::FullProfile;
+use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
-use crate::AppState;
-use crate::helpers::AppResult;
-use crate::helpers::auth::UserState;
-use crate::helpers::printables::{check_printables_profile, CheckPrintablesProfile};
-use crate::models::db::profile::FullProfile;
-
+use std::sync::Arc;
 
 #[derive(Deserialize)]
 pub struct LinkToPrintablesInput {
     pub printables_username: String,
 }
-
 
 #[debug_handler]
 pub async fn link_to_printables(
@@ -31,7 +29,10 @@ pub async fn link_to_printables(
             .body(Body::from("Account already linked"))
             .unwrap());
     }
-    let printables_resp = check_printables_profile(&input.printables_username, &profile.id, &state.env.public_url).await?;
+    // let printables_resp = check_printables_profile(&input.printables_username, &profile.id, &state.env.public_url).await?;
+    let printables_resp =
+        check_printables_profile(&input.printables_username, &profile.id, "https://mawoka.eu")
+            .await?;
     if printables_resp == CheckPrintablesProfile::UserNotFound {
         return Ok(Response::builder()
             .status(StatusCode::NOT_FOUND)
@@ -45,7 +46,9 @@ pub async fn link_to_printables(
             .unwrap());
     }
     if printables_resp == CheckPrintablesProfile::IsOk {
-        let profile = profile.link_printables_profile(&input.printables_username, state.pool.clone()).await?;
+        let profile = profile
+            .link_printables_profile(&input.printables_username, state.pool.clone())
+            .await?;
         return Ok(Response::builder()
             .status(StatusCode::OK)
             .body(Body::from(serde_json::to_string(&profile).unwrap()))

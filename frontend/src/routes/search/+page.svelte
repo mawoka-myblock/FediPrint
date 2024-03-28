@@ -9,19 +9,18 @@
 
 	let { data } = $props();
 
-	let search_query = $state(data.query)
-	let search_results: SearchResult|null = $state(data.results);
+	let search_query = $state(data.query);
+	let search_results: SearchResult | null = $state(data.results);
 	let page = $state(data.page);
 	const search = async () => {
-		const params = new URLSearchParams(window.location.search)
-		params.set("q", search_query)
-		params.set("p", page.toString())
+		const params = new URLSearchParams(window.location.search);
+		params.set('q', search_query);
+		params.set('p', page.toString());
 		const res = await fetch(`/api/v1/search/model?q=${search_query}&page=${page}`);
-		search_results = await res.json()
-		pushState("?"+ params.toString(), {})
+		search_results = await res.json();
+		pushState('?' + params.toString(), {});
 		// window.location.search = url.toString()
 	};
-
 </script>
 
 <div class="flex h-screen">

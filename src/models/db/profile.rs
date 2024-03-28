@@ -90,11 +90,12 @@ impl FullProfile {
             r#"UPDATE profile SET linked_printables_profile = $1 WHERE id = $2;"#,
             printables_profile,
             self.id
-        ).execute(&pool).await?;
+        )
+        .execute(&pool)
+        .await?;
         let mut profile = self.clone();
         profile.linked_printables_profile = Some(printables_profile.to_string());
         Ok(profile)
-
     }
 }
 

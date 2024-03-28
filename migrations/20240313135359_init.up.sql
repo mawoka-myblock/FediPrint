@@ -82,18 +82,19 @@ CREATE TABLE account
 
 CREATE TABLE model
 (
-    id           uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
-    server       text                                                              NOT NULL,
-    "server_id"  text UNIQUE,
-    "profile_id" uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL,
-    published    boolean     DEFAULT false                                         NOT NULL,
-    title        text                                                              NOT NULL,
-    summary      text                                                              NOT NULL,
-    description  text                                                              NOT NULL,
-    tags         text[]                                                            NOT NULL DEFAULT '{}',
-    license      model_license                                                     NOT NULL,
-    "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
-    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL
+    id             uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
+    server         text                                                              NOT NULL,
+    "server_id"    text UNIQUE,
+    "profile_id"   uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL,
+    published      boolean     DEFAULT false                                         NOT NULL,
+    title          text                                                              NOT NULL,
+    summary        text                                                              NOT NULL,
+    description    text                                                              NOT NULL,
+    tags           text[]                                                            NOT NULL DEFAULT '{}',
+    license        model_license                                                     NOT NULL,
+    "created_at"   timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    "updated_at"   timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    printables_url text        DEFAULT NULL
 );
 
 

@@ -18,7 +18,7 @@ use tokio_util::io::StreamReader;
 use tracing::debug;
 use uuid::Uuid;
 
-async fn put_file(
+pub async fn put_file(
     bucket: &Bucket,
     filename: &str,
     content_type: &str,
@@ -28,10 +28,6 @@ async fn put_file(
         .put_object_stream_with_content_type(&mut reader, filename, content_type)
         .await
         .unwrap();
-    /*    let mut buffer = Vec::new();
-    reader.read_to_end(&mut buffer).await.unwrap();
-    debug!("length: {}", buffer.len());*/
-
     Ok(())
 }
 
