@@ -1,5 +1,5 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::printables::{check_printables_profile, CheckPrintablesProfile};
+use crate::helpers::printables::{check_printables_profile, CheckPrintablesProfile, import_all_models};
 use crate::helpers::AppResult;
 use crate::models::db::profile::FullProfile;
 use crate::AppState;
@@ -10,6 +10,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
+use tracing::debug;
 
 #[derive(Deserialize)]
 pub struct LinkToPrintablesInput {
@@ -58,4 +59,31 @@ pub async fn link_to_printables(
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(Body::from(""))
         .unwrap())
+}
+
+#[debug_handler]
+pub async fn import_from_printables(
+    Extension(claims): Extension<UserState>,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<impl IntoResponse> {
+    let profile = FullProfile::get_by_id(&claims.profile_id, state.pool.clone()).await?;
+    if profile.linked_printables_profile.is_none() {
+        return Ok(Response::builder()
+            .status(StatusCode::PRECONDITION_FAILED)
+            .body(Body::from("Printables Account not linked"))
+            .unwrap());
+    }
+    match import_all_models(profile, state).await {
+        Ok(_) => Ok(Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from(""))
+            .unwrap()),
+        Err(e) => {
+            debug!("{:?}", e);
+            Ok(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from(""))
+                .unwrap())
+        }
+    }
 }

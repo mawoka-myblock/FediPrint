@@ -224,7 +224,8 @@ async fn get_user_id(username: &str) -> Option<String> {
         Some(d) => d.get("id"),
         None => return None,
     };
-    temp_d2.map(|d| d.to_string())
+    let f = temp_d2?;
+    f.as_str().map(|d| d.to_string())
 }
 
 async fn save_file_to_s3(
@@ -235,6 +236,7 @@ async fn save_file_to_s3(
     preview_file_id: Option<Uuid>,
     state: Arc<AppState>,
 ) -> FullFile {
+    debug!("Download url: {}", &url);
     let id = Uuid::now_v7();
     let client = reqwest::Client::new();
     // Make separate HEAD request top get content type as the stream on the "main" request consumes the body
@@ -280,7 +282,9 @@ async fn save_file_to_s3(
     }
     file.create(state.pool.clone()).await.unwrap()
 }
+
 const DOWNLOAD_LINK_QUERY: &str = r#"{"query":"mutation GetDownloadLink($id: ID!, $printId: ID!, $fileType: DownloadFileTypeEnum!, $source: DownloadSourceEnum!) { getDownloadLink(id: $id, printId: $printId, fileType: $fileType, source: $source) { ok output { link } }}","variables":{"fileType":"stl","id":"_FILE_ID_","printId":"_MODEL_ID_","source":"model_viewer"}}"#;
+
 async fn get_stl_download_link(file_id: &str, model_id: &str) -> Option<String> {
     let gql_query = DOWNLOAD_LINK_QUERY
         .replace("_FILE_ID_", file_id)
@@ -301,8 +305,8 @@ async fn get_stl_download_link(file_id: &str, model_id: &str) -> Option<String> 
     let output = json["data"]["getDownloadLink"]["output"]
         .as_object()
         .unwrap();
-
-    output.get("link").map(|d| d.to_string())
+    let link = output.get("link")?;
+    link.as_str().map(|d| d.to_string())
 }
 
 async fn create_single_model(
@@ -333,17 +337,17 @@ async fn create_single_model(
             "https://www.printables.com/model/{}-{}",
             model.id, model.slug
         )),
-    };
+    }.create(state.pool.clone()).await?;
     for image in model.images {
         save_file_to_s3(
-            &format!("https://media.printables.com{}", image.file_path),
+            &format!("https://media.printables.com/{}", image.file_path),
             &image.name,
             d.id,
             profile_id,
             None,
             state.clone(),
         )
-        .await;
+            .await;
     }
     for file in model.stls {
         let download_link = match get_stl_download_link(&file.id, &model.id).await {
@@ -358,7 +362,7 @@ async fn create_single_model(
             None,
             state.clone(),
         )
-        .await;
+            .await;
     }
     Ok(d)
 }
@@ -368,6 +372,7 @@ pub async fn import_all_models(profile: FullProfile, state: Arc<AppState>) -> an
         Some(d) => d,
         None => bail!("No profile found"),
     };
+    debug!("User_id: {}", &printables_user_id);
     let gql_query = MODELS_QUERY.replace("_USERID_", &printables_user_id);
     let client = reqwest::Client::new();
     let res = client
@@ -379,7 +384,9 @@ pub async fn import_all_models(profile: FullProfile, state: Arc<AppState>) -> an
         .await?
         .json::<RootModelResponse>()
         .await?;
+    // .text().await?;
     let models = res.data.user_models.items;
+    // debug!("Models: {:?}", &models);
     for model in models {
         create_single_model(model, &profile.id, &profile.username, state.clone()).await?;
     }
