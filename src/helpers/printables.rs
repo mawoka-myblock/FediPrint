@@ -100,6 +100,18 @@ const USER_ID_QUERY: &str = r#"{"query":"query UserProfileSocial($id: ID) { user
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SingleModelResponse {
+    pub data: SingleModelData,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SingleModelData {
+    pub print: Option<PrintablesModel>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RootModelResponse {
     pub data: Data,
 }
@@ -358,7 +370,7 @@ async fn create_single_model(
             &download_link,
             &file.name,
             d.id,
-            &profile_id,
+            profile_id,
             None,
             state.clone(),
         )
@@ -391,4 +403,37 @@ pub async fn import_all_models(profile: FullProfile, state: Arc<AppState>) -> an
         create_single_model(model, &profile.id, &profile.username, state.clone()).await?;
     }
     Ok(())
+}
+
+const SINGLE_MODEL_QUERY: &str = r#"{"query":"query PrintProfile($id: ID!) { print(id: $id) { id name slug datePublished firstPublish description summary images { id filePath rotation fileSize name } stls { id name folder note created fileSize filePreviewPath } otherFiles { id name folder note created fileSize } category { id path { id name } } tags { id name } license { name } modified image { id filePath rotation fileSize name } nsfw premium user { handle } }}","variables":{"id":"_MODEL_ID_"}}"#;
+
+pub enum ImportModelResponse {
+    ModelNotFound,
+    RequestError,
+    OtherError,
+    NotModelAuthor,
+}
+
+pub async fn import_single_model(model_id: &str, profile: FullProfile, state: Arc<AppState>) -> Result<FullModel, ImportModelResponse> {
+    let gql_query = SINGLE_MODEL_QUERY.replace("_MODEL_ID_", model_id);
+    let client = reqwest::Client::new();
+    let res = client
+        .post("https://api.printables.com/graphql/")
+        // .post("https://eopumybgejld0p5.m.pipedream.net")
+        .header(CONTENT_TYPE, "application/json")
+        .body(gql_query)
+        .send()
+        .await.map_err(|_| ImportModelResponse::RequestError)?
+        .json::<SingleModelResponse>()
+        .await.map_err(|_| ImportModelResponse::RequestError)?;
+    let model = match res.data.print {
+        Some(d) => d,
+        None => return Err(ImportModelResponse::ModelNotFound)
+    };
+
+    if model.user.handle != profile.linked_printables_profile.unwrap() {
+        return Err(ImportModelResponse::NotModelAuthor);
+    };
+    let d = create_single_model(model, &profile.id, &profile.username, state.clone()).await.map_err(|_| ImportModelResponse::OtherError)?;
+    Ok(d)
 }

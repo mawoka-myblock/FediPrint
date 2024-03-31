@@ -94,7 +94,7 @@ CREATE TABLE model
     license        model_license                                                     NOT NULL,
     "created_at"   timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
     "updated_at"   timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
-    printables_url text        DEFAULT NULL
+    printables_url text        DEFAULT NULL UNIQUE
 );
 
 

@@ -247,7 +247,13 @@ pub async fn get_server() -> Router {
         )
         .route(
             "/api/v1/links/printables/import",
-            post(v1::links::printables::import_from_printables).route_layer(
+            post(v1::links::printables::import_all_from_printables).route_layer(
+                middleware::from_fn_with_state(state.clone(), auth_middleware),
+            ),
+        )
+        .route(
+            "/api/v1/links/printables/import/single",
+            post(v1::links::printables::import_one_from_printables).route_layer(
                 middleware::from_fn_with_state(state.clone(), auth_middleware),
             ),
         )
