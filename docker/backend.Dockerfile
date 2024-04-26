@@ -46,7 +46,7 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 COPY ./ .
 RUN cargo build --release
 
-FROM debian:stable-slim
+FROM debian:stable
 
 WORKDIR /app
 
