@@ -46,9 +46,10 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 COPY ./ .
 RUN cargo build --release
 
-FROM debian:stable
+FROM debian:stable-slim
 
 WORKDIR /app
+RUN apt update && apt install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
