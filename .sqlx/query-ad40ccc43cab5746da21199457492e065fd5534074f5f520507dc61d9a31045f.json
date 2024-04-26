@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(p.id)\n                FROM followers f\n                JOIN profile p ON p.id = f.follower_id\n                WHERE f.follower_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ad40ccc43cab5746da21199457492e065fd5534074f5f520507dc61d9a31045f"
+}

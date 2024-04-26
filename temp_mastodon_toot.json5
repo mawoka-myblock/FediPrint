@@ -1,0 +1,213 @@
+{
+    "note": {
+        "@context": [
+            "https://www.w3.org/ns/activitystreams",
+            {
+                "Hashtag": "as:Hashtag",
+                "atomUri": "ostatus:atomUri",
+                "blurhash": "toot:blurhash",
+                "conversation": "ostatus:conversation",
+                "focalPoint": {
+                    "@container": "@list",
+                    "@id": "toot:focalPoint"
+                },
+                "inReplyToAtomUri": "ostatus:inReplyToAtomUri",
+                "ostatus": "http://ostatus.org#",
+                "sensitive": "as:sensitive",
+                "toot": "http://joinmastodon.org/ns#",
+                "votersCount": "toot:votersCount"
+            }
+        ],
+        "atomUri": "https://mastodon.online/users/Mawoka/statuses/112078820179087887",
+        "attachment": [
+            {
+                "blurhash": "UB8XIM%MM{WBt7j[ayof00IUt7ofRjayj[WB",
+                "focalPoint": [
+                    0.62,
+                    0.03
+                ],
+                "height": 42,
+                "mediaType": "image/png",
+                "name": "\"Compiling fedi_print v0.1.0 84 errors\" is what the IDE tells me after compiling.",
+                "type": "Document",
+                "url": "https://files.mastodon.online/media_attachments/files/112/078/817/241/572/396/original/9eb3278a8dc97e40.png",
+                "width": 390
+            }
+        ],
+        "attributedTo": "https://mastodon.online/users/Mawoka",
+        "cc": [
+            "https://mastodon.online/users/Mawoka/followers"
+        ],
+        "content": "<p>I love <a href=\"https://mastodon.online/tags/rust\" class=\"mention hashtag\" rel=\"tag\">#<span>rust</span></a>!</p>",
+        "contentMap": {
+            "en": "<p>I love <a href=\"https://mastodon.online/tags/rust\" class=\"mention hashtag\" rel=\"tag\">#<span>rust</span></a>!</p>"
+        },
+        "conversation": "tag:mastodon.online,2024-03-11:objectId=300838624:objectType=Conversation",
+        "id": "https://mastodon.online/users/Mawoka/statuses/112078820179087887",
+        "inReplyTo": null,
+        "inReplyToAtomUri": null,
+        "published": "2024-03-11T19:57:55Z",
+        "replies": {
+            "first": {
+                "items": [
+                    "https://mastodon.online/users/Mawoka/statuses/112078967407548922"
+                ],
+                "next": "https://mastodon.online/users/Mawoka/statuses/112078820179087887/replies?min_id=112078967407548922&page=true",
+                "partOf": "https://mastodon.online/users/Mawoka/statuses/112078820179087887/replies",
+                "type": "CollectionPage"
+            },
+            "id": "https://mastodon.online/users/Mawoka/statuses/112078820179087887/replies",
+            "type": "Collection"
+        },
+        "sensitive": false,
+        "summary": null,
+        "tag": [
+            {
+                "href": "https://mastodon.online/tags/rust",
+                "name": "#rust",
+                "type": "Hashtag"
+            }
+        ],
+        "to": [
+            "https://www.w3.org/ns/activitystreams#Public"
+        ],
+        "type": "Note",
+        "url": "https://mastodon.online/@Mawoka/112078820179087887"
+    },
+    // Profile
+    "profile": {
+        "@context": [
+            "https://www.w3.org/ns/activitystreams",
+            "https://w3id.org/security/v1",
+            {
+                "Curve25519Key": "toot:Curve25519Key",
+                "Device": "toot:Device",
+                "Ed25519Key": "toot:Ed25519Key",
+                "Ed25519Signature": "toot:Ed25519Signature",
+                "EncryptedMessage": "toot:EncryptedMessage",
+                "Hashtag": "as:Hashtag",
+                "PropertyValue": "schema:PropertyValue",
+                "alsoKnownAs": {
+                    "@id": "as:alsoKnownAs",
+                    "@type": "@id"
+                },
+                "cipherText": "toot:cipherText",
+                "claim": {
+                    "@id": "toot:claim",
+                    "@type": "@id"
+                },
+                "deviceId": "toot:deviceId",
+                "devices": {
+                    "@id": "toot:devices",
+                    "@type": "@id"
+                },
+                "discoverable": "toot:discoverable",
+                "featured": {
+                    "@id": "toot:featured",
+                    "@type": "@id"
+                },
+                "featuredTags": {
+                    "@id": "toot:featuredTags",
+                    "@type": "@id"
+                },
+                "fingerprintKey": {
+                    "@id": "toot:fingerprintKey",
+                    "@type": "@id"
+                },
+                "focalPoint": {
+                    "@container": "@list",
+                    "@id": "toot:focalPoint"
+                },
+                "identityKey": {
+                    "@id": "toot:identityKey",
+                    "@type": "@id"
+                },
+                "indexable": "toot:indexable",
+                "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
+                "memorial": "toot:memorial",
+                "messageFranking": "toot:messageFranking",
+                "messageType": "toot:messageType",
+                "movedTo": {
+                    "@id": "as:movedTo",
+                    "@type": "@id"
+                },
+                "publicKeyBase64": "toot:publicKeyBase64",
+                "schema": "http://schema.org#",
+                "suspended": "toot:suspended",
+                "toot": "http://joinmastodon.org/ns#",
+                "value": "schema:value"
+            }
+        ],
+        "attachment": [
+            {
+                "name": "Creator of",
+                "type": "PropertyValue",
+                "value": "<a href=\"https://fosstodon.org/@classquiz\" target=\"_blank\" rel=\"nofollow noopener noreferrer me\" translate=\"no\"><span class=\"invisible\">https://</span><span class=\"\">fosstodon.org/@classquiz</span><span class=\"invisible\"></span></a>"
+            },
+            {
+                "name": "Website",
+                "type": "PropertyValue",
+                "value": "<a href=\"https://mawoka.eu\" target=\"_blank\" rel=\"nofollow noopener noreferrer me\" translate=\"no\"><span class=\"invisible\">https://</span><span class=\"\">mawoka.eu</span><span class=\"invisible\"></span></a>"
+            },
+            {
+                "name": "GitHub",
+                "type": "PropertyValue",
+                "value": "<a href=\"https://github.com/mawoka-myblock\" target=\"_blank\" rel=\"nofollow noopener noreferrer me\" translate=\"no\"><span class=\"invisible\">https://</span><span class=\"\">github.com/mawoka-myblock</span><span class=\"invisible\"></span></a>"
+            },
+            {
+                "name": "Donate",
+                "type": "PropertyValue",
+                "value": "<a href=\"https://mawoka.eu/donate\" target=\"_blank\" rel=\"nofollow noopener noreferrer me\" translate=\"no\"><span class=\"invisible\">https://</span><span class=\"\">mawoka.eu/donate</span><span class=\"invisible\"></span></a>"
+            }
+        ],
+        "devices": "https://mastodon.online/users/Mawoka/collections/devices",
+        "discoverable": true,
+        "endpoints": {
+            "sharedInbox": "https://mastodon.online/inbox"
+        },
+        "featured": "https://mastodon.online/users/Mawoka/collections/featured",
+        "featuredTags": "https://mastodon.online/users/Mawoka/collections/tags",
+        "followers": "https://mastodon.online/users/Mawoka/followers",
+        "following": "https://mastodon.online/users/Mawoka/following",
+        "icon": {
+            "mediaType": "image/png",
+            "type": "Image",
+            "url": "https://files.mastodon.online/accounts/avatars/000/197/929/original/ada84392f1a6d345.png"
+        },
+        "id": "https://mastodon.online/users/Mawoka",
+        "inbox": "https://mastodon.online/users/Mawoka/inbox",
+        "indexable": true,
+        "manuallyApprovesFollowers": false,
+        "memorial": false,
+        "name": "Mawoka",
+        "outbox": "https://mastodon.online/users/Mawoka/outbox",
+        "preferredUsername": "Mawoka",
+        "publicKey": {
+            "id": "https://mastodon.online/users/Mawoka#main-key",
+            "owner": "https://mastodon.online/users/Mawoka",
+            "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6KDOByV2VIYrE71z0GM2\npEicXKZf6fb+oJVu/fCnLYgYYurQl4aKsTr1jE7ifVwicXUtDPoRvoxIS5syHLLH\njEKC9pqk3t8wnOdt2gglpBI4FAZlNiqFSXet0Vtk7Vl2fF08QaiMfzXl6Wu1FRlu\n0+sqXUF1tXrmihDqV251/3wNdAyd5BbqR24A2rOdXCVwycEfAtJq2Mwib0WlN8UZ\n/Nip3FDPTn9WdPGCCO5n+kR8UaUf+OKVimUwv6laKhrShCzfzz5r7Hzja2TOHG0A\nz3FA/ZV4DTbCdHZU3qhb2tOo1RCvs1q2y03IA6aD9XDsR7/XLHFkt01g6H6ufmYL\nlQIDAQAB\n-----END PUBLIC KEY-----\n"
+        },
+        "published": "2021-03-05T00:00:00Z",
+        "summary": "<p>Student and developer for the <a href=\"https://mastodon.online/tags/web\" class=\"mention hashtag\" rel=\"tag\">#<span>web</span></a> using <a href=\"https://mastodon.online/tags/svelte\" class=\"mention hashtag\" rel=\"tag\">#<span>svelte</span></a>, <br /><a href=\"https://mastodon.online/tags/python\" class=\"mention hashtag\" rel=\"tag\">#<span>python</span></a> and more.</p>",
+        "tag": [
+            {
+                "href": "https://mastodon.online/tags/python",
+                "name": "#python",
+                "type": "Hashtag"
+            },
+            {
+                "href": "https://mastodon.online/tags/web",
+                "name": "#web",
+                "type": "Hashtag"
+            },
+            {
+                "href": "https://mastodon.online/tags/svelte",
+                "name": "#svelte",
+                "type": "Hashtag"
+            }
+        ],
+        "type": "Person",
+        "url": "https://mastodon.online/@Mawoka"
+    }
+}
+

@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT n.id,\n       n.created_at,\n       n.updated_at,\n       n.server_id,\n       n.content,\n       n.hashtags,\n       n.audience AS \"audience!: EventAudience\",\n       n.in_reply_to_comment_id,\n       n.in_reply_to_note_id,\n       n.actor_id,\n       n.comment_of_model_id,\n       array_agg(m.server_id) AS mentions,\n       comment_r.server_id AS comment_r_server_id,\n       comment_n.server_id AS comment_n_server_id\nFROM note AS n\n         JOIN _mentions _m ON _m.note_id = id\n         JOIN profile m ON m.id = _m.profile_id\n         JOIN note comment_r ON comment_r.id = n.in_reply_to_comment_id\n         JOIN note comment_n ON comment_n.id = n.in_reply_to_note_id\nWHERE n.actor_id = $1\nGROUP BY n.id, comment_r.server_id, comment_n.server_id;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "server_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "hashtags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 6,
+        "name": "audience!: EventAudience",
+        "type_info": {
+          "Custom": {
+            "name": "event_audience",
+            "kind": {
+              "Enum": [
+                "PUBLIC",
+                "FOLLOWERS",
+                "MENTIONED",
+                "NOBODY"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "in_reply_to_comment_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "in_reply_to_note_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "comment_of_model_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 11,
+        "name": "mentions",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "comment_r_server_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "comment_n_server_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      null,
+      true,
+      true
+    ]
+  },
+  "hash": "7665e599c2bcbe8fe2b795559ae803606c3dd6a1fe5eabd83118e798a1abaf98"
+}

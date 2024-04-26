@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE file SET image_for_model_id = $1 WHERE id = ANY($2);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5f237376e53efbade5cff79d9badb205a33aa02458f15d9e568aa0becf5fee2b"
+}

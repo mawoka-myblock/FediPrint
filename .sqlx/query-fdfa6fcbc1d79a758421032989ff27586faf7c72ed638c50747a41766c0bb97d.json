@@ -1,0 +1,115 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO printer (name, manufacturer, profile_id,public, slicer_config, slicer_config_public, description, modified_scale)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            RETURNING id, created_at, updated_at, name, manufacturer, profile_id, public, slicer_config, slicer_config_public, description, modified_scale AS \"modified_scale!: ModifiedScale\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "manufacturer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "profile_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "slicer_config",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "slicer_config_public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "modified_scale!: ModifiedScale",
+        "type_info": {
+          "Custom": {
+            "name": "modified_scale",
+            "kind": {
+              "Enum": [
+                "NO_MODS",
+                "LIGHT_MODS",
+                "MEDIUM_MODS",
+                "HARD_MODS",
+                "NEW_PRINTER"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        {
+          "Custom": {
+            "name": "modified_scale",
+            "kind": {
+              "Enum": [
+                "NO_MODS",
+                "LIGHT_MODS",
+                "MEDIUM_MODS",
+                "HARD_MODS",
+                "NEW_PRINTER"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "fdfa6fcbc1d79a758421032989ff27586faf7c72ed638c50747a41766c0bb97d"
+}

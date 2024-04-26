@@ -1,0 +1,113 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO note (server_id, content, hashtags, audience, in_reply_to_comment_id, in_reply_to_note_id, actor_id,\n                comment_of_model_id)\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n                RETURNING id, created_at, updated_at, server_id, content, hashtags, audience AS \"audience!: EventAudience\", in_reply_to_comment_id, in_reply_to_note_id, actor_id, comment_of_model_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "server_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "hashtags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 6,
+        "name": "audience!: EventAudience",
+        "type_info": {
+          "Custom": {
+            "name": "event_audience",
+            "kind": {
+              "Enum": [
+                "PUBLIC",
+                "FOLLOWERS",
+                "MENTIONED",
+                "NOBODY"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "in_reply_to_comment_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "in_reply_to_note_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "comment_of_model_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray",
+        {
+          "Custom": {
+            "name": "event_audience",
+            "kind": {
+              "Enum": [
+                "PUBLIC",
+                "FOLLOWERS",
+                "MENTIONED",
+                "NOBODY"
+              ]
+            }
+          }
+        },
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "a64494ec661fce291546d694579a236a486c5de759a95708d38d5411be73d997"
+}

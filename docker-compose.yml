@@ -18,7 +18,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./docker/frontend.Dockerfile
+      dockerfile: ../docker/frontend.Dockerfile
   db:
     image: ghcr.io/mawoka-myblock/pg_uuidv7:main
     environment:
