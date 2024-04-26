@@ -32,15 +32,15 @@ impl CreateModel {
             &ret_data.id,
             &self.files
         )
-        .execute(&pool)
-        .await?;
+            .execute(&pool)
+            .await?;
         sqlx::query!(
             r#"UPDATE file SET image_for_model_id = $1 WHERE id = ANY($2);"#,
             &ret_data.id,
             &self.images
         )
-        .execute(&pool)
-        .await?;
+            .execute(&pool)
+            .await?;
         Ok(ret_data)
     }
 }
@@ -74,15 +74,6 @@ impl FullModel {
         ).fetch_one(&pool).await
     }
 
-    pub async fn get_models_of_profile(
-        profile_id: &Uuid,
-        pool: PgPool,
-    ) -> Result<Vec<FullModel>, Error> {
-        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url FROM model
-            WHERE profile_id = $1"#,
-            profile_id
-        ).fetch_all(&pool).await
-    }
 
     pub async fn change_visibility_with_id_and_profile_id(
         published: &bool,
@@ -120,6 +111,7 @@ fn remove_duplicates_from_list_of_models(models: &mut Vec<FullModelWithRelations
         remove_duplicates(model)
     }
 }
+
 fn remove_duplicates(model: &mut FullModelWithRelationsIds) {
     if let Some(files) = &model.files {
         if let Some(unique_files) = remove_duplicates_from_vec(files.clone()) {
@@ -132,6 +124,7 @@ fn remove_duplicates(model: &mut FullModelWithRelationsIds) {
         }
     }
 }
+
 // Helper function to remove duplicates from a vector
 fn remove_duplicates_from_vec<T: Eq + std::hash::Hash + Clone>(vec: Vec<T>) -> Option<Vec<T>> {
     let mut set: HashSet<_> = HashSet::new();
@@ -213,5 +206,28 @@ impl FullModelWithRelationsIds {
         ).fetch_all(&pool).await?;
         remove_duplicates_from_list_of_models(&mut res);
         Ok(res)
+    }
+
+    pub async fn get_models_of_profile(
+        profile_id: &Uuid,
+        limit: &i64,
+        offset: &i64,
+        pool: PgPool,
+    ) -> Result<Vec<FullModelWithRelationsIds>, Error> {
+        sqlx::query_as!(FullModelWithRelationsIds, r#"SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        FROM
+            model AS m
+        LEFT JOIN
+            file AS f ON m.id = f.file_for_model_id
+        LEFT JOIN
+            file AS i ON m.id = i.image_for_model_id
+        WHERE
+            m.profile_id = $3
+        GROUP BY
+            m.id
+        ORDER BY created_at DESC OFFSET $1 LIMIT $2;
+            "#,
+            offset, limit, profile_id
+        ).fetch_all(&pool).await
     }
 }

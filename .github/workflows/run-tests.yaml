@@ -27,7 +27,7 @@ jobs:
         with:
           tool: cargo-tarpaulin
       - name: Deploy docker deps
-        run: docker compose -f "docker-compose.yml" up -d --build
+        run: docker compose -f "docker-compose.dev.yml" up -d --build
 #      - run: cargo build --verbose
 #      - run: cargo test --verbose
       - uses: Swatinem/rust-cache@v2
@@ -44,4 +44,4 @@ jobs:
           slug: mawoka-myblock/FediPrint
       - name: Stop containers
         if: always()
-        run: docker-compose -f "docker-compose.yml" down
+        run: docker-compose -f "docker-compose.dev.yml" down

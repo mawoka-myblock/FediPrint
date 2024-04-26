@@ -250,6 +250,7 @@ async fn save_file_to_s3(
 ) -> FullFile {
     debug!("Download url: {}", &url);
     let id = Uuid::now_v7();
+    let str_id = id.to_string();
     let client = reqwest::Client::new();
     // Make separate HEAD request top get content type as the stream on the "main" request consumes the body
     let content_type_res = client.head(url).send().await.unwrap();
@@ -267,11 +268,11 @@ async fn save_file_to_s3(
     futures::pin_mut!(body_reader);
     state
         .s3
-        .put_object_stream_with_content_type(&mut body_reader, filename, content_type)
+        .put_object_stream_with_content_type(&mut body_reader, &str_id, content_type)
         .await
         .unwrap();
     // 🗿 TIL that there's a Unicode Character for Moai.
-    let metadata = state.s3.head_object(filename).await.unwrap().0;
+    let metadata = state.s3.head_object(str_id).await.unwrap().0;
     let mut file = CreateFile {
         id,
         mime_type: content_type.to_string(),

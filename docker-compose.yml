@@ -1,32 +1,44 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/backend.Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/fedi_print"
+      JWT_SECRET: "HALLO_WELT"
+      PUBLIC_URL: "http://localhost:8080"
+      BASE_DOMAIN: "localhost.local"
+      S3_BASE_URL: "http://minio:9000"
+      S3_REGION: "eu-central-1"
+      S3_USERNAME: "fediprint"
+      S3_PASSWORD: "fediprint"
+      S3_BUCKET_NAME: "fediprint"
+      MEILISEARCH_URL: "http://meilisearch:7700"
+      MEILISEARCH_KEY: "MAIN_KEY"
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./docker/frontend.Dockerfile
   db:
-#    build:
-#      context: pg_uuidv7
-#      args:
-#        PG_MAJOR_VERSION: 16
     image: ghcr.io/mawoka-myblock/pg_uuidv7:main
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fedi_print
     volumes:
       - db:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
   meilisearch:
     image: getmeili/meilisearch:v1.7
     volumes:
       - search:/meili_data
-    ports:
-      - 7700:7700
     environment:
       MEILI_NO_ANALYTICS: "true"
-      MEILI_MASTER_KEY: MASTER_KEY
+      MEILI_MASTER_KEY: MAIN_KEY
   caddy:
     image: caddy:alpine
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-    network_mode: "host"
-    privileged: true
+      - ./docker/prod.Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - 8080:8080
   minio:
     image: bitnami/minio
     environment:
@@ -34,9 +46,6 @@ services:
       MINIO_ROOT_PASSWORD: fediprint
     volumes:
       - minio:/bitnami/minio/data
-    ports:
-      - 9000:9000
-      - 9001:9001
 volumes:
   db:
   search:

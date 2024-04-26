@@ -213,6 +213,10 @@ pub async fn get_server() -> Router {
             )),
         )
         .route(
+            "/api/v1/storage/download/:id",
+            get(v1::storage::get_file),
+        )
+        .route(
             "/api/v1/model/create",
             post(v1::model::create_model).route_layer(middleware::from_fn_with_state(
                 state.clone(),

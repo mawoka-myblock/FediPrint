@@ -49,8 +49,8 @@ pub async fn create_model(
         files: input.files,
         images: input.images,
     }
-    .create(state.pool.clone())
-    .await?;
+        .create(state.pool.clone())
+        .await?;
     let s_id = format!(
         "{}/api/v1/models/{}/{}",
         state.env.public_url, claims.username, &res.id
@@ -66,9 +66,17 @@ pub async fn create_model(
 #[debug_handler]
 pub async fn list_own_models(
     Extension(claims): Extension<UserState>,
+    query: Query<PaginationQuery>,
     State(state): State<Arc<AppState>>,
 ) -> AppResult<impl IntoResponse> {
-    let models = FullModel::get_models_of_profile(&claims.profile_id, state.pool.clone()).await?;
+    if query.page < 0 {
+        return Ok(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::from("page can't be less than 0"))
+            .unwrap());
+    }
+    let models = FullModelWithRelationsIds::get_models_of_profile(&claims.profile_id, &20i64,
+                                                                  &((&query.page * 20) as i64), state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -94,7 +102,7 @@ pub async fn change_model_visibility(
         &claims.profile_id,
         state.pool.clone(),
     )
-    .await?;
+        .await?;
     index_model(&model, &claims.profile_id, &state.ms).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -119,7 +127,7 @@ pub async fn get_newest_models(
         &((&query.page * 20) as i64),
         state.pool.clone(),
     )
-    .await?;
+        .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
