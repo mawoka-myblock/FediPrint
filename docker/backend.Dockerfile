@@ -57,4 +57,4 @@ USER fediprint:fediprint
 
 COPY --from=builder /app/target/release/fedi_print fedi_print
 
-ENTRYPOINT ["/app/fedi_print"]
+CMD ["/app/fedi_print"]
