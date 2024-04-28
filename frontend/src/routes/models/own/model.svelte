@@ -17,6 +17,6 @@
 	<div class="flex flex-col text-white">
 		<h2 class="mx-auto text-4xl">{model.title}</h2>
 		<p class="mx-auto">{model.summary}</p>
-		<div class="flex mx-auto"><BrownButton href="/model/{model.id}">View</BrownButton></div>
+		<div class="flex mx-auto"><BrownButton href="/model/{model.id}?own=true">View</BrownButton></div>
 	</div>
 </div>
