@@ -58,4 +58,6 @@ USER fediprint:fediprint
 
 COPY --from=builder /app/target/release/fedi_print fedi_print
 
+EXPOSE 3000
+
 CMD ["/app/fedi_print"]
