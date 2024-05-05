@@ -262,7 +262,7 @@ pub async fn get_server() -> Router {
             ),
         )
         .route(
-            "/api/v1/statuses/{id}",
+            "/api/v1/statuses/:id",
             get(v1::statuses::get_status),
         )
         .with_state(state)
