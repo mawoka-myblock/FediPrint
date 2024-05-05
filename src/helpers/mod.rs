@@ -34,8 +34,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-where
-    E: std::error::Error,
+    where
+        E: std::error::Error,
 {
     AppError::InternalServerError
 }
@@ -103,6 +103,17 @@ impl IntoResponse for AppError {
 }
 
 pub fn ensure_ap_header(headers: &HeaderMap) -> Result<(), Response> {
+    let is_ap_h = is_ap_header(headers)?;
+    if is_ap_h {
+        return Ok(());
+    };
+    Err(Response::builder()
+        .status(StatusCode::NOT_ACCEPTABLE)
+        .body(Body::from(""))
+        .unwrap())
+}
+
+pub fn is_ap_header(headers: &HeaderMap) -> Result<bool, Response> {
     let accept_h = match headers.get("accept") {
         Some(d) => d.to_str().map_err(|_| {
             Response::builder()
@@ -113,18 +124,12 @@ pub fn ensure_ap_header(headers: &HeaderMap) -> Result<(), Response> {
         None => {
             return Err(Response::builder()
                 .status(StatusCode::NOT_ACCEPTABLE)
-                .body(Body::from(""))
+                .body(Body::from("Accept header empty"))
                 .unwrap());
         }
     };
-    if !accept_h.contains("application/activity+json") {
-        // TODO allow "application/ld+json; profile="https://www.w3.org/ns/activitystreams"" as well
-        return Err(Response::builder()
-            .status(StatusCode::NOT_ACCEPTABLE)
-            .body(Body::from(""))
-            .unwrap());
-    }
-    Ok(())
+    Ok(accept_h.contains("application/activity+json"))
+    // TODO allow "application/ld+json; profile="https://www.w3.org/ns/activitystreams"" as well
 }
 
 #[derive(Debug, Clone)]

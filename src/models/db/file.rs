@@ -70,6 +70,7 @@ pub struct FullFile {
     pub file_for_model_id: Option<Uuid>,
     pub image_for_model_id: Option<Uuid>,
 }
+
 impl FullFile {
     pub async fn get_newest_files_by_profile_paginated(
         profile_id: &Uuid,
@@ -112,8 +113,20 @@ impl FullFile {
             id,
             profile_id
         )
-        .execute(&pool)
-        .await?;
+            .execute(&pool)
+            .await?;
         Ok(())
+    }
+    pub async fn get_many_files(ids_in: Vec<Uuid>, pool: PgPool) -> Result<Vec<FullFile>, Error> {
+        let ids: &[Uuid] = ids_in.as_slice();
+        sqlx::query_as!(FullFile,r#"SELECT id, created_at, updated_at, mime_type, size, file_name, description, alt_text, thumbhash, preview_file_id, to_be_deleted_at, profile_id, file_for_model_id, image_for_model_id FROM file
+        WHERE id = ANY($1)
+        "#, ids).fetch_all(&pool).await
+    }
+    pub async fn get_many_files_by_model(ids: &Uuid, pool: PgPool) -> Result<Vec<FullFile>, Error> {
+        sqlx::query_as!(FullFile,r#"SELECT f.id, f.created_at, f.updated_at, f.mime_type, f.size, f.file_name, f.description, f.alt_text, f.thumbhash, f.preview_file_id, f.to_be_deleted_at, f.profile_id, f.file_for_model_id, f.image_for_model_id
+            FROM file as f
+                LEFT JOIN model m on f.file_for_model_id = m.id OR f.image_for_model_id = m.id
+            WHERE m.id = $1"#, ids).fetch_all(&pool).await
     }
 }

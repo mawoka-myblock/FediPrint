@@ -96,6 +96,7 @@ pub async fn get_outbox(
                 to,
                 cc,
                 content: item.content,
+                summary: item.summary,
                 tag: Tag::from_strs(item.hashtags, &state.env.public_url),
                 replies: NoteBoxItemReplies {
                     id: format!(
