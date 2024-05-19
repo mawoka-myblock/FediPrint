@@ -350,7 +350,9 @@ async fn create_single_model(
             "https://www.printables.com/model/{}-{}",
             model.id, model.slug
         )),
-    }.create(state.pool.clone()).await?;
+    }
+    .create(state.pool.clone())
+    .await?;
     for image in model.images {
         save_file_to_s3(
             &format!("https://media.printables.com/{}", image.file_path),
@@ -360,7 +362,7 @@ async fn create_single_model(
             None,
             state.clone(),
         )
-            .await;
+        .await;
     }
     for file in model.stls {
         let download_link = match get_stl_download_link(&file.id, &model.id).await {
@@ -375,7 +377,7 @@ async fn create_single_model(
             None,
             state.clone(),
         )
-            .await;
+        .await;
     }
     Ok(d)
 }
@@ -415,7 +417,11 @@ pub enum ImportModelResponse {
     NotModelAuthor,
 }
 
-pub async fn import_single_model(model_id: &str, profile: FullProfile, state: Arc<AppState>) -> Result<FullModel, ImportModelResponse> {
+pub async fn import_single_model(
+    model_id: &str,
+    profile: FullProfile,
+    state: Arc<AppState>,
+) -> Result<FullModel, ImportModelResponse> {
     let gql_query = SINGLE_MODEL_QUERY.replace("_MODEL_ID_", model_id);
     let client = reqwest::Client::new();
     let res = client
@@ -424,17 +430,21 @@ pub async fn import_single_model(model_id: &str, profile: FullProfile, state: Ar
         .header(CONTENT_TYPE, "application/json")
         .body(gql_query)
         .send()
-        .await.map_err(|_| ImportModelResponse::RequestError)?
+        .await
+        .map_err(|_| ImportModelResponse::RequestError)?
         .json::<SingleModelResponse>()
-        .await.map_err(|_| ImportModelResponse::RequestError)?;
+        .await
+        .map_err(|_| ImportModelResponse::RequestError)?;
     let model = match res.data.print {
         Some(d) => d,
-        None => return Err(ImportModelResponse::ModelNotFound)
+        None => return Err(ImportModelResponse::ModelNotFound),
     };
 
     if model.user.handle != profile.linked_printables_profile.unwrap() {
         return Err(ImportModelResponse::NotModelAuthor);
     };
-    let d = create_single_model(model, &profile.id, &profile.username, state.clone()).await.map_err(|_| ImportModelResponse::OtherError)?;
+    let d = create_single_model(model, &profile.id, &profile.username, state.clone())
+        .await
+        .map_err(|_| ImportModelResponse::OtherError)?;
     Ok(d)
 }

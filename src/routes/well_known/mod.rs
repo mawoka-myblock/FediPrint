@@ -1,2 +1,2 @@
-pub mod webfinger;
 pub mod nodeinfo;
+pub mod webfinger;

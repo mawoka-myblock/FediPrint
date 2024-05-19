@@ -88,8 +88,8 @@ pub async fn upload_file(
         file_for_model_id: None,
         image_for_model_id: None,
     }
-        .create(state.pool.clone())
-        .await?;
+    .create(state.pool.clone())
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)
         .header("Content-Type", "application/json")
@@ -110,8 +110,8 @@ pub async fn edit_file_metadata(
         file_name: input.file_name,
         description: input.description,
     }
-        .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
-        .await?;
+    .update_by_profile_and_return(&claims.profile_id, state.pool.clone())
+    .await?;
 
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -143,7 +143,7 @@ pub async fn list_own_files(
         &((&query.page * 20) as i64),
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -174,13 +174,18 @@ pub async fn delete_file(
         .unwrap())
 }
 
-
 #[debug_handler]
-pub async fn get_file(Path(id): Path<Uuid>, State(state): State<Arc<AppState>>) -> AppResult<impl IntoResponse> {
-    let body = Body::from_stream(state.s3.get_object_stream(id.to_string()).await.unwrap().bytes);
-    Ok(
-        Response::builder()
-            .body(body)
+pub async fn get_file(
+    Path(id): Path<Uuid>,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<impl IntoResponse> {
+    let body = Body::from_stream(
+        state
+            .s3
+            .get_object_stream(id.to_string())
+            .await
             .unwrap()
-    )
+            .bytes,
+    );
+    Ok(Response::builder().body(body).unwrap())
 }

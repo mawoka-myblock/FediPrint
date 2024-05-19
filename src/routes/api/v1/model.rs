@@ -1,6 +1,6 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::search::{index_model, search};
-use crate::helpers::{AppResult};
+use crate::helpers::AppResult;
 use crate::models::db::model::{
     CreateModel as DbCreateModel, FullModel, FullModelWithRelationsIds,
 };
@@ -9,7 +9,7 @@ use crate::routes::api::v1::storage::PaginationQuery;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
-use axum::http::{StatusCode};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::{Deserialize, Serialize};
@@ -49,8 +49,8 @@ pub async fn create_model(
         files: input.files,
         images: input.images,
     }
-        .create(state.pool.clone())
-        .await?;
+    .create(state.pool.clone())
+    .await?;
     let s_id = format!(
         "{}/api/v1/models/{}/{}",
         state.env.public_url, claims.username, &res.id
@@ -75,8 +75,13 @@ pub async fn list_own_models(
             .body(Body::from("page can't be less than 0"))
             .unwrap());
     }
-    let models = FullModelWithRelationsIds::get_models_of_profile(&claims.profile_id, &20i64,
-                                                                  &((&query.page * 20) as i64), state.pool.clone()).await?;
+    let models = FullModelWithRelationsIds::get_models_of_profile(
+        &claims.profile_id,
+        &20i64,
+        &((&query.page * 20) as i64),
+        state.pool.clone(),
+    )
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")
@@ -102,7 +107,7 @@ pub async fn change_model_visibility(
         &claims.profile_id,
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     index_model(&model, &claims.profile_id, &state.ms).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
@@ -127,7 +132,7 @@ pub async fn get_newest_models(
         &((&query.page * 20) as i64),
         state.pool.clone(),
     )
-        .await?;
+    .await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

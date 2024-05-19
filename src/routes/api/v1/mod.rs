@@ -7,5 +7,5 @@ pub mod model;
 pub mod printers;
 pub mod storage;
 
-pub mod statuses;
 pub mod nodeinfo;
+pub mod statuses;

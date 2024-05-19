@@ -1,3 +1,5 @@
+use crate::models::db::file::FullFile;
+use crate::models::db::profile::UsernameAndServerId;
 use crate::models::db::ModelLicense;
 use chrono::{DateTime, Utc};
 use serde_derive::Deserialize;
@@ -5,8 +7,6 @@ use serde_derive::Serialize;
 use serde_json::{json, Value};
 use sqlx::{Error, PgPool};
 use uuid::Uuid;
-use crate::models::db::file::FullFile;
-use crate::models::db::profile::UsernameAndServerId;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -426,8 +426,8 @@ LIMIT 15;
        "#,
             id
         )
-            .fetch_all(&pool)
-            .await
+        .fetch_all(&pool)
+        .await
     }
     pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<NoteJoinedModel, Error> {
         // Type overrides necessary, as sqlx wants everything to be Option<> in Rust which just isn't
@@ -475,11 +475,10 @@ ORDER BY "created_at!: DateTime<Utc>"
        "#,
             id
         )
-            .fetch_one(&pool)
-            .await
+        .fetch_one(&pool)
+        .await
     }
 }
-
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -502,26 +501,31 @@ pub struct ActivityPubModel {
     pub url: String,
 }
 
-
 impl ActivityPubModel {
-    pub async fn get_by_id(id: &Uuid, pool: PgPool, public_url: String) -> Result<ActivityPubModel, Error> {
+    pub async fn get_by_id(
+        id: &Uuid,
+        pool: PgPool,
+        public_url: String,
+    ) -> Result<ActivityPubModel, Error> {
         let status = NoteJoinedModel::get_by_id(id, pool.clone()).await?;
         let id = status.note_id.unwrap_or(status.model_id.unwrap());
         let is_model = status.model_id.is_some();
         let mut attachments: Vec<Attachment> = vec![];
         if is_model {
             let files = FullFile::get_many_files_by_model(&id, pool.clone()).await?;
-            attachments = files.iter().map(|v| Attachment {
-                blurhash: v.thumbhash.clone(),
-                height: None,
-                width: None,
-                media_type: v.mime_type.clone(),
-                url: format!("{public_url}/api/v1/storage/download/{}", v.id),
-                name: v.description.clone().unwrap_or_default(),
-                type_field: "Document".to_string(),
-            }).collect();
+            attachments = files
+                .iter()
+                .map(|v| Attachment {
+                    blurhash: v.thumbhash.clone(),
+                    height: None,
+                    width: None,
+                    media_type: v.mime_type.clone(),
+                    url: format!("{public_url}/api/v1/storage/download/{}", v.id),
+                    name: v.description.clone().unwrap_or_default(),
+                    type_field: "Document".to_string(),
+                })
+                .collect();
         }
-
 
         let user_data = UsernameAndServerId::get_by_id(&status.profile_id, pool.clone()).await?;
         let model_context: Value = json!({
@@ -535,7 +539,10 @@ impl ActivityPubModel {
             "toot": "http://joinmastodon.org/ns#",
         });
         Ok(ActivityPubModel {
-            context: ("https://www.w3.org/ns/activitystreams".to_string(), model_context),
+            context: (
+                "https://www.w3.org/ns/activitystreams".to_string(),
+                model_context,
+            ),
             attachment: attachments,
             attributed_to: user_data.server_id,
             cc: vec![format!(
@@ -557,7 +564,15 @@ impl ActivityPubModel {
             },
             sensitive: false,
             summary: status.summary,
-            tag: status.hashtags.iter().map(|t| Tag { href: format!("{}/api/v1/tags/{}", public_url, t), name: format!("#{}", t), type_field: "Hashtag".to_string() }).collect(),
+            tag: status
+                .hashtags
+                .iter()
+                .map(|t| Tag {
+                    href: format!("{}/api/v1/tags/{}", public_url, t),
+                    name: format!("#{}", t),
+                    type_field: "Hashtag".to_string(),
+                })
+                .collect(),
             to: vec!["https://www.w3.org/ns/activitystreams#Public".to_string()],
             type_field: "Note".to_string(),
             url: format!("{}/api/v1/model/{}", public_url, &id),

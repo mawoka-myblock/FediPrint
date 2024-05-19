@@ -91,8 +91,8 @@ impl FullProfile {
             printables_profile,
             self.id
         )
-            .execute(&pool)
-            .await?;
+        .execute(&pool)
+        .await?;
         let mut profile = self.clone();
         profile.linked_printables_profile = Some(printables_profile.to_string());
         Ok(profile)
@@ -126,8 +126,8 @@ impl FullProfileWithFollower {
                 WHERE f.profile_id = $1;"#,
             id
         )
-            .fetch_all(&pool)
-            .await?;
+        .fetch_all(&pool)
+        .await?;
         Ok(FullProfileWithFollower { profile, followers })
     }
 
@@ -139,8 +139,8 @@ impl FullProfileWithFollower {
                 WHERE f.profile_id = $1;"#,
             id
         )
-            .fetch_one(&pool)
-            .await?;
+        .fetch_one(&pool)
+        .await?;
         Ok(c.unwrap())
     }
 }
@@ -162,8 +162,8 @@ impl FullProfileWithFollowing {
                 WHERE f.follower_id = $1;"#,
             id
         )
-            .fetch_all(&pool)
-            .await?;
+        .fetch_all(&pool)
+        .await?;
         Ok(FullProfileWithFollowing { profile, following })
     }
 
@@ -175,8 +175,8 @@ impl FullProfileWithFollowing {
                 WHERE f.follower_id = $1;"#,
             id
         )
-            .fetch_one(&pool)
-            .await?;
+        .fetch_one(&pool)
+        .await?;
         Ok(c.unwrap())
     }
 }
@@ -188,6 +188,12 @@ pub struct UsernameAndServerId {
 
 impl UsernameAndServerId {
     pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<UsernameAndServerId, Error> {
-        sqlx::query_as!(UsernameAndServerId,r#"select server_id, username from profile where id= $1"#, id).fetch_one(&pool).await
+        sqlx::query_as!(
+            UsernameAndServerId,
+            r#"select server_id, username from profile where id= $1"#,
+            id
+        )
+        .fetch_one(&pool)
+        .await
     }
 }

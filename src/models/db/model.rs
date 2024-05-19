@@ -32,15 +32,15 @@ impl CreateModel {
             &ret_data.id,
             &self.files
         )
-            .execute(&pool)
-            .await?;
+        .execute(&pool)
+        .await?;
         sqlx::query!(
             r#"UPDATE file SET image_for_model_id = $1 WHERE id = ANY($2);"#,
             &ret_data.id,
             &self.images
         )
-            .execute(&pool)
-            .await?;
+        .execute(&pool)
+        .await?;
         Ok(ret_data)
     }
 }
@@ -73,7 +73,6 @@ impl FullModel {
             server_id, id
         ).fetch_one(&pool).await
     }
-
 
     pub async fn change_visibility_with_id_and_profile_id(
         published: &bool,

@@ -34,8 +34,8 @@ pub enum AppError {
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
-    where
-        E: std::error::Error,
+where
+    E: std::error::Error,
 {
     AppError::InternalServerError
 }

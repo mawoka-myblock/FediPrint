@@ -1,6 +1,10 @@
 use crate::helpers::auth::UserState;
-use crate::helpers::printables::{check_printables_profile, CheckPrintablesProfile, import_all_models, import_single_model, ImportModelResponse};
+use crate::helpers::printables::{
+    check_printables_profile, import_all_models, import_single_model, CheckPrintablesProfile,
+    ImportModelResponse,
+};
 use crate::helpers::AppResult;
+use crate::models::db::model::FullModel;
 use crate::models::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
@@ -11,7 +15,6 @@ use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use std::sync::Arc;
 use tracing::debug;
-use crate::models::db::model::FullModel;
 
 #[derive(Deserialize)]
 pub struct LinkToPrintablesInput {
@@ -94,7 +97,6 @@ pub struct ImportSingleModelFromPrintablesInput {
     pub id: i64,
 }
 
-
 #[debug_handler]
 pub async fn import_one_from_printables(
     Extension(claims): Extension<UserState>,
@@ -109,18 +111,19 @@ pub async fn import_one_from_printables(
             .unwrap());
     }
     let mut resp_code = StatusCode::OK;
-    let model: Option<FullModel> = match import_single_model(&input.id.to_string(), profile, state).await {
-        Ok(d) => Some(d),
-        Err(e) => {
-            resp_code = match e {
-                ImportModelResponse::ModelNotFound => StatusCode::NOT_FOUND,
-                ImportModelResponse::OtherError => StatusCode::INTERNAL_SERVER_ERROR,
-                ImportModelResponse::RequestError => StatusCode::INTERNAL_SERVER_ERROR,
-                ImportModelResponse::NotModelAuthor => StatusCode::UNAUTHORIZED
-            };
-            None
-        }
-    };
+    let model: Option<FullModel> =
+        match import_single_model(&input.id.to_string(), profile, state).await {
+            Ok(d) => Some(d),
+            Err(e) => {
+                resp_code = match e {
+                    ImportModelResponse::ModelNotFound => StatusCode::NOT_FOUND,
+                    ImportModelResponse::OtherError => StatusCode::INTERNAL_SERVER_ERROR,
+                    ImportModelResponse::RequestError => StatusCode::INTERNAL_SERVER_ERROR,
+                    ImportModelResponse::NotModelAuthor => StatusCode::UNAUTHORIZED,
+                };
+                None
+            }
+        };
     match model {
         Some(d) => Ok(Response::builder()
             .status(StatusCode::OK)
@@ -129,6 +132,6 @@ pub async fn import_one_from_printables(
         None => Ok(Response::builder()
             .status(resp_code)
             .body(Body::from(""))
-            .unwrap())
+            .unwrap()),
     }
 }

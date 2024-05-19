@@ -54,7 +54,7 @@ pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
         None,
         None,
     )
-        .expect("S3 credentials invalid");
+    .expect("S3 credentials invalid");
     let mut bucket = Bucket::new(&config.s3_bucket_name, s3_region.clone(), s3_creds.clone())
         .expect("S3 Bucket initialization failed");
     bucket.set_path_style();
@@ -66,9 +66,9 @@ pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
             s3_creds,
             BucketConfiguration::default(),
         )
-            .await
-            .unwrap()
-            .bucket;
+        .await
+        .unwrap()
+        .bucket;
         bucket.set_path_style();
     }
     let sqlx_pool = match pool {
@@ -216,10 +216,7 @@ pub async fn get_server() -> Router {
                 auth_middleware,
             )),
         )
-        .route(
-            "/api/v1/storage/download/:id",
-            get(v1::storage::get_file),
-        )
+        .route("/api/v1/storage/download/:id", get(v1::storage::get_file))
         .route(
             "/api/v1/model/create",
             post(v1::model::create_model).route_layer(middleware::from_fn_with_state(
@@ -265,15 +262,8 @@ pub async fn get_server() -> Router {
                 middleware::from_fn_with_state(state.clone(), auth_middleware),
             ),
         )
-        .route(
-            "/api/v1/statuses/:id",
-            get(v1::statuses::get_status),
-        )
-        .route(
-            "/api/v1/nodeinfo/2.0",
-            get(v1::nodeinfo::get_nodeinfo)
-        )
-
+        .route("/api/v1/statuses/:id", get(v1::statuses::get_status))
+        .route("/api/v1/nodeinfo/2.0", get(v1::nodeinfo::get_nodeinfo))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
 }

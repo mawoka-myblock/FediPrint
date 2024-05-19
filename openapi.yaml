@@ -206,16 +206,16 @@ paths:
       tags:
         - interact
       summary: Post a note
-      responses: 
+      responses:
         "200":
           description: Note created successfully
       requestBody:
         required: true
-        content: 
+        content:
           "application/json":
-            schema: 
+            schema:
               type: object
-              properties: 
+              properties:
                 content:
                   type: string
                 audience:
@@ -227,18 +227,16 @@ paths:
                     - Nobody
                 hashtags:
                   type: array
-                  items: 
+                  items:
                     type: string
                 mentions:
                   type: array
-                  items: 
+                  items:
                     type: string
                 in_reply_to:
                   type: string
-              required: 
+              required:
                 - content
                 - audience
                 - hashtags
                 - mentions
-
-                    

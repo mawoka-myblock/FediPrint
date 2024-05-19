@@ -113,8 +113,8 @@ impl FullFile {
             id,
             profile_id
         )
-            .execute(&pool)
-            .await?;
+        .execute(&pool)
+        .await?;
         Ok(())
     }
     pub async fn get_many_files(ids_in: Vec<Uuid>, pool: PgPool) -> Result<Vec<FullFile>, Error> {
