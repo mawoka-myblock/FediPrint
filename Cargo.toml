@@ -54,6 +54,10 @@ meilisearch-sdk = "0.25.0"
 tower = { version = "0.4", features = ["util"] }
 hyper = "1.1.0"
 
+[build-dependencies]
+vergen-gix = { version = "1.0.0-beta.2", features = ["build"] }
+anyhow = "1"
+
 [profile.dev]
 debug = 0
 

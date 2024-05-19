@@ -132,6 +132,10 @@ pub async fn get_server() -> Router {
             get(routes::well_known::webfinger::handler),
         )
         .route(
+            "/.well-known/nodeinfo",
+            get(routes::well_known::nodeinfo::handler),
+        )
+        .route(
             "/api/v1/user/:username",
             get(v1::activitypub::profile::get_user_profile),
         )
@@ -265,6 +269,11 @@ pub async fn get_server() -> Router {
             "/api/v1/statuses/:id",
             get(v1::statuses::get_status),
         )
+        .route(
+            "/api/v1/nodeinfo/2.0",
+            get(v1::nodeinfo::get_nodeinfo)
+        )
+
         .with_state(state)
         .layer(TraceLayer::new_for_http())
 }
