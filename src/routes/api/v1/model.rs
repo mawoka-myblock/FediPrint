@@ -8,7 +8,7 @@ use crate::models::model::CreateModel;
 use crate::routes::api::v1::storage::PaginationQuery;
 use crate::AppState;
 use axum::body::Body;
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
 use axum::http::{StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
@@ -143,9 +143,9 @@ pub struct GetModelQuery {
 #[debug_handler]
 pub async fn get_model(
     State(state): State<Arc<AppState>>,
-    query: Query<GetModelQuery>,
+    Path(id): Path<Uuid>,
 ) -> AppResult<impl IntoResponse> {
-    let model = FullModelWithRelationsIds::get_by_id(&query.id, state.pool.clone()).await?;
+    let model = FullModelWithRelationsIds::get_by_id(&id, state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

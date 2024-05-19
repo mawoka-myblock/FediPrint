@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use axum::body::Body;
 use axum::debug_handler;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use tracing::debug;
@@ -9,7 +9,6 @@ use uuid::Uuid;
 use crate::AppState;
 use crate::helpers::{AppResult, ensure_ap_header};
 use crate::models::activitypub::ActivityPubModel;
-use crate::routes::api::v1::model::GetModelQuery;
 
 #[debug_handler]
 pub async fn get_status(
