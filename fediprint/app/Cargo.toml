@@ -1,0 +1,61 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = { version = "0.7.4", features = ["macros", "multipart"] }
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
+tokio = { version = "1.36.0", features = ["full"] }
+openssl = "0.10.63"
+argon2 = "0.5.3"
+axum-extra = { version = "0.9.2", features = ["cookie"] }
+chrono = { version = "0.4.34", features = ["clock", "serde"] }
+tower-http = { version = "0.5.1", features = ["cors", "fs", "trace"] }
+oauth2 = "4.4.2"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+uuid = { version = "1.7.0", features = ["serde", "v4", "fast-rng", "v7"] }
+jsonwebtoken = "9"
+dotenvy = "0.15.7"
+serde_derive = "1.0.196"
+regex = "1.10.3"
+anyhow = "1.0.79"
+base64 = "0.21.7"
+url = "2.5.0"
+rust-s3 = { version = "0.34.0-rc4", features = ["async-std"] }
+aws-creds = "0.36.0"
+blurhash = "0.2.0"
+futures = "0.3.30"
+tokio-util = "0.7.10"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tracing = "0.1"
+http-body-util = "0.1"
+mime = "0.3.17"
+
+# new db
+sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros", "migrate" ] }
+# email
+lettre = "0.11"
+lettre_email = "0.9"
+email_address = "0.2"
+# search
+meilisearch-sdk = "0.25.0"
+shared = {path = "../shared"}
+
+
+[dev-dependencies]
+tower = { version = "0.4", features = ["util"] }
+hyper = "1.1.0"
+
+[build-dependencies]
+vergen-gix = { version = "1.0.0-beta.2", features = ["build"] }
+anyhow = "1"
+
+[profile.dev]
+debug = 0
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3
