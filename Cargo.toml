@@ -1,6 +1,6 @@
 [workspace]
 
-members = ["prusaslicer", "prusaslicer/prusaslicer_macros"]
+members = [ "database","prusaslicer", "prusaslicer/prusaslicer_macros", "worker"]
 
 [package]
 name = "fedi_print"
@@ -48,6 +48,7 @@ lettre_email = "0.9"
 email_address = "0.2"
 # search
 meilisearch-sdk = "0.25.0"
+database = {path = "./database"}
 
 
 [dev-dependencies]

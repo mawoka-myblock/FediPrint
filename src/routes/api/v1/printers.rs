@@ -1,8 +1,8 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use crate::models::db::printer::CreatePrinter as DbCreatePrinter;
-use crate::models::db::printer::FullPrinter;
-use crate::models::printers::{CreatePrinter, UpdatePrinter};
+use database::::db::printer::CreatePrinter as DbCreatePrinter;
+use database::::db::printer::FullPrinter;
+use database::::printers::{CreatePrinter, UpdatePrinter};
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
@@ -89,7 +89,7 @@ pub async fn update_printer(
 mod tests {
     use super::*;
     use crate::get_state;
-    use crate::models::db::ModifiedScale;
+    use database::::db::ModifiedScale;
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use serde_json::Value;

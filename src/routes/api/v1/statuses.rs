@@ -1,5 +1,5 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use crate::models::activitypub::ActivityPubModel;
+use database::::activitypub::ActivityPubModel;
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;

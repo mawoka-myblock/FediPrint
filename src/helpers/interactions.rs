@@ -1,10 +1,10 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
 use crate::helpers::Config;
-use crate::models::activitypub::{FollowRequest, Profile};
-use crate::models::data::Webfinger;
+use database::::activitypub::{FollowRequest, Profile};
+use database::::data::Webfinger;
 
-use crate::models::db::profile::{ExtendedCreateProfile, FullProfile};
+use database::profile::{ExtendedCreateProfile, FullProfile};
 use anyhow::Context;
 use chrono::DateTime;
 use sqlx::PgPool;

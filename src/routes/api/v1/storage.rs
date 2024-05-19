@@ -1,7 +1,7 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use crate::models::db::file::{CreateFile, FullFile, UpdateFile};
-use crate::models::storage::UpdateImageMetadata;
+use database::::db::file::{CreateFile, FullFile, UpdateFile};
+use database::::storage::UpdateImageMetadata;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Multipart, Path, Query, State};

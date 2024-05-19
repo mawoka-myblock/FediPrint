@@ -1,4 +1,4 @@
-use crate::models::db::ModifiedScale;
+use database::::db::ModifiedScale;
 use serde_derive::Deserialize;
 use uuid::Uuid;
 

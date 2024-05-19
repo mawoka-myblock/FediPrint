@@ -4,8 +4,8 @@ use crate::helpers::printables::{
     ImportModelResponse,
 };
 use crate::helpers::AppResult;
-use crate::models::db::model::FullModel;
-use crate::models::db::profile::FullProfile;
+use database::::db::model::FullModel;
+use database::::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;

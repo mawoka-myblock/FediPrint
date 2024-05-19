@@ -16,8 +16,8 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::helpers::auth::UserState;
-use crate::models::db::account::{CreateAccount, FullAccount};
-use crate::models::db::profile::{CreateProfile, FullProfile};
+use database::::db::account::{CreateAccount, FullAccount};
+use database::::db::profile::{CreateProfile, FullProfile};
 use crate::{
     helpers::auth::{generate_jwt, get_password_hash},
     helpers::{
@@ -152,7 +152,7 @@ pub async fn get_me_handler(
 mod tests {
     use super::*;
     use crate::get_state;
-    use crate::models::users::CreateUserInput;
+    use database::::users::CreateUserInput;
     use axum::http::StatusCode;
     use sqlx::PgPool;
 

@@ -1,10 +1,10 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::search::{index_model, search};
 use crate::helpers::AppResult;
-use crate::models::db::model::{
+use database::::db::model::{
     CreateModel as DbCreateModel, FullModel, FullModelWithRelationsIds,
 };
-use crate::models::model::CreateModel;
+use database::::model::CreateModel;
 use crate::routes::api::v1::storage::PaginationQuery;
 use crate::AppState;
 use axum::body::Body;

@@ -14,3 +14,9 @@ repos:
         language: rust
         files: \.rs$
         args: [ ]
+      - id: sqlx-prep
+        name: Sqlx prepare
+        entry: cargo sqlx prepare
+        pass_filenames: false
+        language: system
+        files: \.sql$

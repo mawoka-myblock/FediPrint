@@ -1,7 +1,7 @@
-use crate::models::db::file::{CreateFile, FullFile};
-use crate::models::db::model::FullModel;
-use crate::models::db::profile::FullProfile;
-use crate::models::db::ModelLicense;
+use database::::db::file::{CreateFile, FullFile};
+use database::::db::model::FullModel;
+use database::::db::profile::FullProfile;
+use database::::db::ModelLicense;
 use crate::AppState;
 use anyhow::bail;
 use chrono::{DateTime, Utc};

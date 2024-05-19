@@ -1,6 +1,6 @@
-use crate::models::db::model::FullModel;
-use crate::models::db::note::FullNote;
-use crate::models::db::EventAudience;
+use database::::db::model::FullModel;
+use database::::db::note::FullNote;
+use database::::db::EventAudience;
 use chrono::{DateTime, Utc};
 use meilisearch_sdk::{errors::Error, Index, SearchResult, SearchResults};
 use serde_derive::{Deserialize, Serialize};

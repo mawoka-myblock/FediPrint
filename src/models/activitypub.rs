@@ -1,6 +1,6 @@
-use crate::models::db::file::FullFile;
-use crate::models::db::profile::UsernameAndServerId;
-use crate::models::db::ModelLicense;
+use database::::db::file::FullFile;
+use database::::db::profile::UsernameAndServerId;
+use database::::db::ModelLicense;
 use chrono::{DateTime, Utc};
 use serde_derive::Deserialize;
 use serde_derive::Serialize;

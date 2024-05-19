@@ -1,6 +1,6 @@
 use crate::helpers::AppResult;
-use crate::models::data::{Webfinger, WebfingerLink};
-use crate::models::db::profile::FullProfile;
+use database::::data::{Webfinger, WebfingerLink};
+use database::::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;

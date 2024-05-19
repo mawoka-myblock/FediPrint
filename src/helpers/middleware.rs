@@ -15,7 +15,7 @@ use serde::Serialize;
 use crate::helpers::auth::{
     check_if_token_was_valid, generate_jwt, read_jwt, InputClaims, UserState,
 };
-use crate::models::db::account::FullAccount;
+use database::::db::account::FullAccount;
 
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {

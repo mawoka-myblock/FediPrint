@@ -12,9 +12,9 @@ use std::fmt;
 use uuid::Uuid;
 
 #[cfg(test)]
-use crate::models::db::account::FullAccount;
+use database::::db::account::FullAccount;
 #[cfg(test)]
-use crate::models::db::profile::FullProfile;
+use database::::db::profile::FullProfile;
 #[cfg(test)]
 use crate::{TEST_ACCOUNT_UUID, TEST_PROFILE_UUID};
 #[cfg(test)]

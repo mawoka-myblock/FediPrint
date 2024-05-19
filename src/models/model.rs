@@ -1,4 +1,4 @@
-use crate::models::db::ModelLicense;
+use database::::db::ModelLicense;
 use serde_derive::Deserialize;
 use uuid::Uuid;
 

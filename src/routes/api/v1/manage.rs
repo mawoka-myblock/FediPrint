@@ -1,7 +1,7 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::interactions::{create_remote_profile, follow_user};
 use crate::helpers::AppResult;
-use crate::models::db::profile::FullProfile;
+use database::::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;

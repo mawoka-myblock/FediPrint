@@ -1,10 +1,10 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use crate::models::activitypub::Profile;
-use crate::models::activitypub::{
+use database::::activitypub::Profile;
+use database::::activitypub::{
     AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, IdentityKey, OrderedCollection,
     PeopleDataPage, PublicKey,
 };
-use crate::models::db::profile::{FullProfile, FullProfileWithFollower, FullProfileWithFollowing};
+use database::::db::profile::{FullProfile, FullProfileWithFollower, FullProfileWithFollowing};
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;

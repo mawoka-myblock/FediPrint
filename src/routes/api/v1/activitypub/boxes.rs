@@ -1,9 +1,9 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use crate::models::activitypub::{
+use database::::activitypub::{
     FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteJoinedModel,
     OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, Tag,
 };
-use crate::models::db::profile::FullProfile;
+use database::::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};

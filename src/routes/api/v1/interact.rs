@@ -1,7 +1,7 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use crate::models::db::note::{CreateNote, UserFacingNote};
-use crate::models::db::EventAudience;
+use database::::db::note::{CreateNote, UserFacingNote};
+use database::::db::EventAudience;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
