@@ -11,9 +11,10 @@ repos:
       - id: format
         name: format
         entry: cargo fmt
+        pass_filenames: false
         language: rust
         files: \.rs$
-        args: ["--manifest-path", "fediprint/Cargo.toml", "--"]
+        args: ["--all","--manifest-path", "fediprint/Cargo.toml"]
       - id: sqlx-prep
         name: Sqlx prepare
         entry: sh -c "cd fediprint && cargo sqlx prepare --workspace"
