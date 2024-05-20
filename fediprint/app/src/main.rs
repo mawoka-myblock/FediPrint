@@ -1,5 +1,5 @@
 use dotenvy::dotenv;
-use helpers::Config;
+use shared::helpers::config::Config;
 use std::sync::Arc;
 use std::time::Duration;
 

@@ -1,5 +1,15 @@
 -- Add up migration script here
 
+CREATE OR REPLACE FUNCTION notify_worker_update() RETURNS TRIGGER AS
+$$
+BEGIN
+    -- Get the ID of the newly inserted row
+    PERFORM pg_notify('worker_update', NEW.id::TEXT);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TYPE job_status AS ENUM (
     'UNPROCESSED',
     'PROCESSING',
@@ -22,4 +32,11 @@ CREATE TABLE jobs
     processing_times FLOAT[]     DEFAULT '{}'                      NOT NULL,
     updated_at       TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP         NOT NULL,
     job_type         INTEGER                                       NOT NULL
-)
+);
+
+
+CREATE TRIGGER worker_update_trigger
+    AFTER INSERT
+    ON jobs
+    FOR EACH ROW
+EXECUTE FUNCTION notify_worker_update();

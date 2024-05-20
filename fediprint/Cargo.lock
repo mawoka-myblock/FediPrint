@@ -5161,12 +5161,16 @@ dependencies = [
 name = "worker"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
+ "dotenvy",
  "num-derive",
  "num-traits",
  "serde",
  "serde_json",
+ "shared",
  "sqlx",
+ "tokio",
  "uuid 1.8.0",
 ]
 

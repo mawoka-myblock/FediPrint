@@ -1,6 +1,6 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
-use crate::helpers::Config;
+use shared::helpers::config::Config;
 use shared::models::activitypub::{FollowRequest, Profile};
 use shared::models::data::Webfinger;
 
