@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Account Confirmation</title>
+    </head>
+    <body>
+        <p>Dear {{ username }},</p>
+
+        <p>
+            Thank you for creating an account with FediPrint. Your account has
+            been successfully created.
+        </p>
+
+        <p>To activate your account, please click on the following link:</p>
+        <a href="{{ verify_link }}">Verify your account</a>
+
+        <p>
+            Once you have verified your account, you will be able to access all
+            of the features of FediPrint.
+        </p>
+
+        <p>Thank you,</p>
+        <p>Your instance admins</p>
+    </body>
+</html>

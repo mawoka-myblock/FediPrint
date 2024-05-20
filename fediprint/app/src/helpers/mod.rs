@@ -18,7 +18,6 @@ use reqwest::Error;
 use s3::error::S3Error;
 use sqlx::Error as SqlxError;
 use std::borrow::Cow;
-use std::str::FromStr;
 use tracing::debug;
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;

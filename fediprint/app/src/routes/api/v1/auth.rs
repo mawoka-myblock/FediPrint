@@ -153,7 +153,7 @@ mod tests {
     use super::*;
     use crate::get_state;
     use axum::http::StatusCode;
-    use shared::users::CreateUserInput;
+    use shared::models::users::CreateUserInput;
     use sqlx::PgPool;
 
     #[sqlx::test]

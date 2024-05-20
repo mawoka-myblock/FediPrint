@@ -1,4 +1,6 @@
-use std::str::FromStr;
+use percent_encoding::percent_decode_str;
+use std::{process::exit, str::FromStr};
+use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -14,6 +16,16 @@ pub struct Config {
     pub meilisearch_url: String,
     pub meilisearch_key: String,
     pub registration_disabled: bool,
+    pub smtp: SmtpData,
+}
+
+#[derive(Debug, Clone)]
+pub struct SmtpData {
+    pub server: String,
+    pub username: String,
+    pub password: String,
+    pub port: i32,
+    pub email: String,
 }
 
 impl Config {
@@ -34,6 +46,19 @@ impl Config {
             std::env::var("MEILISEARCH_URL").expect("MEILISEARCH_URL must be set");
         let meilisearch_key =
             std::env::var("MEILISEARCH_KEY").expect("MEILISEARCH_KEY must be set");
+        let smtp_uri =
+            Url::parse(&std::env::var("SMTP_URI").expect("SMTP_URI must be set")).unwrap();
+        let smtp = SmtpData {
+            server: smtp_uri.host().unwrap().to_string(),
+            port: i32::from(smtp_uri.port().unwrap()),
+            username: percent_decode_str(smtp_uri.username())
+                .decode_utf8_lossy()
+                .to_string(),
+            password: percent_decode_str(smtp_uri.password().unwrap())
+                .decode_utf8_lossy()
+                .to_string(),
+            email: smtp_uri.path()[1..].to_string(),
+        };
         Config {
             database_url,
             jwt_secret,
@@ -47,6 +72,7 @@ impl Config {
             meilisearch_url,
             meilisearch_key,
             registration_disabled,
+            smtp,
         }
     }
 }
