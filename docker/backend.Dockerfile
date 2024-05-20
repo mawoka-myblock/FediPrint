@@ -5,7 +5,7 @@ WORKDIR /app
 # To ensure a reproducible build consider pinning
 # the cargo-chef version with `--version X.X.X`
 RUN cargo install cargo-chef
-COPY . .
+COPY fediprint/ .
 # Compute a lock-like file for our project
 RUN cargo chef prepare  --recipe-path recipe.json
 
@@ -43,8 +43,11 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 
 
 
-COPY ./ .
-RUN cargo build --release
+COPY fediprint/ .
+COPY migrations migrations
+COPY .git .git
+RUN sed -i -e 's/\.\.\/\.\.\/migrations/\.\.\/migrations/g' app/src/main.rs
+RUN cargo build --release --bin app
 
 FROM debian:stable-slim
 
@@ -56,8 +59,8 @@ COPY --from=builder /etc/group /etc/group
 
 USER fediprint:fediprint
 
-COPY --from=builder /app/target/release/fedi_print fedi_print
+COPY --from=builder /app/target/release/app app
 
 EXPOSE 8000
 
-CMD ["/app/fedi_print"]
+CMD ["/app/app"]
