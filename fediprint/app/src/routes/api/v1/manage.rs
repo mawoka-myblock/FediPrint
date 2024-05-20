@@ -1,7 +1,6 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::interactions::{create_remote_profile, follow_user};
 use crate::helpers::AppResult;
-use shared::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
@@ -10,6 +9,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use regex::Regex;
 use serde::Deserialize;
+use shared::db::profile::FullProfile;
 use std::sync::Arc;
 
 #[derive(Deserialize)]

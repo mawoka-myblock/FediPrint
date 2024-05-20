@@ -1,17 +1,22 @@
-use sqlx::{Error, PgPool};
+use crate::types::{JobStatus, JobType};
 use chrono::{DateTime, Utc};
 use num_traits::ToPrimitive;
+use sqlx::{Error, PgPool};
 use uuid::Uuid;
-use crate::types::{JobType, JobStatus};
 
 mod types;
 
-
-
 struct CreateRawJob<'a> {
     input_data: &'a str,
-    max_tries: i8, // Should be 3
+    max_tries: i32, // Should be 3
     job_type: JobType,
+}
+impl CreateRawJob<'_> {
+    async fn create_raw_job(self, pool: PgPool) -> Result<i32, Error> {
+        sqlx::query_scalar!(r#"INSERT INTO jobs (input_data, max_tries, job_type) VALUES ($1, $2, $3) RETURNING id"#,
+        self.input_data, self.max_tries, self.job_type.to_i32()
+    ).fetch_one(&pool).await
+    }
 }
 
 struct FullJob {
@@ -27,16 +32,8 @@ struct FullJob {
     max_tries: i8,
     processing_time: Vec<f32>,
     updated_at: DateTime<Utc>,
-    job_type: JobType
+    job_type: JobType,
 }
 
-async fn create_raw_job(data: &str, max_tries: Option<i32>, job_type: JobType, pool: PgPool) -> Result<i32, Error> {
-    sqlx::query_scalar!(r#"INSERT INTO jobs (input_data, max_tries, job_type) VALUES ($1, $2, $3) RETURNING id"#,
-        data, max_tries, job_type.to_i32()
-    ).fetch_one(&pool).await
-}
-
-
-pub async fn send_register_confirm_email(to_user: &Uuid, pool: PgPool) -> Result<i64, Error> {
-
-}
+// pub async fn send_register_confirm_email(to_user: &Uuid, pool: PgPool) -> Result<i64, Error> {
+// }

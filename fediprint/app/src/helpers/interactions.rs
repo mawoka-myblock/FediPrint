@@ -4,9 +4,9 @@ use crate::helpers::Config;
 use shared::models::activitypub::{FollowRequest, Profile};
 use shared::models::data::Webfinger;
 
-use shared::db::profile::{ExtendedCreateProfile, FullProfile};
 use anyhow::Context;
 use chrono::DateTime;
+use shared::db::profile::{ExtendedCreateProfile, FullProfile};
 use sqlx::PgPool;
 use tracing::debug;
 use uuid::Uuid;

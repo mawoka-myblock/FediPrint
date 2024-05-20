@@ -12,13 +12,13 @@ use std::fmt;
 use uuid::Uuid;
 
 #[cfg(test)]
-use shared::db::account::FullAccount;
-#[cfg(test)]
-use shared::db::profile::FullProfile;
-#[cfg(test)]
 use crate::{TEST_ACCOUNT_UUID, TEST_PROFILE_UUID};
 #[cfg(test)]
 use openssl::rsa::Rsa;
+#[cfg(test)]
+use shared::db::account::FullAccount;
+#[cfg(test)]
+use shared::db::profile::FullProfile;
 #[cfg(test)]
 use sqlx::PgPool;
 

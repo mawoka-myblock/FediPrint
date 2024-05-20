@@ -1,11 +1,11 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use shared::models::activitypub::ActivityPubModel;
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
+use shared::models::activitypub::ActivityPubModel;
 use std::sync::Arc;
 use tracing::debug;
 use uuid::Uuid;

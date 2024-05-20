@@ -1,7 +1,5 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use shared::db::note::{CreateNote, UserFacingNote};
-use shared::db::EventAudience;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
@@ -9,6 +7,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
+use shared::db::note::{CreateNote, UserFacingNote};
+use shared::db::EventAudience;
 use std::sync::Arc;
 
 #[derive(Deserialize)]

@@ -1,6 +1,4 @@
 use crate::helpers::AppResult;
-use shared::models::data::{Webfinger, WebfingerLink};
-use shared::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
@@ -9,6 +7,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use regex::Regex;
 use serde::Deserialize;
+use shared::db::profile::FullProfile;
+use shared::models::data::{Webfinger, WebfingerLink};
 use std::sync::Arc;
 
 #[derive(Deserialize)]

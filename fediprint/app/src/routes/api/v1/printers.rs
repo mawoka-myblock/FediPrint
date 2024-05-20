@@ -1,14 +1,14 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use shared::db::printer::CreatePrinter as DbCreatePrinter;
-use shared::db::printer::FullPrinter;
-use shared::models::printers::{CreatePrinter, UpdatePrinter};
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
+use shared::db::printer::CreatePrinter as DbCreatePrinter;
+use shared::db::printer::FullPrinter;
+use shared::models::printers::{CreatePrinter, UpdatePrinter};
 use std::sync::Arc;
 
 #[debug_handler]
@@ -89,10 +89,10 @@ pub async fn update_printer(
 mod tests {
     use super::*;
     use crate::get_state;
-    use shared::db::ModifiedScale;
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use serde_json::Value;
+    use shared::db::ModifiedScale;
     use sqlx::PgPool;
     use std::clone::Clone;
     use uuid::uuid;

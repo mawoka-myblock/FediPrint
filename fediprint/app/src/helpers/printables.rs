@@ -1,7 +1,3 @@
-use shared::db::file::{CreateFile, FullFile};
-use shared::db::model::FullModel;
-use shared::db::profile::FullProfile;
-use shared::db::ModelLicense;
 use crate::AppState;
 use anyhow::bail;
 use chrono::{DateTime, Utc};
@@ -10,6 +6,10 @@ use reqwest::header::CONTENT_TYPE;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::Value;
+use shared::db::file::{CreateFile, FullFile};
+use shared::db::model::FullModel;
+use shared::db::profile::FullProfile;
+use shared::db::ModelLicense;
 use std::io;
 use std::sync::Arc;
 use tokio_util::io::StreamReader;

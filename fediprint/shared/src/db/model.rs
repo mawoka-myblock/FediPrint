@@ -1,6 +1,6 @@
 use crate::db::ModelLicense;
 use chrono::{DateTime, Utc};
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
 use std::collections::HashSet;
 use uuid::Uuid;

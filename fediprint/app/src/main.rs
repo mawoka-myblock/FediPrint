@@ -79,7 +79,10 @@ pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
             .await
             .expect("can't connect to database"),
     };
-    sqlx::migrate!("../../migrations").run(&sqlx_pool).await.unwrap();
+    sqlx::migrate!("../../migrations")
+        .run(&sqlx_pool)
+        .await
+        .unwrap();
 
     let client =
         meilisearch_sdk::Client::new(&config.meilisearch_url, Some(&config.meilisearch_key));

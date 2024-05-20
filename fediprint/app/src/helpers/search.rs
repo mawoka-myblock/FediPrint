@@ -1,10 +1,10 @@
-use shared::db::model::FullModel;
-use shared::db::note::FullNote;
-use shared::db::EventAudience;
 use chrono::{DateTime, Utc};
 use meilisearch_sdk::{errors::Error, Index, SearchResult, SearchResults};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+use shared::db::model::FullModel;
+use shared::db::note::FullNote;
+use shared::db::EventAudience;
 use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, PartialEq, Clone)]

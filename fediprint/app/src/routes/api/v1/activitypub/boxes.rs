@@ -1,9 +1,4 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use shared::models::activitypub::{
-    FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteJoinedModel,
-    OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, Tag,
-};
-use shared::db::profile::FullProfile;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
@@ -11,6 +6,11 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde_derive::Deserialize;
 use serde_json::json;
+use shared::db::profile::FullProfile;
+use shared::models::activitypub::{
+    FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteJoinedModel,
+    OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, Tag,
+};
 use std::sync::Arc;
 use uuid::Uuid;
 

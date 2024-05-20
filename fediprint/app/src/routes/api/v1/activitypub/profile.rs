@@ -1,10 +1,4 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use shared::models::activitypub::Profile;
-use shared::models::activitypub::{
-    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, IdentityKey, OrderedCollection,
-    PeopleDataPage, PublicKey,
-};
-use shared::db::profile::{FullProfile, FullProfileWithFollower, FullProfileWithFollowing};
 use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
@@ -12,6 +6,12 @@ use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde_derive::Deserialize;
+use shared::db::profile::{FullProfile, FullProfileWithFollower, FullProfileWithFollowing};
+use shared::models::activitypub::Profile;
+use shared::models::activitypub::{
+    AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, IdentityKey, OrderedCollection,
+    PeopleDataPage, PublicKey,
+};
 use std::sync::Arc;
 
 #[debug_handler]
