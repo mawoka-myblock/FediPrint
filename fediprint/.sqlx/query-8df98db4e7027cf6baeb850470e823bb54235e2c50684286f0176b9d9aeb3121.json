@@ -13,7 +13,16 @@
       "Left": [
         "Text",
         "Int4",
-        "Int4"
+        {
+          "Custom": {
+            "name": "job_type",
+            "kind": {
+              "Enum": [
+                "SEND_REGISTER_EMAIL"
+              ]
+            }
+          }
+        }
       ]
     },
     "nullable": [

@@ -1,0 +1,122 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            id,\n            created_at,\n            started_at,\n            status AS \"status!: types::JobStatus\",\n            retry_at,\n            finished_at,\n            input_data,\n            return_data,\n            failure_log,\n            tries,\n            max_tries,\n            processing_times,\n            updated_at,\n            job_type AS \"job_type!: types::JobType\"\n        FROM\n            jobs\n        WHERE\n            id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "status!: types::JobStatus",
+        "type_info": {
+          "Custom": {
+            "name": "job_status",
+            "kind": {
+              "Enum": [
+                "UNPROCESSED",
+                "PROCESSING",
+                "FINISHED",
+                "WAITING_FOR_RETRY",
+                "FAILED"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "retry_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "finished_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "input_data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "return_data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "failure_log",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 9,
+        "name": "tries",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "max_tries",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "processing_times",
+        "type_info": "Float8Array"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "job_type!: types::JobType",
+        "type_info": {
+          "Custom": {
+            "name": "job_type",
+            "kind": {
+              "Enum": [
+                "SEND_REGISTER_EMAIL"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "782e4a164390367098d1875ee201a2648c3699c56e0aaa60396a6843fb6c7788"
+}
