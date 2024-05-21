@@ -1,13 +1,40 @@
 use anyhow::Result;
+use chrono::{DateTime, TimeDelta, Utc};
 use dotenvy::dotenv;
 use shared::helpers::config::Config;
 use sqlx::postgres::{PgListener, PgPoolOptions};
+use sqlx::{Error, PgPool};
+use std::sync::Arc;
 use std::time::Duration;
+use std::time::Instant;
 use tracing::debug;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use types::JobResponseFailure;
+
+use crate::tasks::email::send_register_email;
+use crate::types::JobStatus;
 mod tasks;
 pub mod types;
+
+async fn save_failed_job(
+    data: JobResponseFailure,
+    t: f64,
+    job_id: i32,
+    pool: PgPool,
+) -> Result<(), Error> {
+    let mut retry_at: Option<DateTime<Utc>> = None;
+    let mut status: JobStatus = JobStatus::Failed;
+    if data.try_in.is_some() {
+        retry_at = Some(Utc::now() + TimeDelta::milliseconds(data.try_in.unwrap().into()));
+        status = JobStatus::WaitingForRetry;
+    }
+    sqlx::query!(
+        r#"UPDATE jobs SET retry_at = $1, failure_log = array_append(failure_log, $2), processing_times = array_append(processing_times, $3), status = $4 WHERE id = $5"#,
+        retry_at, data.failure_message, t, status as _, job_id
+    ).execute(&pool).await?;
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -75,5 +102,11 @@ async fn main() -> Result<()> {
         )
         .fetch_one(&pool)
         .await?;
+        let start_time = Instant::now();
+        let data = match job.job_type {
+            types::JobType::SendRegisterEmail => {
+                send_register_email(job, &config, pool.clone()).await
+            }
+        };
     }
 }

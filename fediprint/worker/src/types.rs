@@ -8,13 +8,14 @@ pub enum JobStatus {
     Processing,
     Finished,
     WaitingForRetry,
+    Failed,
 }
 #[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type, Clone)]
 #[sqlx(type_name = "job_type", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum JobType {
     SendRegisterEmail,
 }
-
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct FullJob {
     pub id: i64,
     pub created_at: DateTime<Utc>,
@@ -31,14 +32,28 @@ pub struct FullJob {
     pub updated_at: DateTime<Utc>,
     pub job_type: JobType,
 }
-
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct JobResponseSuccess<'a> {
     pub processing_time: f64,
     pub resp_data: Option<&'a str>,
 }
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
+pub struct JobResponseFailure {
+    pub try_in: Option<i32>, // in seconds
+    pub failure_message: String,
+}
 
-pub struct JobResponseFailure<'a> {
-    pub processing_time: f64,
-    pub try_in: i32, // in seconds
-    pub failure_message: &'a str,
+impl JobResponseFailure {
+    pub fn try_in_30(msg: &str) -> Self {
+        JobResponseFailure {
+            try_in: Some(30),
+            failure_message: msg.to_string(),
+        }
+    }
+    pub fn never_try(msg: &str) -> Self {
+        JobResponseFailure {
+            try_in: None,
+            failure_message: msg.to_string(),
+        }
+    }
 }

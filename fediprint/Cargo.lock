@@ -5229,6 +5229,7 @@ dependencies = [
  "askama",
  "chrono",
  "dotenvy",
+ "lettre 0.11.7",
  "num-derive",
  "num-traits",
  "serde",
