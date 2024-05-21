@@ -34,12 +34,15 @@ jobs:
       - name: Install SQLx CLI
         run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
       - name: Apply migrations
+        working-directory: fediprint
         run: sqlx mig run
       - name: Run tests & Coverage
+        working-directory: fediprint
         run: cargo tarpaulin --all-features --workspace --out Xml --engine=llvm
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
+          files: ./fediprint/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: mawoka-myblock/FediPrint
       - name: Stop containers
