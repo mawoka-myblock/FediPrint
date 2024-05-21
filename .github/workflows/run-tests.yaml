@@ -34,7 +34,6 @@ jobs:
       - name: Install SQLx CLI
         run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
       - name: Apply migrations
-        working-directory: fediprint
         run: sqlx mig run
       - name: Run tests & Coverage
         working-directory: fediprint
