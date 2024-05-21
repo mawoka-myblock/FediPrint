@@ -73,9 +73,9 @@ pub async fn send_register_email(
         username: &profile.username,
         verify_link: &link,
     };
-    let html = template
-        .render()
-        .map_err(|e| format!("Failed to render email template: {:?}", e))?;
+    let html = template.render().map_err(|e| {
+        JobResponseFailure::try_in_30(&format!("Failed to render email template: {e}"))
+    })?;
     send_email("Verify your email", &user.email, &html, &cfg.smtp).await?;
     Ok("".into())
 }

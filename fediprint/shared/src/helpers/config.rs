@@ -1,5 +1,5 @@
 use percent_encoding::percent_decode_str;
-use std::{process::exit, str::FromStr};
+use std::str::FromStr;
 use url::Url;
 
 #[derive(Debug, Clone)]

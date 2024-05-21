@@ -4,7 +4,6 @@ use dotenvy::dotenv;
 use shared::helpers::config::Config;
 use sqlx::postgres::{PgListener, PgPoolOptions};
 use sqlx::{Error, PgPool};
-use std::sync::Arc;
 use std::time::Duration;
 use std::time::Instant;
 use tracing::debug;
@@ -19,7 +18,7 @@ pub mod types;
 
 async fn save_failed_job(
     data: JobResponseFailure,
-    t: f64,
+    t: u128,
     job_id: i32,
     pool: PgPool,
 ) -> Result<(), Error> {
@@ -31,7 +30,14 @@ async fn save_failed_job(
     }
     sqlx::query!(
         r#"UPDATE jobs SET retry_at = $1, failure_log = array_append(failure_log, $2), processing_times = array_append(processing_times, $3), status = $4 WHERE id = $5"#,
-        retry_at, data.failure_message, t, status as _, job_id
+        retry_at, data.failure_message, t as i64, status as _, job_id
+    ).execute(&pool).await?;
+    Ok(())
+}
+async fn save_success_job(data: String, t: u128, job_id: i32, pool: PgPool) -> Result<(), Error> {
+    sqlx::query!(
+        r#"UPDATE jobs SET return_data = $1, processing_times = array_append(processing_times, $2), status = $3 WHERE id = $4"#,
+        data, t as i64, JobStatus::Finished as _, job_id
     ).execute(&pool).await?;
     Ok(())
 }
@@ -105,8 +111,13 @@ async fn main() -> Result<()> {
         let start_time = Instant::now();
         let data = match job.job_type {
             types::JobType::SendRegisterEmail => {
-                send_register_email(job, &config, pool.clone()).await
+                send_register_email(job.clone(), &config, pool.clone()).await
             }
         };
+        let elapsed = start_time.elapsed().as_millis();
+        match data {
+            Ok(d) => save_success_job(d, elapsed, job.id as i32, pool.clone()).await?,
+            Err(e) => save_failed_job(e, elapsed, job.id as i32, pool.clone()).await?,
+        }
     }
 }

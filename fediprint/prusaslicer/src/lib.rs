@@ -377,7 +377,7 @@ pub struct PrusaSlicerOptions {
     pub wipe_into_infill: Option<NoExtraParam>,
     pub wipe_into_objects: Option<NoExtraParam>,
 }
-
+#[allow(dead_code)]
 fn main() {
     /*    let options = PrusaSlicerOptions {
         align_xy: Some(NoExtraParam),

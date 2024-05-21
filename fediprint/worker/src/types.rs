@@ -33,9 +33,8 @@ pub struct FullJob {
     pub job_type: JobType,
 }
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
-pub struct JobResponseSuccess<'a> {
-    pub processing_time: f64,
-    pub resp_data: Option<&'a str>,
+pub struct JobResponseSuccess {
+    pub resp_data: Option<String>,
 }
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct JobResponseFailure {
@@ -44,12 +43,14 @@ pub struct JobResponseFailure {
 }
 
 impl JobResponseFailure {
+    #[allow(dead_code)]
     pub fn try_in_30(msg: &str) -> Self {
         JobResponseFailure {
             try_in: Some(30),
             failure_message: msg.to_string(),
         }
     }
+    #[allow(dead_code)]
     pub fn never_try(msg: &str) -> Self {
         JobResponseFailure {
             try_in: None,

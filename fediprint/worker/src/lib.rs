@@ -1,7 +1,4 @@
-use crate::types::{JobStatus, JobType};
-use chrono::{DateTime, Utc};
-use num_traits::ToPrimitive;
-use shared::db::account::FullAccount;
+use crate::types::JobType;
 use sqlx::{Error, PgPool};
 use uuid::Uuid;
 
