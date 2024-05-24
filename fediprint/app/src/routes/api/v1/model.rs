@@ -9,8 +9,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use serde_derive::{Deserialize, Serialize};
-use shared::db::model::CreateModel;
 use shared::db::model::{CreateModel as DbCreateModel, FullModel, FullModelWithRelationsIds};
+use shared::models::model::CreateModel;
 use std::sync::Arc;
 use uuid::Uuid;
 

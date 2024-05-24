@@ -82,7 +82,7 @@
 		});
 		if (res.ok) {
 			const d = await res.json();
-			window.location.assign(`/models/${d.id}`);
+			window.location.assign(`/model/${d.id}?own=true`);
 		} else {
 			alert('Error creating model!');
 		}
