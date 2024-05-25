@@ -10,7 +10,7 @@ use axum::extract::DefaultBodyLimit;
 use axum::http::Method;
 use axum::{
     middleware,
-    routing::{delete, get, patch, post, put},
+    routing::{delete, get, head, patch, post, put},
     Router,
 };
 use s3::{Bucket, BucketConfiguration, Region};
@@ -219,6 +219,10 @@ pub async fn get_server() -> Router {
             )),
         )
         .route("/api/v1/storage/download/:id", get(v1::storage::get_file))
+        .route(
+            "/api/v1/storage/download/:id",
+            head(v1::storage::get_file_head),
+        )
         .route(
             "/api/v1/model/create",
             post(v1::model::create_model).route_layer(middleware::from_fn_with_state(

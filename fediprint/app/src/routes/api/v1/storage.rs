@@ -175,12 +175,7 @@ pub async fn delete_file(
         .unwrap())
 }
 
-#[debug_handler]
-pub async fn get_file(
-    Path(id): Path<Uuid>,
-    State(state): State<Arc<AppState>>,
-) -> AppResult<impl IntoResponse> {
-    let file = FullFile::get_by_id(&id, state.pool.clone()).await?;
+fn get_file_headers(file: FullFile) -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", file.mime_type.parse().unwrap());
     if file.file_name.is_some() {
@@ -204,15 +199,30 @@ pub async fn get_file(
         "X-Updated-At",
         file.updated_at.to_rfc3339().parse().unwrap(),
     );
+    headers
+}
 
-    let body = Body::from_stream(
-        state
-            .s3
-            .get_object_stream(file.id.to_string())
-            .await
-            .unwrap()
-            .bytes,
-    );
+#[debug_handler]
+pub async fn get_file(
+    Path(id): Path<Uuid>,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<impl IntoResponse> {
+    let file = FullFile::get_by_id(&id, state.pool.clone()).await?;
+    let file_id = file.id.to_string();
+    let headers = get_file_headers(file);
+
+    let body = Body::from_stream(state.s3.get_object_stream(file_id).await.unwrap().bytes);
 
     Ok((headers, Response::builder().body(body).unwrap()))
+}
+
+#[debug_handler]
+pub async fn get_file_head(
+    Path(id): Path<Uuid>,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<impl IntoResponse> {
+    let file = FullFile::get_by_id(&id, state.pool.clone()).await?;
+    let headers = get_file_headers(file);
+
+    Ok(headers)
 }
