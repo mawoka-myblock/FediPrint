@@ -3,6 +3,7 @@ use crate::helpers::AppResult;
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Multipart, Path, Query, State};
+use axum::http::HeaderMap;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
@@ -179,13 +180,39 @@ pub async fn get_file(
     Path(id): Path<Uuid>,
     State(state): State<Arc<AppState>>,
 ) -> AppResult<impl IntoResponse> {
+    let file = FullFile::get_by_id(&id, state.pool.clone()).await?;
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", file.mime_type.parse().unwrap());
+    if file.file_name.is_some() {
+        headers.insert(
+            "Content-Disposition",
+            format!("attachment; filename={}", file.file_name.unwrap())
+                .parse()
+                .unwrap(),
+        );
+    }
+
+    if file.thumbhash.is_some() {
+        headers.insert("X-Blurhash", file.thumbhash.unwrap().parse().unwrap());
+    }
+    headers.insert("Content-Length", format!("{}", file.size).parse().unwrap());
+    headers.insert(
+        "X-Created-At",
+        file.created_at.to_rfc3339().parse().unwrap(),
+    );
+    headers.insert(
+        "X-Updated-At",
+        file.updated_at.to_rfc3339().parse().unwrap(),
+    );
+
     let body = Body::from_stream(
         state
             .s3
-            .get_object_stream(id.to_string())
+            .get_object_stream(file.id.to_string())
             .await
             .unwrap()
             .bytes,
     );
-    Ok(Response::builder().body(body).unwrap())
+
+    Ok((headers, Response::builder().body(body).unwrap()))
 }

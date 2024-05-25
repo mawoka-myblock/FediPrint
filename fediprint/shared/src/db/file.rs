@@ -129,4 +129,10 @@ impl FullFile {
                 LEFT JOIN model m on f.file_for_model_id = m.id OR f.image_for_model_id = m.id
             WHERE m.id = $1"#, ids).fetch_all(&pool).await
     }
+    pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullFile, Error> {
+        sqlx::query_as!(FullFile, r#"SELECT id, created_at, updated_at, mime_type, size, file_name, description, alt_text, thumbhash, preview_file_id, to_be_deleted_at, profile_id, file_for_model_id, image_for_model_id FROM file
+        WHERE id = $1;"#,
+            id
+        ).fetch_one(&pool).await
+    }
 }
