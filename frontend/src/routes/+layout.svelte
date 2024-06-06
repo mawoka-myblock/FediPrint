@@ -1,8 +1,14 @@
 <script lang="ts">
 	import '@unocss/reset/tailwind-compat.css';
+	import Navbar from '$lib/components/navbar.svelte';
 </script>
 
-<slot />
+<div class="h-screen flex flex-col">
+	<Navbar />
+	<div class="w-full h-full">
+		<slot />
+	</div>
+</div>
 
 <style>
 	:global(.marck-script) {

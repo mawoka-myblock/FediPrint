@@ -11,6 +11,6 @@ export interface FullModelWithRelationsIds {
     license: string
     created_at: string
     updated_at: string
-    files?: string[]
+    files: string[]
     images?: string[]
 }

@@ -190,6 +190,9 @@ fn get_file_headers(file: FullFile) -> HeaderMap {
     if file.thumbhash.is_some() {
         headers.insert("X-Blurhash", file.thumbhash.unwrap().parse().unwrap());
     }
+    if file.alt_text.is_some() {
+        headers.insert("X-Alttext", file.alt_text.unwrap().parse().unwrap());
+    }
     headers.insert("Content-Length", format!("{}", file.size).parse().unwrap());
     headers.insert(
         "X-Created-At",

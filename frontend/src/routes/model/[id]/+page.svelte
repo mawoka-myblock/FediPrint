@@ -3,6 +3,7 @@
 <script lang="ts">
 	import type { FullModelWithRelationsIds } from '$lib/helpers/typings.js';
 	import BrownButton from '$lib/components/button/brown.svelte';
+	import Gallery from '$lib/components/media/gallery.svelte';
 
 	const { data } = $props();
 	const model: FullModelWithRelationsIds = data.model;
@@ -37,5 +38,14 @@
 	{/if}
 	<div class="flex flex-col w-full">
 		<h1 class="text-4xl mx-a">{model.title}</h1>
+	</div>
+	<div class="grid grid-cols-2">
+
+		<Gallery image_ids={model.images}/>
+
+
+		{#if model.description}
+			<p>{model.description}</p>
+		{/if}
 	</div>
 </div>
