@@ -45,6 +45,7 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 
 COPY fediprint/ .
 COPY migrations migrations
+COPY fediprint/.sqlx .sqlx
 COPY .git .git
 RUN sed -i -e 's/\.\.\/\.\.\/migrations/\.\.\/migrations/g' app/src/main.rs
 RUN cargo build --release --bin app

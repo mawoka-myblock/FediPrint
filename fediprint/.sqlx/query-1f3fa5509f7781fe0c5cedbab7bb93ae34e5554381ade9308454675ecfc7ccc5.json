@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, created_at, updated_at, mime_type, size, file_name, description, alt_text, thumbhash, preview_file_id, to_be_deleted_at, profile_id, file_for_model_id, image_for_model_id FROM file\n        WHERE id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "size",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "file_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "thumbhash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "preview_file_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "to_be_deleted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "profile_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 12,
+        "name": "file_for_model_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "image_for_model_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "1f3fa5509f7781fe0c5cedbab7bb93ae34e5554381ade9308454675ecfc7ccc5"
+}

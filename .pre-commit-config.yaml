@@ -8,8 +8,8 @@ repos:
       - id: mixed-line-ending
   - repo: local
     hooks:
-      - id: format
-        name: format
+      - id: format_rust
+        name: format_rust
         entry: cargo fmt
         pass_filenames: false
         language: rust
@@ -21,3 +21,9 @@ repos:
         pass_filenames: false
         language: rust
         files: \.sql$
+      # - id: format_frontend
+      #   name: format_frontend
+      #   entry: pnpm --prefix frontend/ format:specific
+      #   pass_filenames: true
+      #   language: system
+      #   files: frontend\/.*

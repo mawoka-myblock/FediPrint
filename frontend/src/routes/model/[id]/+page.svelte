@@ -40,8 +40,9 @@
 		<h1 class="text-4xl mx-a">{model.title}</h1>
 	</div>
 	<div class="grid grid-cols-2">
-		<Gallery image_ids={model.images} />
-
+		{#if model.images}
+			<Gallery image_ids={model.images} />
+		{/if}
 		{#if model.description}
 			<p>{model.description}</p>
 		{/if}
