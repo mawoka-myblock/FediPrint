@@ -4,7 +4,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			user: Claims | null
+			user: Claims | null;
 		}
 		// interface PageData {}
 		// interface PageState {}
@@ -14,12 +14,12 @@ declare global {
 
 export {};
 export interface Claims {
-    sub: string,
-    email: string,
-    username: string,
-    display_name: string,
-    profile_id: string,
-    server_id: string,
-    exp: number,
-    iat: number,
+	sub: string;
+	email: string;
+	username: string;
+	display_name: string;
+	profile_id: string;
+	server_id: string;
+	exp: number;
+	iat: number;
 }

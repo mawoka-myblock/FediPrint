@@ -5,7 +5,6 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { draw, slide } from 'svelte/transition';
 
-
 	let menuIsClosed = true;
 	const toggleMenu = () => {
 		menuIsClosed = !menuIsClosed;
@@ -19,15 +18,13 @@
 	if (browser) {
 		darkMode =
 			localStorage.theme === 'dark' ||
-			(!('theme' in localStorage) &&
-				window.matchMedia('(prefers-color-scheme: dark)').matches);
+			(!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
 	}
 
 	const switchDarkMode = () => {
 		!darkMode ? localStorage.setItem('theme', 'dark') : localStorage.setItem('theme', 'light');
 		window.location.reload();
 	};
-
 </script>
 
 <nav class="w-screen px-4 lg:px-10 py-2 sticky backdrop-blur-2xl bg-white/70 shadow-md z-30 top-0">
@@ -42,12 +39,11 @@
 			<!-- <a class="btn-nav" href="/explore">Explore</a> -->
 			<a class="btn-nav" href="/search">Search</a>
 			{#if $user}
-			<a class="btn-nav border-2 rounded" href="/models/create/select">Create</a>
+				<a class="btn-nav border-2 rounded" href="/models/create/select">Create</a>
 
 				<a class="btn-nav" href="/models/own">Own Models</a>
 			{:else}
-				<a class="btn-nav" href="/docs">Docs
-                </a>
+				<a class="btn-nav" href="/docs">Docs </a>
 				<a
 					target="_blank"
 					class="btn-nav flex items-center gap-1"
@@ -63,14 +59,9 @@
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
-						><path
-							d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-						/><polyline points="15 3 21 3 21 9" /><line
-							x1="10"
-							x2="21"
-							y1="14"
-							y2="3"
-						/></svg
+						><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
+							points="15 3 21 3 21 9"
+						/><line x1="10" x2="21" y1="14" y2="3" /></svg
 					>
 				</a>
 			{/if}
@@ -83,8 +74,7 @@
 					<a class="btn-nav" href="/auth/register">Register</a>
 				{/if}
 
-				<a class="btn-nav" href="/auth/login?returnTo=">Login</a
-				>
+				<a class="btn-nav" href="/auth/login?returnTo=">Login</a>
 			{/if}
 
 			<div class="fit-content flex items-center justify-center gap-2">
@@ -95,7 +85,7 @@
 								switchDarkMode();
 							}}
 							aria-label="Activate light mode"
-                            class="bg-transparent"
+							class="bg-transparent"
 						>
 							<!-- Heroicons: sun -->
 							<svg
@@ -121,7 +111,7 @@
 								switchDarkMode();
 							}}
 							aria-label="Activate darkmode"
-                            class="bg-transparent"
+							class="bg-transparent"
 						>
 							<!-- Heroicons: moon -->
 							<svg
@@ -215,12 +205,7 @@
 				{/if}
 
 				{#if menuIsClosed}
-					<button
-						class="px-3"
-						id="open-menu"
-						on:click={toggleMenu}
-						aria-label="Open navbar"
-					>
+					<button class="px-3" id="open-menu" on:click={toggleMenu} aria-label="Open navbar">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="24"
@@ -236,12 +221,7 @@
 						</svg>
 					</button>
 				{:else}
-					<button
-						class="px-3"
-						id="close-menu"
-						on:click={toggleMenu}
-						aria-label="Close navbar"
-					>
+					<button class="px-3" id="close-menu" on:click={toggleMenu} aria-label="Close navbar">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="24"
@@ -287,14 +267,9 @@
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							class="lucide lucide-external-link"
-							><path
-								d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-							/><polyline points="15 3 21 3 21 9" /><line
-								x1="10"
-								x2="21"
-								y1="14"
-								y2="3"
-							/></svg
+							><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
+								points="15 3 21 3 21 9"
+							/><line x1="10" x2="21" y1="14" y2="3" /></svg
 						>
 					</a>
 				{/if}
@@ -307,9 +282,7 @@
 						<a class="btn-nav" href="/auth/register">Register</a>
 					{/if}
 
-					<a class="btn-nav" href="/auth/login?returnTo="
-						>Login</a
-					>
+					<a class="btn-nav" href="/auth/login?returnTo=">Login</a>
 				{/if}
 			</div>
 		{/if}

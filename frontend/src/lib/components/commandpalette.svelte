@@ -41,7 +41,7 @@ SPDX-License-Identifier: MPL-2.0
 			command: 'newquiz',
 			args: ['title'],
 			action: (args) => window.location.assign(`/create?title=${args.join(' ')}`)
-		},
+		}
 	];
 	let visible_items = actions;
 
@@ -177,13 +177,13 @@ SPDX-License-Identifier: MPL-2.0
 </script>
 
 {#if open}
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		class="fixed top-0 left-0 w-screen h-screen flex bg-black bg-opacity-50 z-50"
 		on:click={close_on_outside}
-        on:keydown={() =>{}}
-        aria-roledescription="Command palette to navigate quickly"
-        aria-role="dialog"
+		on:keydown={() => {}}
+		aria-roledescription="Command palette to navigate quickly"
+		aria-role="dialog"
 		transition:fade={{ duration: 60 }}
 	>
 		<div class="m-auto w-1/3 h-2/3 rounded bg-black flex flex-col">
@@ -212,14 +212,11 @@ SPDX-License-Identifier: MPL-2.0
 					>
 						<div class="flex">
 							<h3 class="text-lg my-auto">{vi.title}</h3>
-							<p
-								class="font-mono my-auto ml-auto h-fit bg-black bg-opacity-50 rounded p-0.5"
-							>
+							<p class="font-mono my-auto ml-auto h-fit bg-black bg-opacity-50 rounded p-0.5">
 								/{vi.command}
 								{#if vi.args}
 									{#each vi.args as arg}
-										&lbrace;<span class="text-indigo-400">{arg}</span
-										>&rbrace;{/each}
+										&lbrace;<span class="text-indigo-400">{arg}</span>&rbrace;{/each}
 								{/if}
 							</p>
 						</div>

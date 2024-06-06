@@ -10,17 +10,17 @@
 	const own: boolean = data.own;
 
 	const toggle_visibility = async () => {
-		const res = await fetch("/api/v1/model/visibility", {
-			method: "PATCH",
-			headers: {"Content-Type": "application/json"},
-			body: JSON.stringify({model_id: model.id, public: !model.published})
-		})
+		const res = await fetch('/api/v1/model/visibility', {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ model_id: model.id, public: !model.published })
+		});
 		if (res.ok) {
-			window.location.reload()
-			return
+			window.location.reload();
+			return;
 		}
-		alert("Something went wrong!")
-	}
+		alert('Something went wrong!');
+	};
 </script>
 
 <div class="w-screen">
@@ -40,9 +40,7 @@
 		<h1 class="text-4xl mx-a">{model.title}</h1>
 	</div>
 	<div class="grid grid-cols-2">
-
-		<Gallery image_ids={model.images}/>
-
+		<Gallery image_ids={model.images} />
 
 		{#if model.description}
 			<p>{model.description}</p>

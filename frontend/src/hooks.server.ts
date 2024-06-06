@@ -13,10 +13,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.user = null;
 		return resolve(event, uno_data);
 	}
-	const jwt = jws.decode(access_token)
+	const jwt = jws.decode(access_token);
 	const user = jwt?.payload;
-	delete user["private_key"]
+	delete user['private_key'];
 	event.locals.user = user;
 	return resolve(event, uno_data);
-
-}
+};

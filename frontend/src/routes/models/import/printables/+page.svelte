@@ -5,7 +5,7 @@
 	let import_id: undefined | number = $state(undefined);
 
 	const import_single = async () => {
-		loading = true
+		loading = true;
 		const res = await fetch('/api/v1/links/printables/import/single', {
 			method: 'POST',
 			headers: {
@@ -18,26 +18,26 @@
 			window.location.assign('/auth/link/printables');
 		}
 		if (res.status === 401) {
-			alert("The model isn't owned by you")
+			alert("The model isn't owned by you");
 		}
-		if ( res.status === 404) {
-			alert("Model wasn't found")
+		if (res.status === 404) {
+			alert("Model wasn't found");
 		}
 		if (res.status === 500) {
-			alert("Model probably already imported")
+			alert('Model probably already imported');
 		}
 		if (res.status === 422) {
-			alert("Invalid ID")
+			alert('Invalid ID');
 		}
 		if (res.status === 200) {
-			const json = await res.json()
-			window.location.assign("/model/"+json.id)
+			const json = await res.json();
+			window.location.assign('/model/' + json.id);
 		}
-		loading = false
+		loading = false;
 	};
 
 	const import_all = async () => {
-		loading = true
+		loading = true;
 		const res = await fetch('/api/v1/links/printables/import', {
 			method: 'POST'
 		});
@@ -52,7 +52,7 @@
 			alert('Success!');
 			window.location.assign('/home');
 		}
-		loading = false
+		loading = false;
 	};
 </script>
 
