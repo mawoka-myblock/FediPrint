@@ -3,7 +3,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend.Dockerfile
-    environment:
+      target: server
+    environment: &env
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/fedi_print"
       JWT_SECRET: "HALLO_WELT"
       PUBLIC_URL: "http://localhost:8080"
@@ -15,10 +16,14 @@ services:
       S3_BUCKET_NAME: "fediprint"
       MEILISEARCH_URL: "http://meilisearch:7700"
       MEILISEARCH_KEY: "MAIN_KEY"
+    depends_on:
+      - db
   frontend:
     build:
       context: ./frontend
       dockerfile: ../docker/frontend.Dockerfile
+    depends_on:
+      - db
   db:
     image: ghcr.io/mawoka-myblock/pg_uuidv7:main
     environment:
@@ -46,6 +51,14 @@ services:
       MINIO_ROOT_PASSWORD: fediprint
     volumes:
       - minio:/bitnami/minio/data
+  worker:
+    build:
+      context: .
+      dockerfile: ./docker/backend.Dockerfile
+      target: worker
+    environment: *env
+    depends_on:
+      - db
 volumes:
   db:
   search:
