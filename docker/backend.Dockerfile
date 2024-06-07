@@ -114,11 +114,11 @@ FROM debian:stable-slim AS worker
 WORKDIR /app
 RUN apt update && apt install -y openssl && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/group /etc/group
+COPY --from=builder-worker /etc/passwd /etc/passwd
+COPY --from=builder-worker /etc/group /etc/group
 
 USER fediprint:fediprint
 
-COPY --from=builder /app/target/release/worker worker
+COPY --from=builder-worker /app/target/release/worker worker
 
 CMD ["/app/worker"]
