@@ -3906,6 +3906,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "percent-encoding",
+ "reqwest 0.12.4",
  "serde",
  "serde_derive",
  "serde_json",

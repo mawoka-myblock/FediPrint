@@ -42,6 +42,89 @@ async fn save_success_job(data: String, t: u128, job_id: i32, pool: PgPool) -> R
     Ok(())
 }
 
+async fn run_job(task_id: i32, config: &Config, pool: PgPool) -> Result<(), Error> {
+    let lock_success: bool =
+        sqlx::query_scalar!(r#"SELECT pg_try_advisory_lock($1)"#, i64::from(task_id))
+            .fetch_one(&pool)
+            .await
+            .unwrap()
+            .expect("DB query failed");
+    if !lock_success {
+        debug!("Could not acquire lock, waiting for next event");
+        return Ok(());
+    }
+    debug!("Yay! Acquired lock for job {task_id}");
+    let job = sqlx::query_as!(
+        types::FullJob,
+        r#"SELECT
+        id,
+        created_at,
+        started_at,
+        status AS "status!: types::JobStatus",
+        retry_at,
+        finished_at,
+        input_data,
+        return_data,
+        failure_log,
+        tries,
+        max_tries,
+        processing_times,
+        updated_at,
+        job_type AS "job_type!: types::JobType"
+    FROM
+        jobs
+    WHERE
+        id = $1"#,
+        task_id
+    )
+    .fetch_one(&pool)
+    .await?;
+    let start_time = Instant::now();
+    let data = match job.job_type {
+        types::JobType::SendRegisterEmail => {
+            send_register_email(job.clone(), &config, pool.clone()).await
+        }
+    };
+    let elapsed = start_time.elapsed().as_millis();
+    match data {
+        Ok(d) => save_success_job(d, elapsed, job.id as i32, pool.clone()).await,
+        Err(e) => save_failed_job(e, elapsed, job.id as i32, pool.clone()).await,
+    }
+}
+
+async fn fetch_and_process_jobs(config: &Config, pool: PgPool) -> Result<(), Error> {
+    let jobs = sqlx::query_as!(
+        types::FullJob,
+        r#"SELECT
+        id,
+        created_at,
+        started_at,
+        status AS "status!: types::JobStatus",
+        retry_at,
+        finished_at,
+        input_data,
+        return_data,
+        failure_log,
+        tries,
+        max_tries,
+        processing_times,
+        updated_at,
+        job_type AS "job_type!: types::JobType"
+    FROM
+        jobs
+    WHERE
+        status = 'UNPROCESSED'
+        AND updated_at < NOW() - INTERVAL '15 minutes'
+    LIMIT 10"# // Limit the number of jobs fetched to avoid overloading
+    )
+    .fetch_all(&pool)
+    .await?;
+    for job in jobs {
+        run_job(job.id as i32, config, pool.clone()).await?;
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::registry()
@@ -64,60 +147,30 @@ async fn main() -> Result<()> {
         .expect("can't connect to database");
     let mut listener = PgListener::connect_with(&pool).await?;
     listener.listen_all(vec!["worker_update"]).await?;
+
+    let periodic_check_interval = Duration::from_secs(300); // 5 minutes
+
     loop {
-        let notification = listener.recv().await?;
-        debug!(
-            "Received notification: with {} on channel {}",
-            notification.payload(),
-            notification.channel()
-        );
-        let task_id: i32 = notification.payload().parse().unwrap();
-        let lock_success: bool =
-            sqlx::query_scalar!(r#"SELECT pg_try_advisory_lock($1)"#, i64::from(task_id))
-                .fetch_one(&pool)
-                .await
-                .unwrap()
-                .expect("DB query failed");
-        if !lock_success {
-            debug!("Could not acquire lock, waiting for next event");
-            continue;
-        }
-        debug!("Yay! Acquired lock for job {task_id}");
-        let job = sqlx::query_as!(
-            types::FullJob,
-            r#"SELECT
-            id,
-            created_at,
-            started_at,
-            status AS "status!: types::JobStatus",
-            retry_at,
-            finished_at,
-            input_data,
-            return_data,
-            failure_log,
-            tries,
-            max_tries,
-            processing_times,
-            updated_at,
-            job_type AS "job_type!: types::JobType"
-        FROM
-            jobs
-        WHERE
-            id = $1"#,
-            task_id
-        )
-        .fetch_one(&pool)
-        .await?;
-        let start_time = Instant::now();
-        let data = match job.job_type {
-            types::JobType::SendRegisterEmail => {
-                send_register_email(job.clone(), &config, pool.clone()).await
+        tokio::select! {
+            notification = listener.recv() => {
+                match notification {
+                    Ok(notification) => {
+                        debug!(
+                            "Received notification: with {} on channel {}",
+                            notification.payload(),
+                            notification.channel()
+                        );
+                        let task_id: i32 = notification.payload().parse().unwrap();
+                        run_job(task_id, &config, pool.clone()).await?;
+                    },
+                    Err(e) => {
+                        debug!("Failed to receive notification: {:?}", e);
+                    }
+                }
+            },
+            _ = tokio::time::sleep(periodic_check_interval) => {
+                fetch_and_process_jobs(&config, pool.clone()).await?;
             }
-        };
-        let elapsed = start_time.elapsed().as_millis();
-        match data {
-            Ok(d) => save_success_job(d, elapsed, job.id as i32, pool.clone()).await?,
-            Err(e) => save_failed_job(e, elapsed, job.id as i32, pool.clone()).await?,
         }
     }
 }
