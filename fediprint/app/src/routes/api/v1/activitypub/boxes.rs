@@ -18,7 +18,7 @@ use shared::models::activitypub::{
 };
 use shared::models::inbox::InboxEvent;
 use std::sync::Arc;
-use tracing::error;
+use tracing::{debug, error};
 use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -190,10 +190,11 @@ pub async fn post_inbox(
     State(state): State<Arc<AppState>>,
     Json(event): Json<InboxEvent>,
 ) -> AppResult<impl IntoResponse> {
-    match ensure_ap_header(&headers) {
-        Ok(_) => (),
-        Err(e) => return Ok(e),
-    };
+    // match ensure_ap_header(&headers) {
+    //     Ok(_) => (),
+    //     Err(e) => return Ok(e),
+    // };
+    debug!("Req Content Type: {:?}", headers.get("accept"));
     let event_type = event.event_type.as_str();
     let _ = match event_type {
         "Announce" => handle_announce(event).await,
