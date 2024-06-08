@@ -12,6 +12,7 @@ services:
       - db:/var/lib/postgresql/data
     ports:
       - 5432:5432
+    restart: unless-stopped
   meilisearch:
     image: getmeili/meilisearch:v1.7
     volumes:
@@ -21,12 +22,14 @@ services:
     environment:
       MEILI_NO_ANALYTICS: "true"
       MEILI_MASTER_KEY: MASTER_KEY
+    restart: unless-stopped
   caddy:
     image: caddy:alpine
     volumes:
       - ./docker/dev.Caddyfile:/etc/caddy/Caddyfile
     network_mode: "host"
     privileged: true
+    restart: unless-stopped
   minio:
     image: bitnami/minio
     environment:
@@ -37,6 +40,7 @@ services:
     ports:
       - 9000:9000
       - 9001:9001
+    restart: unless-stopped
 volumes:
   db:
   search:
