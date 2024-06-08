@@ -169,7 +169,7 @@ pub async fn get_server() -> Router {
         )
         .route(
             "/api/v1/user/:username/inbox",
-            post(v1::activitypub::boxes::post_inbox),
+            post(v1::activitypub::boxes::post_user_inbox),
         )
         .route(
             "/api/v1/printers/create",
@@ -285,7 +285,7 @@ async fn main() {
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 // axum logs rejections from built-in extractors with the `axum::rejection`
                 // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "fedi_print=debug,tower_http=debug,axum::rejection=trace".into()
+                "fedi_print=trace,tower_http=debug,axum::rejection=trace".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())

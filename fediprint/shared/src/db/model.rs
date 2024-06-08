@@ -229,4 +229,53 @@ impl FullModelWithRelationsIds {
             offset, limit, profile_id
         ).fetch_all(&pool).await
     }
+    pub async fn change_visibility_with_id_and_profile_id(
+        published: &bool,
+        id: &Uuid,
+        profile_id: &Uuid,
+        pool: PgPool,
+    ) -> Result<FullModelWithRelationsIds, Error> {
+        sqlx::query_as!(FullModelWithRelationsIds, r#"WITH updated_model AS (
+            UPDATE model
+            SET published = $1
+            WHERE id = $2 AND profile_id = $3
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at
+        )
+        SELECT
+            m.id,
+            m.server,
+            m.server_id,
+            m.profile_id,
+            m.published,
+            m.title,
+            m.summary,
+            m.description,
+            m.tags,
+            m.license AS "license!: ModelLicense",
+            m.created_at,
+            m.updated_at,
+            array_agg(DISTINCT f.id) AS files,
+            array_agg(DISTINCT i.id) AS images
+        FROM
+            updated_model AS m
+        LEFT JOIN
+            file AS f ON m.id = f.file_for_model_id
+        LEFT JOIN
+            file AS i ON m.id = i.image_for_model_id
+        GROUP BY
+            m.id,
+            m.server,
+            m.server_id,
+            m.profile_id,
+            m.published,
+            m.title,
+            m.summary,
+            m.description,
+            m.tags,
+            m.license,
+            m.created_at,
+            m.updated_at;"#r,
+            published, id, profile_id
+        ).fetch_one(&pool).await
+    }
 }

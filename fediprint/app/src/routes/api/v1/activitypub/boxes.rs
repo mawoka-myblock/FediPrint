@@ -184,7 +184,7 @@ pub async fn get_outbox(
         .unwrap())
 }
 
-pub async fn post_inbox(
+pub async fn post_user_inbox(
     Path(username): Path<String>,
     headers: HeaderMap,
     State(state): State<Arc<AppState>>,

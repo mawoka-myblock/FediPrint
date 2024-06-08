@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use meilisearch_sdk::{errors::Error, Index, SearchResult, SearchResults};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use shared::db::model::FullModel;
+use shared::db::model::{FullModel, FullModelWithRelationsIds};
 use shared::db::note::FullNote;
 use shared::db::EventAudience;
 use uuid::Uuid;
@@ -24,6 +24,7 @@ pub struct MsModel {
     pub tags: Vec<String>,
     pub profile_id: Uuid,
     pub record_type: RecordType,
+    pub image_ids: Vec<Uuid>,
 }
 
 impl MsModel {
@@ -40,6 +41,7 @@ impl MsModel {
                     tags: self.tags,
                     profile_id: self.profile_id,
                     record_type: RecordType::Model,
+                    image_ids: self.image_ids,
                 }],
                 Some("id"),
             )
@@ -55,7 +57,11 @@ impl MsModel {
     }
 }
 
-pub async fn index_model(model: &FullModel, profile_id: &Uuid, index: &Index) -> Result<(), Error> {
+pub async fn index_model(
+    model: &FullModelWithRelationsIds,
+    profile_id: &Uuid,
+    index: &Index,
+) -> Result<(), Error> {
     if !model.published {
         MsModel::delete_if_existing(&model.id, index).await?;
         return Ok(());
@@ -70,6 +76,7 @@ pub async fn index_model(model: &FullModel, profile_id: &Uuid, index: &Index) ->
         created_at: model.created_at,
         updated_at: model.updated_at,
         record_type: RecordType::Note,
+        image_ids: model.images.clone().unwrap_or(vec![]),
     }
     .index(index)
     .await?;
@@ -92,6 +99,7 @@ pub async fn index_note(note: &FullNote, profile_id: &Uuid, index: &Index) -> Re
         created_at: note.created_at,
         profile_id: *profile_id,
         record_type: RecordType::Note,
+        image_ids: vec![],
     }
     .index(index)
     .await?;

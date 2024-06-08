@@ -5,6 +5,7 @@
 	import { invalidateAll, pushState, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import type { SearchResult } from './proxy+page.js';
+	import Gallery from '$lib/components/media/gallery.svelte';
 	// import { page as svelte_page } from '$app/stores';
 
 	let { data } = $props();
@@ -40,6 +41,7 @@
 				{#if search_results}
 					{#each search_results.hits as m}
 						<div class="rounded-lg border-2 border-c-grey aspect-square">
+							<Gallery image_ids={m.result.images}
 							<h3>{m.result.title}</h3>
 						</div>
 					{/each}

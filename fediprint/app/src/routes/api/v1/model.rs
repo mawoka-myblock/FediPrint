@@ -99,7 +99,7 @@ pub async fn change_model_visibility(
     State(state): State<Arc<AppState>>,
     Json(input): Json<ChangeModelVisibilityInput>,
 ) -> AppResult<impl IntoResponse> {
-    let model = FullModel::change_visibility_with_id_and_profile_id(
+    let model = FullModelWithRelationsIds::change_visibility_with_id_and_profile_id(
         &input.public,
         &input.model_id,
         &claims.profile_id,
