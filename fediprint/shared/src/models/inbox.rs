@@ -9,7 +9,7 @@ pub struct InboxEvent {
     pub context: String,
     #[serde(rename = "type")]
     pub event_type: String,
-    pub to: Vec<String>,
+    pub to: Option<Vec<String>>,
     pub actor: String,
     pub object: Value,
 }
