@@ -169,7 +169,7 @@ pub async fn get_server() -> Router {
         )
         .route(
             "/api/v1/user/:username/inbox",
-            get(v1::activitypub::boxes::post_inbox),
+            post(v1::activitypub::boxes::post_inbox),
         )
         .route(
             "/api/v1/printers/create",
