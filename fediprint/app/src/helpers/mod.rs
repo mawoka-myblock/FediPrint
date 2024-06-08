@@ -1,3 +1,4 @@
+pub mod activitypub;
 pub mod auth;
 pub mod interactions;
 pub mod middleware;

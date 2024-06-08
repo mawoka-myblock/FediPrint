@@ -1,9 +1,14 @@
+use crate::helpers::activitypub::inbox_activities::{
+    handle_accept, handle_add, handle_announce, handle_create, handle_delete, handle_follow,
+    handle_like, handle_reject, handle_remove, handle_undo, handle_update,
+};
 use crate::helpers::{ensure_ap_header, AppResult};
 use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde_derive::Deserialize;
 use serde_json::json;
 use shared::db::profile::FullProfile;
@@ -11,7 +16,9 @@ use shared::models::activitypub::{
     FocalPoint, NoteBoxItemFirst, NoteBoxItemObject, NoteBoxItemReplies, NoteJoinedModel,
     OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, Tag,
 };
+use shared::models::inbox::InboxEvent;
 use std::sync::Arc;
+use tracing::error;
 use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -174,5 +181,41 @@ pub async fn get_outbox(
         .status(StatusCode::OK)
         .header("Content-Type", "application/activity+json; charset=utf-8")
         .body(Body::from(serde_json::to_string(&data).unwrap()))
+        .unwrap())
+}
+
+pub async fn post_inbox(
+    Path(username): Path<String>,
+    headers: HeaderMap,
+    State(state): State<Arc<AppState>>,
+    Json(event): Json<InboxEvent>,
+) -> AppResult<impl IntoResponse> {
+    match ensure_ap_header(&headers) {
+        Ok(_) => (),
+        Err(e) => return Ok(e),
+    };
+    let event_type = event.event_type.as_str();
+    let _ = match event_type {
+        "Announce" => handle_announce(event).await,
+        "Create" => handle_create(event).await,
+        "Update" => handle_update(event).await,
+        "Delete" => handle_delete(event).await,
+        "Follow" => handle_follow(event).await,
+        "Accept" => handle_accept(event).await,
+        "Reject" => handle_reject(event).await,
+        "Remove" => handle_remove(event).await,
+        "Like" => handle_like(event).await,
+        "Undo" => handle_undo(event).await,
+        "Add" => handle_add(event).await,
+        _ => {
+            error!("Unknown event: {}", event_type);
+            Ok(())
+        }
+    };
+
+    Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/activity+json; charset=utf-8")
+        .body(Body::from(""))
         .unwrap())
 }

@@ -168,6 +168,10 @@ pub async fn get_server() -> Router {
             get(v1::activitypub::boxes::get_outbox),
         )
         .route(
+            "/api/v1/user/:username/inbox",
+            get(v1::activitypub::boxes::post_inbox),
+        )
+        .route(
             "/api/v1/printers/create",
             post(v1::printers::create_printer).route_layer(middleware::from_fn_with_state(
                 state.clone(),
