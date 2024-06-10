@@ -80,9 +80,9 @@ async fn get_node_info_url(url: String) -> Result<Option<String>> {
 pub async fn get_instance_by_base_url(base_url: &str, pool: PgPool) -> Result<FullInstance> {
     // BetterErrorHandling
     let instance_db_res = FullInstance::get_by_base_url(base_url, pool.clone()).await;
-    if instance_db_res.is_ok() {
-        return Ok(instance_db_res.unwrap());
-    }
+    if let Ok(v) = instance_db_res {
+        return Ok(v);
+    };
     let nodeinfo_url = get_node_info_url(format!("{}/.well-known/nodeinfo", base_url)).await?;
     if nodeinfo_url.is_none() {
         bail!("NodeInfo Url could not be found")
@@ -101,5 +101,5 @@ pub async fn get_instance_by_base_url(base_url: &str, pool: PgPool) -> Result<Fu
         software: node_info.software.name,
         software_version: Some(node_info.software.version),
     };
-    return Ok(instance.create_and_return_full(pool.clone()).await?);
+    Ok(instance.create_and_return_full(pool.clone()).await?)
 }

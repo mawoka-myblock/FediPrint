@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use meilisearch_sdk::{errors::Error, Index, SearchResult, SearchResults};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use shared::db::model::{FullModel, FullModelWithRelationsIds};
+use shared::db::model::FullModelWithRelationsIds;
 use shared::db::note::FullNote;
 use shared::db::EventAudience;
 use uuid::Uuid;
@@ -76,7 +76,7 @@ pub async fn index_model(
         created_at: model.created_at,
         updated_at: model.updated_at,
         record_type: RecordType::Note,
-        image_ids: model.images.clone().unwrap_or(vec![]),
+        image_ids: model.images.clone().unwrap_or_default(),
     }
     .index(index)
     .await?;

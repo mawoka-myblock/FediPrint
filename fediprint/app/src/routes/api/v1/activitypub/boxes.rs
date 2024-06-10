@@ -185,9 +185,9 @@ pub async fn get_outbox(
 }
 
 pub async fn post_user_inbox(
-    Path(username): Path<String>,
+    // Path(username): Path<String>,
     headers: HeaderMap,
-    State(state): State<Arc<AppState>>,
+    // State(state): State<Arc<AppState>>,
     Json(event): Json<InboxEvent>,
 ) -> AppResult<impl IntoResponse> {
     // match ensure_ap_header(&headers) {

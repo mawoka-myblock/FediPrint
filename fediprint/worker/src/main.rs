@@ -82,7 +82,7 @@ async fn run_job(task_id: i32, config: &Config, pool: PgPool) -> Result<(), Erro
     let start_time = Instant::now();
     let data = match job.job_type {
         types::JobType::SendRegisterEmail => {
-            send_register_email(job.clone(), &config, pool.clone()).await
+            send_register_email(job.clone(), config, pool.clone()).await
         }
     };
     let elapsed = start_time.elapsed().as_millis();
