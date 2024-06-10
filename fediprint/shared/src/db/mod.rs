@@ -2,6 +2,7 @@ use serde_derive::{Deserialize, Serialize};
 
 pub mod account;
 pub mod file;
+pub mod instances;
 pub mod model;
 pub mod note;
 pub mod printer;

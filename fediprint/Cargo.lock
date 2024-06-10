@@ -3904,6 +3904,7 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "percent-encoding",
  "reqwest 0.12.4",

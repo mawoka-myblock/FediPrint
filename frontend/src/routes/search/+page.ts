@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import type { PageLoad, Actions } from './$types';
+import type { PageLoad } from './$types';
 export interface SearchResult {
 	hits: Hit[];
 	offset: any;
@@ -28,6 +28,7 @@ export interface Result {
 	tags: string[];
 	profile_id: string;
 	record_type: string;
+	images: string[]
 }
 
 export const load: PageLoad = async ({ url, fetch }) => {

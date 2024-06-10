@@ -113,7 +113,7 @@ async fn fetch_and_process_jobs(config: &Config, pool: PgPool) -> Result<(), Err
     FROM
         jobs
     WHERE
-        status = 'UNPROCESSED'
+        (status = 'UNPROCESSED' OR retry_at < NOW())
         AND updated_at < NOW() - INTERVAL '15 minutes'
     LIMIT 10"# // Limit the number of jobs fetched to avoid overloading
     )
