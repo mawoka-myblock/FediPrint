@@ -1,4 +1,5 @@
 use dotenvy::dotenv;
+use shared::db::instances::CreateInstance;
 use shared::helpers::config::Config;
 use std::sync::Arc;
 use std::time::Duration;
@@ -83,6 +84,17 @@ pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
         .run(&sqlx_pool)
         .await
         .unwrap();
+
+    CreateInstance {
+        base_url: config.public_url.clone(),
+        instance_name: Some("PLACEHOLDER".to_string()),
+        user_count: None,
+        software: "fediprint".to_string(),
+        software_version: Some(env!("CARGO_PKG_VERSION").to_string()),
+    }
+    .create_local(sqlx_pool.clone())
+    .await
+    .expect("Could not save instance data to DB!");
 
     let client =
         meilisearch_sdk::Client::new(&config.meilisearch_url, Some(&config.meilisearch_key));

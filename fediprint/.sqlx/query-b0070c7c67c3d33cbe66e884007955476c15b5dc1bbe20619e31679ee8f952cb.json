@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO profile (username, server, server_id, display_name, inbox, outbox, public_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+  "query": "SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance\n            FROM profile WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -62,17 +62,16 @@
         "ordinal": 11,
         "name": "linked_printables_profile",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "instance",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
-        "Text",
-        "Text",
-        "Text",
-        "Text",
-        "Text",
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -87,8 +86,9 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "0457c04aa8123fc7a5b62801273a54454002dc4f650cfa3445e1efffdc6a7741"
+  "hash": "b0070c7c67c3d33cbe66e884007955476c15b5dc1bbe20619e31679ee8f952cb"
 }

@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO instances (id,base_url, instance_name, user_count, software, software_version)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ON CONFLICT (id) DO UPDATE\n                SET base_url = $2,\n                    instance_name = $3,\n                    software = $5,\n                    software_version = $6\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eee80d463c71b5c0b44781afe552c7116f1be6b74d19c2757665af182344378b"
+}

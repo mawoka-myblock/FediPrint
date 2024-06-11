@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde_derive::Serialize;
 use sqlx::{Error, PgPool};
-use uuid::Uuid;
+use uuid::{uuid, Uuid};
 
 #[derive(Serialize, Debug, PartialEq)]
 pub struct CreateProfile {
@@ -14,13 +14,14 @@ pub struct CreateProfile {
     pub inbox: String,
     pub outbox: String,
     pub public_key: String,
+    pub instance: Uuid,
 }
 
 impl CreateProfile {
     pub async fn create(self, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
-            "INSERT INTO profile (username, server, server_id, display_name, inbox, outbox, public_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-            self.username, self.server, self.server_id, self.display_name, self.inbox, self.outbox, self.public_key
+            r#"INSERT INTO profile (username, server, server_id, display_name, inbox, outbox, public_key, instance) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *"#,
+            self.username, self.server, self.server_id, self.display_name, self.inbox, self.outbox, self.public_key, uuid!("00000000-0000-0000-0000-000000000000")
         ).fetch_one(&pool).await
     }
 }
@@ -37,13 +38,14 @@ pub struct ExtendedCreateProfile {
     pub outbox: String,
     pub public_key: String,
     pub registered_at: DateTime<Utc>,
+    pub instance: Uuid,
 }
 
 impl ExtendedCreateProfile {
     pub async fn create(self, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
-            "INSERT INTO profile (username, server, server_id, display_name, inbox, outbox, public_key, registered_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
-            self.username, self.server, self.server_id, self.display_name, self.inbox, self.outbox, self.public_key, self.registered_at
+            r#"INSERT INTO profile (username, server, server_id, display_name, inbox, outbox, public_key, registered_at, instance) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *"#,
+            self.username, self.server, self.server_id, self.display_name, self.inbox, self.outbox, self.public_key, self.registered_at, self.instance
         ).fetch_one(&pool).await
     }
 }
@@ -62,12 +64,13 @@ pub struct FullProfile {
     pub registered_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub linked_printables_profile: Option<String>,
+    pub instance: Uuid,
 }
 
 impl FullProfile {
     pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
-            r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile
+            r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance
             FROM profile WHERE id = $1"#,
             id).fetch_one(&pool).await
     }
@@ -76,7 +79,7 @@ impl FullProfile {
         server: &str,
         pool: PgPool,
     ) -> Result<FullProfile, Error> {
-        sqlx::query_as!(FullProfile, r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile
+        sqlx::query_as!(FullProfile, r#"SELECT id, username, server, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance
         FROM profile WHERE username = $1 and server = $2"#,
             username, server).fetch_one(&pool).await
     }

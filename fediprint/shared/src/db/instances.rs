@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, PgPool};
-use uuid::Uuid;
+use uuid::{uuid, Uuid};
 
 #[derive(Serialize, Debug, PartialEq, Deserialize)]
 pub struct CreateInstance {
@@ -20,6 +20,18 @@ impl CreateInstance {
             RETURNING id, created_at, updated_at, base_url, instance_name, user_count, software, software_version
             "#, self.base_url, self.instance_name, self.user_count, self.software, self.software_version
         ).fetch_one(&pool).await
+    }
+    pub async fn create_local(self, pool: PgPool) -> Result<(), Error> {
+        sqlx::query!(r#"INSERT INTO instances (id,base_url, instance_name, user_count, software, software_version)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (id) DO UPDATE
+                SET base_url = $2,
+                    instance_name = $3,
+                    software = $5,
+                    software_version = $6
+            "#, uuid!("00000000-0000-0000-0000-000000000000"), self.base_url, self.instance_name, self.user_count, self.software, self.software_version
+        ).execute(&pool).await?;
+        Ok(())
     }
 }
 

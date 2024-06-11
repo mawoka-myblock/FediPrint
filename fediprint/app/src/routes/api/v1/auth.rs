@@ -13,7 +13,7 @@ use openssl::symm::Cipher;
 use serde::Deserialize;
 use std::str;
 use std::sync::Arc;
-use uuid::Uuid;
+use uuid::{uuid, Uuid};
 
 use crate::helpers::auth::UserState;
 use crate::{
@@ -69,6 +69,7 @@ pub async fn create_user(
         ),
         summary: "".to_string(),
         public_key,
+        instance: uuid!("00000000-0000-0000-0000-000000000000"),
     }
     .create(state.pool.clone())
     .await?;

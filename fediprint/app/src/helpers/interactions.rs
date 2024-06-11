@@ -9,7 +9,7 @@ use chrono::DateTime;
 use shared::db::profile::{ExtendedCreateProfile, FullProfile};
 use sqlx::PgPool;
 use tracing::debug;
-use uuid::Uuid;
+use uuid::{uuid, Uuid};
 
 pub async fn create_remote_profile(
     username: String,
@@ -58,6 +58,7 @@ pub async fn create_remote_profile(
         registered_at: DateTime::from(chrono::DateTime::parse_from_rfc3339(
             &ap_profile_response.published,
         )?),
+        instance: uuid!("00000000-0000-0000-0000-000000000000"),
     }
     .create(pool.clone())
     .await?)
