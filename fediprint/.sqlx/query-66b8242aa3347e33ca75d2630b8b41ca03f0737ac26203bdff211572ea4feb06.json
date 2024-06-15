@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance\n        FROM profile WHERE username = $1 and instance = $2",
+  "query": "INSERT INTO profile (username, server_id, display_name, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, instance) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n            RETURNING id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance",
   "describe": {
     "columns": [
       {
@@ -40,26 +40,41 @@
       },
       {
         "ordinal": 7,
+        "name": "follower_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "following_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "message_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
         "name": "public_key",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 11,
         "name": "registered_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 12,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "linked_printables_profile",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 14,
         "name": "instance",
         "type_info": "Uuid"
       }
@@ -67,6 +82,15 @@
     "parameters": {
       "Left": [
         "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Text",
+        "Timestamptz",
         "Uuid"
       ]
     },
@@ -81,9 +105,12 @@
       false,
       false,
       false,
+      false,
+      false,
+      false,
       true,
       false
     ]
   },
-  "hash": "f7af440283491811c92ad0ba6fb452c16e95694cc807e6766f9edfdee4482115"
+  "hash": "66b8242aa3347e33ca75d2630b8b41ca03f0737ac26203bdff211572ea4feb06"
 }

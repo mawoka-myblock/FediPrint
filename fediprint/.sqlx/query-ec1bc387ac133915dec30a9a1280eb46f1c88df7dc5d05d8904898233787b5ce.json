@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance\n        FROM profile WHERE LOWER(username) = LOWER($1) and instance = $2",
+  "query": "SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance\n            FROM profile WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -40,33 +40,47 @@
       },
       {
         "ordinal": 7,
+        "name": "follower_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "following_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "message_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
         "name": "public_key",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 11,
         "name": "registered_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 12,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "linked_printables_profile",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 14,
         "name": "instance",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Uuid"
       ]
     },
@@ -81,9 +95,12 @@
       false,
       false,
       false,
+      false,
+      false,
+      false,
       true,
       false
     ]
   },
-  "hash": "2aaa58aec035fc34207d34cf348b798ce9a14c235e27200d437483620680b912"
+  "hash": "ec1bc387ac133915dec30a9a1280eb46f1c88df7dc5d05d8904898233787b5ce"
 }

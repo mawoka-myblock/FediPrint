@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO profile (username, server_id, display_name, inbox, outbox, public_key, instance) VALUES ($1, $2, $3, $4, $5, $6, $7)\n            RETURNING id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance",
+  "query": "SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance\n        FROM profile WHERE username = $1 and instance = $2",
   "describe": {
     "columns": [
       {
@@ -40,37 +40,47 @@
       },
       {
         "ordinal": 7,
+        "name": "follower_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "following_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "message_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
         "name": "public_key",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 11,
         "name": "registered_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 12,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "linked_printables_profile",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 14,
         "name": "instance",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
-        "Text",
-        "Text",
-        "Text",
-        "Text",
         "Text",
         "Uuid"
       ]
@@ -86,9 +96,12 @@
       false,
       false,
       false,
+      false,
+      false,
+      false,
       true,
       false
     ]
   },
-  "hash": "5e934c93cfbb0bc682d3089ca33d20bf4b9a78750e252237e692504eaf8b03a4"
+  "hash": "f3808cbbdd61dfdf8be642cd007fc86d8e65f5912db11a356af1baf5d3e566df"
 }

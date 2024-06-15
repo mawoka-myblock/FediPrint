@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO profile (username, server_id, display_name, inbox, outbox, public_key, registered_at, instance) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            RETURNING id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance",
+  "query": "INSERT INTO profile (username, server_id, display_name, inbox, outbox, public_key, instance) VALUES ($1, $2, $3, $4, $5, $6, $7)\n            RETURNING id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance",
   "describe": {
     "columns": [
       {
@@ -40,26 +40,41 @@
       },
       {
         "ordinal": 7,
+        "name": "follower_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "following_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "message_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
         "name": "public_key",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 11,
         "name": "registered_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 12,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "linked_printables_profile",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 14,
         "name": "instance",
         "type_info": "Uuid"
       }
@@ -72,7 +87,6 @@
         "Text",
         "Text",
         "Text",
-        "Timestamptz",
         "Uuid"
       ]
     },
@@ -87,9 +101,12 @@
       false,
       false,
       false,
+      false,
+      false,
+      false,
       true,
       false
     ]
   },
-  "hash": "085146ce667446b4c47f7909b7bfd718851f4d2eed6437c753b26717c21dc57b"
+  "hash": "e55bb7673ba85cfa2d2cb39ba7028fe27c34a938511ec21c9425223708d8fc47"
 }

@@ -26,7 +26,7 @@ impl CreateProfile {
     pub async fn create(self, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
             r#"INSERT INTO profile (username, server_id, display_name, inbox, outbox, public_key, instance) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance"#,
+            RETURNING id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance"#,
             self.username, self.server_id, self.display_name, self.inbox, self.outbox, self.public_key, uuid!("00000000-0000-0000-0000-000000000000")
         ).fetch_one(&pool).await
     }
@@ -41,6 +41,9 @@ pub struct ExtendedCreateProfile {
     pub summary: String,
     pub inbox: String,
     pub outbox: String,
+    pub follower_count: i64,
+    pub following_count: i64,
+    pub message_count: i64,
     pub public_key: String,
     pub registered_at: DateTime<Utc>,
     pub instance: Uuid,
@@ -49,9 +52,9 @@ pub struct ExtendedCreateProfile {
 impl ExtendedCreateProfile {
     pub async fn create(self, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
-            r#"INSERT INTO profile (username, server_id, display_name, inbox, outbox, public_key, registered_at, instance) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance"#,
-            self.username, self.server_id, self.display_name, self.inbox, self.outbox, self.public_key, self.registered_at, self.instance
+            r#"INSERT INTO profile (username, server_id, display_name, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, instance) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            RETURNING id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance"#,
+            self.username, self.server_id, self.display_name, self.inbox, self.outbox,self.follower_count, self.following_count, self.message_count, self.public_key, self.registered_at, self.instance
         ).fetch_one(&pool).await
     }
 }
@@ -65,6 +68,9 @@ pub struct FullProfile {
     pub summary: String,
     pub inbox: String,
     pub outbox: String,
+    pub follower_count: i64,
+    pub following_count: i64,
+    pub message_count: i64,
     pub public_key: String,
     pub registered_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -75,7 +81,7 @@ pub struct FullProfile {
 impl FullProfile {
     pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullProfile, Error> {
         sqlx::query_as!(FullProfile,
-            r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance
+            r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance
             FROM profile WHERE id = $1"#,
             id).fetch_one(&pool).await
     }
@@ -84,7 +90,7 @@ impl FullProfile {
         instance_id: &Uuid,
         pool: PgPool,
     ) -> Result<FullProfile, Error> {
-        sqlx::query_as!(FullProfile, r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance
+        sqlx::query_as!(FullProfile, r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance
         FROM profile WHERE username = $1 and instance = $2"#,
             username, instance_id).fetch_one(&pool).await
     }
@@ -94,7 +100,7 @@ impl FullProfile {
         instance: FullInstance,
         pool: PgPool,
     ) -> Result<FullProfile, Error> {
-        sqlx::query_as!(FullProfile, r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance
+        sqlx::query_as!(FullProfile, r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance
         FROM profile WHERE LOWER(username) = LOWER($1) and instance = $2"#,
             name, instance.id).fetch_one(&pool).await
     }
