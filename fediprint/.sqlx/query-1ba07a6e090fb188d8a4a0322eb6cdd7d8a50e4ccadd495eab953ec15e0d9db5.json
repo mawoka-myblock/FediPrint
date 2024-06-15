@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, created_at, updated_at, base_url, instance_name, user_count, software, software_version\n        FROM instances WHERE base_url = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "base_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "instance_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "software",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "software_version",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "1ba07a6e090fb188d8a4a0322eb6cdd7d8a50e4ccadd495eab953ec15e0d9db5"
+}

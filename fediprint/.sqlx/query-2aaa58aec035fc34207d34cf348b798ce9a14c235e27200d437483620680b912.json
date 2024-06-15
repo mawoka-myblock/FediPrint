@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, username, server_id, display_name, summary, inbox, outbox, public_key, registered_at, updated_at, linked_printables_profile, instance\n        FROM profile WHERE LOWER(username) = LOWER($1) and instance = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "inbox",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "outbox",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "public_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "registered_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "linked_printables_profile",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "instance",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "2aaa58aec035fc34207d34cf348b798ce9a14c235e27200d437483620680b912"
+}

@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "server",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "profile_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "published",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "tags",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 9,
+        "name": "license!: ModelLicense",
+        "type_info": {
+          "Custom": {
+            "name": "model_license",
+            "kind": {
+              "Enum": [
+                "CC_PD",
+                "CC_ATTR",
+                "CC_ATTR_SA",
+                "CC_ATTR_ND",
+                "CC_ATTR_NC",
+                "CC_ATTR_NC_SA",
+                "CC_ATTR_NC_ND",
+                "GPL2",
+                "GPL3",
+                "GNU_LESSER",
+                "BSD",
+                "SDFL"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "printables_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        {
+          "Custom": {
+            "name": "model_license",
+            "kind": {
+              "Enum": [
+                "CC_PD",
+                "CC_ATTR",
+                "CC_ATTR_SA",
+                "CC_ATTR_ND",
+                "CC_ATTR_NC",
+                "CC_ATTR_NC_SA",
+                "CC_ATTR_NC_ND",
+                "GPL2",
+                "GPL3",
+                "GNU_LESSER",
+                "BSD",
+                "SDFL"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "6ac68241b1e860f7d465afde8075ed1ca6b207b0a3cb4e6f8ec335aea5b21a6f"
+}

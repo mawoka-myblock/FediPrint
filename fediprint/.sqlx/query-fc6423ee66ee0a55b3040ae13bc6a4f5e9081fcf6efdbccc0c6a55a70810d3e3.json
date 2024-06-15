@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO instances (base_url, instance_name, user_count, software, software_version)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING id, created_at, updated_at, base_url, instance_name, user_count, software, software_version\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "base_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "instance_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "software",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "software_version",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "fc6423ee66ee0a55b3040ae13bc6a4f5e9081fcf6efdbccc0c6a55a70810d3e3"
+}
