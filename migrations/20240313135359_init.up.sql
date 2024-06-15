@@ -68,7 +68,6 @@ CREATE TABLE profile
 (
     id                          uuid        DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
     username                    text                                   NOT NULL,
-    server                      text                                   NOT NULL,
     server_id                   text                                   NOT NULL UNIQUE,
     "display_name"              text                                   NOT NULL,
     summary                     text        DEFAULT ''                 NOT NULL,

@@ -10,6 +10,7 @@ use serde::Deserialize;
 use shared::db::profile::FullProfile;
 use shared::models::data::{Webfinger, WebfingerLink};
 use std::sync::Arc;
+use uuid::uuid;
 
 #[derive(Deserialize)]
 pub struct WebfingerQuery {
@@ -57,9 +58,9 @@ pub async fn handler(
             .unwrap());
     }
 
-    let user = FullProfile::get_by_username_and_server(
+    let user = FullProfile::get_by_username_and_instance(
         username,
-        &state.env.base_domain,
+        &uuid!("00000000-0000-0000-0000-000000000000"),
         state.pool.clone(),
     )
     .await?;

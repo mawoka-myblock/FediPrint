@@ -13,6 +13,7 @@ use shared::models::activitypub::{
     PeopleDataPage, PublicKey,
 };
 use std::sync::Arc;
+use uuid::uuid;
 
 #[debug_handler]
 pub async fn get_user_profile(
@@ -25,9 +26,9 @@ pub async fn get_user_profile(
         Err(e) => return Ok(e),
     };
 
-    let user = FullProfile::get_by_username_and_server(
+    let user = FullProfile::get_by_username_and_instance(
         &username,
-        &state.env.base_domain,
+        &uuid!("00000000-0000-0000-0000-000000000000"),
         state.pool.clone(),
     )
     .await?;
@@ -153,9 +154,9 @@ pub async fn get_followers(
     };
     let page = query.page;
 
-    let user = FullProfile::get_by_username_and_server(
+    let user = FullProfile::get_by_username_and_instance(
         &username,
-        &state.env.base_domain,
+        &uuid!("00000000-0000-0000-0000-000000000000"),
         state.pool.clone(),
     )
     .await?;
@@ -220,9 +221,9 @@ pub async fn get_following(
     };
     let page = query.page;
 
-    let user = FullProfile::get_by_username_and_server(
+    let user = FullProfile::get_by_username_and_instance(
         &username,
-        &state.env.base_domain,
+        &uuid!("00000000-0000-0000-0000-000000000000"),
         state.pool.clone(),
     )
     .await?;

@@ -161,6 +161,7 @@ pub async fn get_server() -> Router {
             "/api/v1/user/:username/following",
             get(v1::activitypub::profile::get_following),
         )
+        /*
         .route(
             "/api/v1/manage/follow",
             post(v1::manage::follow_user_route).route_layer(middleware::from_fn_with_state(
@@ -168,6 +169,7 @@ pub async fn get_server() -> Router {
                 auth_middleware,
             )),
         )
+        */
         .route(
             "/api/v1/manage/interact/note",
             post(v1::interact::post_note).route_layer(middleware::from_fn_with_state(
@@ -286,6 +288,10 @@ pub async fn get_server() -> Router {
         )
         .route("/api/v1/statuses/:id", get(v1::statuses::get_status))
         .route("/api/v1/nodeinfo/2.0", get(v1::nodeinfo::get_nodeinfo))
+        .route(
+            "/api/v1/search/profiles",
+            get(routes::api::v1::search::search_profiles),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http())
 }
@@ -297,7 +303,7 @@ async fn main() {
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 // axum logs rejections from built-in extractors with the `axum::rejection`
                 // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "fedi_print=trace,tower_http=debug,axum::rejection=trace".into()
+                "app=trace,shared=trace,tower_http=debug,axum::rejection=trace".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())

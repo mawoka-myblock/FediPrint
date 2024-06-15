@@ -1,8 +1,8 @@
 -- Creating both basic user and profile
 
-INSERT INTO profile (id, username, server, server_id, display_name, summary, inbox, outbox, public_key,
+INSERT INTO profile (id, username, server_id, display_name, summary, inbox, outbox, public_key,
                             registered_at, updated_at)
-VALUES ('018e7b20-51bd-703a-96c6-9c70cc723c67', 'testuser', 'localhost.local',
+VALUES ('018e7b20-51bd-703a-96c6-9c70cc723c67', 'testuser',
         'http://localhost:3000/api/v1/user/testuser', 'testuser', '',
         'http://localhost:3000/api/v1/user/testuser/inbox', 'http://localhost:3000/api/v1/user/testuser/outbox', e'-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3MyEeSoghnygXkxoZErc

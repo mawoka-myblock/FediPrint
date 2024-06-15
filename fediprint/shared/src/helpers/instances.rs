@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
 use sqlx::PgPool;
+use tracing::debug;
 
 use crate::db::instances::CreateInstance;
 use crate::db::instances::FullInstance;
@@ -28,7 +29,7 @@ pub struct NodeInfo {
     pub software: Software,
     pub protocols: Vec<String>,
     pub services: Services,
-    pub openregistrations: bool,
+    pub open_registrations: bool,
     pub usage: Usage,
     pub metadata: std::collections::HashMap<String, String>,
 }
@@ -84,6 +85,7 @@ pub async fn get_instance_by_base_url(base_url: &str, pool: PgPool) -> Result<Fu
         return Ok(v);
     };
     let nodeinfo_url = get_node_info_url(format!("{}/.well-known/nodeinfo", base_url)).await?;
+    debug!("NodeInfo URL: {:?}", &nodeinfo_url);
     if nodeinfo_url.is_none() {
         bail!("NodeInfo Url could not be found")
     }
@@ -91,6 +93,7 @@ pub async fn get_instance_by_base_url(base_url: &str, pool: PgPool) -> Result<Fu
         .await?
         .json::<NodeInfo>()
         .await?;
+    debug!("NodeInfo: {:?}", &node_info);
     if node_info.version != "2.0" {
         bail!("Manifest version wrong")
     }

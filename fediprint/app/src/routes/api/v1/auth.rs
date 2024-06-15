@@ -56,7 +56,6 @@ pub async fn create_user(
     let profile = CreateProfile {
         id: Uuid::now_v7(),
         username: input.username.clone(),
-        server: state.env.base_domain.to_string(),
         server_id: format!("{}/api/v1/user/{}", state.env.public_url, input.username),
         display_name: input.display_name,
         inbox: format!(

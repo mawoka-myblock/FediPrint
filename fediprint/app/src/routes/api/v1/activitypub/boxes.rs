@@ -19,7 +19,7 @@ use shared::models::activitypub::{
 use shared::models::inbox::InboxEvent;
 use std::sync::Arc;
 use tracing::{debug, error};
-use uuid::Uuid;
+use uuid::{uuid, Uuid};
 
 #[derive(Deserialize)]
 pub struct GetBox {
@@ -41,9 +41,9 @@ pub async fn get_outbox(
     // TODO get the count right
     let count: i64 = 12;
 
-    let user = FullProfile::get_by_username_and_server(
+    let user = FullProfile::get_by_username_and_instance(
         &username,
-        &state.env.base_domain,
+        &uuid!("00000000-0000-0000-0000-000000000000"),
         state.pool.clone(),
     )
     .await?;

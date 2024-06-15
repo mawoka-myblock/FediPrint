@@ -35,7 +35,7 @@ impl CreateInstance {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq, Deserialize)]
+#[derive(Serialize, Debug, PartialEq, Deserialize, Clone)]
 pub struct FullInstance {
     pub id: Uuid,
     pub created_at: DateTime<Utc>,

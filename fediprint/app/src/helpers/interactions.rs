@@ -1,68 +1,10 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::sign::sign_post_request_with_body;
 use shared::helpers::config::Config;
-use shared::models::activitypub::{FollowRequest, Profile};
-use shared::models::data::Webfinger;
+use shared::models::activitypub::FollowRequest;
 
-use anyhow::Context;
-use chrono::DateTime;
-use shared::db::profile::{ExtendedCreateProfile, FullProfile};
-use sqlx::PgPool;
-use tracing::debug;
-use uuid::{uuid, Uuid};
-
-pub async fn create_remote_profile(
-    username: String,
-    domain: String,
-    pool: PgPool,
-) -> anyhow::Result<FullProfile> {
-    let webfinger_response = reqwest::get(format!(
-        "https://{domain}/.well-known/webfinger?resource=acct:{username}@{domain}"
-    ))
-    .await?
-    .json::<Webfinger>()
-    .await?;
-    let mut server_id = None;
-    for link in webfinger_response.links {
-        if link.rel != "self" {
-            continue;
-        }
-        server_id = Some(link.href.with_context(|| "server_id is None")?);
-    }
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        "Accept",
-        reqwest::header::HeaderValue::from_str("application/activity+json").unwrap(),
-    );
-    let ap_client = reqwest::Client::builder()
-        .default_headers(headers)
-        .build()
-        .unwrap();
-    let ap_profile_response = ap_client
-        .get(server_id.unwrap())
-        .send()
-        .await?
-        .json::<Profile>()
-        .await?;
-    debug!("{:?}", ap_profile_response);
-    Ok(ExtendedCreateProfile {
-        id: Uuid::now_v7(),
-        username: ap_profile_response.preferred_username.clone(),
-        server: domain,
-        server_id: ap_profile_response.id,
-        display_name: ap_profile_response.name,
-        summary: "".to_string(),
-        inbox: ap_profile_response.inbox,
-        outbox: ap_profile_response.outbox,
-        public_key: ap_profile_response.public_key.public_key_pem,
-        registered_at: DateTime::from(chrono::DateTime::parse_from_rfc3339(
-            &ap_profile_response.published,
-        )?),
-        instance: uuid!("00000000-0000-0000-0000-000000000000"),
-    }
-    .create(pool.clone())
-    .await?)
-}
+use shared::db::profile::FullProfile;
+use uuid::Uuid;
 
 pub async fn follow_user(
     to_follow: &FullProfile,
