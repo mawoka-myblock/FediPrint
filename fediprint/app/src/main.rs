@@ -292,6 +292,10 @@ pub async fn get_server() -> Router {
             "/api/v1/search/profiles",
             get(routes::api::v1::search::search_profiles),
         )
+        .route(
+            "/api/v1/statuses/remote",
+            get(routes::api::v1::statuses::get_remote_status),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http())
 }

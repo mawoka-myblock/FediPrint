@@ -1,4 +1,4 @@
-use crate::db::EventAudience;
+use crate::{db::EventAudience, models::activitypub::note::NoteResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
@@ -41,6 +41,39 @@ pub struct FullNote {
     pub in_reply_to_note_id: Option<Uuid>,
     pub actor_id: Uuid,
     pub comment_of_model_id: Option<Uuid>,
+}
+
+impl FullNote {
+    pub async fn create(self, pool: PgPool) -> Result<FullNote, Error> {
+        sqlx::query_as!(FullNote, r#"INSERT INTO note (id, created_at, updated_at, server_id, content, hashtags, audience, in_reply_to_comment_id, in_reply_to_note_id, actor_id,
+                comment_of_model_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                RETURNING id, created_at, updated_at, server_id, content, hashtags, audience AS "audience!: EventAudience", in_reply_to_comment_id, in_reply_to_note_id, actor_id, comment_of_model_id"#,
+                self.id, self.created_at, self.updated_at, self.server_id, self.content, &self.hashtags, self.audience as _, self.in_reply_to_comment_id, self.in_reply_to_note_id, self.actor_id, self.comment_of_model_id
+        ).fetch_one(&pool).await
+    }
+
+    pub async fn create_from_note_response(
+        d: NoteResponse,
+        profile_id: Uuid,
+        pool: PgPool,
+    ) -> Result<FullNote, Error> {
+        let date: DateTime<Utc> = DateTime::parse_from_rfc3339(&d.published).unwrap().into();
+        let note = FullNote {
+            id: Uuid::now_v7(),
+            created_at: date,
+            updated_at: date,
+            server_id: Some(d.id),
+            content: d.content,
+            hashtags: d.tag.into_iter().map(|v| v.name).collect(),
+            audience: EventAudience::Public,
+            in_reply_to_comment_id: None,
+            in_reply_to_note_id: None,
+            actor_id: profile_id,
+            comment_of_model_id: None,
+        };
+        note.create(pool).await
+    }
 }
 
 #[derive(Serialize, Debug, PartialEq, Deserialize)]

@@ -149,6 +149,22 @@ impl FullProfile {
         )
         .await
     }
+
+    pub async fn get_by_server_id(server_id: &str, pool: PgPool) -> Result<FullProfile, Error> {
+        sqlx::query_as!(FullProfile, r#"SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance
+        FROM profile WHERE server_id = $1"#,
+            server_id).fetch_one(&pool).await
+    }
+    pub async fn get_by_server_id_or_create(
+        server_id: &str,
+        instance_id: Uuid,
+        pool: PgPool,
+    ) -> anyhow::Result<FullProfile> {
+        if let Ok(d) = FullProfile::get_by_server_id(server_id, pool.clone()).await {
+            return Ok(d);
+        }
+        FullProfile::get_from_activitypub(server_id, instance_id, pool).await
+    }
 }
 
 #[derive(Serialize, Debug, PartialEq, sqlx::FromRow)]

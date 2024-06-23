@@ -1,4 +1,5 @@
 use serde_derive::{Deserialize, Serialize};
+use strum::EnumString;
 
 pub mod account;
 pub mod file;
@@ -27,7 +28,7 @@ pub enum EventAudience {
     Nobody,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type, Clone)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type, Clone, EnumString)]
 #[sqlx(type_name = "model_license", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ModelLicense {
     CcPd,

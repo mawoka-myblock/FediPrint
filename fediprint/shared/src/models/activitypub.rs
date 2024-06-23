@@ -598,3 +598,39 @@ pub struct First {
     #[serde(rename = "type")]
     pub type_field: String,
 }
+
+pub mod note {
+    use super::{Replies, Tag};
+    use serde_derive::Deserialize;
+    use serde_derive::Serialize;
+    use serde_json::Value;
+
+    #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct NoteResponse {
+        #[serde(rename = "@context")]
+        pub context: (String, std::collections::HashMap<String, Value>),
+        pub atom_uri: Option<String>,
+        pub attachment: Vec<Value>,
+        pub attributed_to: String,
+        pub cc: Vec<String>,
+        pub content: String,
+        pub content_map: Option<std::collections::HashMap<String, String>>,
+        pub conversation: Option<String>,
+        pub id: String,
+        pub in_reply_to: Option<Value>,
+        pub in_reply_to_atom_uri: Option<Value>,
+        pub published: String,
+        pub replies: Replies,
+        pub sensitive: Option<bool>,
+        pub summary: Option<String>,
+        pub tag: Vec<Tag>,
+        pub to: Vec<String>,
+        #[serde(rename = "type")]
+        pub type_field: String,
+        pub updated: Option<String>,
+        pub url: String,
+        pub license: Option<String>,
+        pub name: Option<String>, // that's the title
+    }
+}

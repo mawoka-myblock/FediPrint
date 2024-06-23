@@ -1,8 +1,8 @@
-use crate::db::ModelLicense;
+use crate::{db::ModelLicense, models::activitypub::note::NoteResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
-use std::collections::HashSet;
+use std::{collections::HashSet, str::FromStr};
 use uuid::Uuid;
 
 #[derive(Serialize, Debug, PartialEq, Deserialize)]
@@ -96,7 +96,7 @@ impl FullModel {
             offset, limit
         ).fetch_all(&pool).await
     }
-    pub async fn create(self, pool: PgPool) -> Result<Self, Error> {
+    pub async fn create(self, pool: PgPool) -> Result<FullModel, Error> {
         sqlx::query_as!(FullModel, r#"INSERT INTO model (id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, printables_url)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
@@ -277,5 +277,32 @@ impl FullModelWithRelationsIds {
             m.updated_at;"#r,
             published, id, profile_id
         ).fetch_one(&pool).await
+    }
+    pub async fn create_from_note_response(
+        d: NoteResponse,
+        server: String,
+        profile_id: Uuid,
+        pool: PgPool,
+    ) -> Result<FullModelWithRelationsIds, Error> {
+        // TODO get rid of unwrap
+        let date: DateTime<Utc> = DateTime::parse_from_rfc3339(&d.published).unwrap().into();
+        let id = Uuid::now_v7();
+        let model = FullModel {
+            description: d.content,
+            server_id: Some(d.id),
+            created_at: date,
+            summary: d.summary.unwrap(),
+            id,
+            server,
+            license: ModelLicense::from_str(&d.license.unwrap()).unwrap(),
+            profile_id,
+            printables_url: None,
+            published: true,
+            tags: d.tag.into_iter().map(|v| v.name).collect(),
+            title: d.name.unwrap(),
+            updated_at: date,
+        };
+        model.create(pool.clone()).await?;
+        FullModelWithRelationsIds::get_by_id(&id, pool).await
     }
 }

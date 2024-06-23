@@ -1,3 +1,4 @@
+pub mod activities;
 pub mod config;
 pub mod instances;
 pub mod profile;

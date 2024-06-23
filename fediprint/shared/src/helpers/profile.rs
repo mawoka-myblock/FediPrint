@@ -1,3 +1,4 @@
+#[doc(inline)]
 use chrono::DateTime;
 use reqwest::Error;
 use serde_derive::Deserialize;
@@ -17,6 +18,8 @@ impl FullProfile {
         instance_id: Uuid,
         pool: PgPool,
     ) -> anyhow::Result<FullProfile> {
+        //! Fetches the Profile by URL and saves them in the db.
+        //! This does not check if the user already exists!
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Accept",

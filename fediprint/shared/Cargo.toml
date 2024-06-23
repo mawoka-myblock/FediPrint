@@ -22,3 +22,5 @@ percent-encoding = "2.3.1"
 reqwest = { version = "0.12", features = ["json"] }
 anyhow = "1"
 tracing = "0.1"
+strum = { version = "0.26", features = ["derive"] }
+serde_path_to_error = "0.1"
