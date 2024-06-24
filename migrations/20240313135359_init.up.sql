@@ -146,7 +146,7 @@ CREATE TABLE note
     "in_reply_to_comment_id" uuid                                                              REFERENCES note (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
     "in_reply_to_note_id"    uuid                                                              REFERENCES note (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
     "in_reply_to_model_id"   uuid                                                              REFERENCES model (id) ON UPDATE CASCADE ON DELETE SET NULL UNIQUE,
-    "actor_id"               uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL UNIQUE,
+    "actor_id"               uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL,
     "comment_of_model_id"    uuid                                                              REFERENCES model (id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 

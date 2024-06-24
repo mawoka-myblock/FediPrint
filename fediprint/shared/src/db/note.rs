@@ -2,6 +2,7 @@ use crate::{db::EventAudience, models::activitypub::note::NoteResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
+use tracing::trace;
 use uuid::Uuid;
 
 #[derive(Serialize, Debug, PartialEq, FromRow)]
@@ -53,6 +54,13 @@ impl FullNote {
         ).fetch_one(&pool).await
     }
 
+    pub async fn get_by_server_id(server_id: &str, pool: PgPool) -> Result<FullNote, Error> {
+        sqlx::query_as!(FullNote, r#"SELECT id, created_at, updated_at, server_id, content, hashtags, audience AS "audience!: EventAudience", in_reply_to_comment_id, in_reply_to_note_id, actor_id, comment_of_model_id
+                FROM note WHERE server_id = $1"#,
+                server_id
+        ).fetch_one(&pool).await
+    }
+
     pub async fn create_from_note_response(
         d: NoteResponse,
         profile_id: Uuid,
@@ -72,7 +80,19 @@ impl FullNote {
             actor_id: profile_id,
             comment_of_model_id: None,
         };
+        trace!("note: {:?}", &note);
         note.create(pool).await
+    }
+
+    pub async fn create_or_get_from_note_response(
+        d: NoteResponse,
+        profile_id: Uuid,
+        pool: PgPool,
+    ) -> Result<FullNote, Error> {
+        if let Ok(d) = FullNote::get_by_server_id(&d.id, pool.clone()).await {
+            return Ok(d);
+        }
+        FullNote::create_from_note_response(d, profile_id, pool).await
     }
 }
 

@@ -23,6 +23,7 @@ pub enum GetRemoteActivtyErrors {
     RequestFailedWithCode(StatusCode),
     JsonParsingFailed(String),
     ModelCreationFailed,
+    NoteCreationFailed,
     UserQueryFailed,
 }
 
@@ -90,9 +91,12 @@ pub async fn get_remote_activity(
         ))
     } else {
         Ok(ModelOrNote::Note(
-            FullNote::create_from_note_response(data, profile.id, pool)
+            FullNote::create_or_get_from_note_response(data, profile.id, pool)
                 .await
-                .map_err(|_| GetRemoteActivtyErrors::ModelCreationFailed)?,
+                .map_err(|e| {
+                    error!(e = %e);
+                    GetRemoteActivtyErrors::NoteCreationFailed
+                })?,
         ))
     }
 }

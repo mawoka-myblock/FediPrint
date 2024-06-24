@@ -278,6 +278,32 @@ impl FullModelWithRelationsIds {
             published, id, profile_id
         ).fetch_one(&pool).await
     }
+
+    pub async fn get_by_server_id(
+        server_id: &str,
+        pool: PgPool,
+    ) -> Result<FullModelWithRelationsIds, Error> {
+        let mut model = sqlx::query_as!(
+            FullModelWithRelationsIds,
+            r#"
+        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        FROM
+            model AS m
+        LEFT JOIN
+            file AS f ON m.id = f.file_for_model_id
+        LEFT JOIN
+            file AS i ON m.id = i.image_for_model_id
+        WHERE
+            m.server_id = $1
+        GROUP BY
+            m.id;
+        "#,
+            server_id
+        ).fetch_one(&pool).await?;
+        remove_duplicates(&mut model);
+        Ok(model)
+    }
+
     pub async fn create_from_note_response(
         d: NoteResponse,
         server: String,
@@ -304,5 +330,16 @@ impl FullModelWithRelationsIds {
         };
         model.create(pool.clone()).await?;
         FullModelWithRelationsIds::get_by_id(&id, pool).await
+    }
+    pub async fn create_or_get_from_note_response(
+        d: NoteResponse,
+        server: String,
+        profile_id: Uuid,
+        pool: PgPool,
+    ) -> Result<FullModelWithRelationsIds, Error> {
+        if let Ok(d) = FullModelWithRelationsIds::get_by_server_id(&d.id, pool.clone()).await {
+            return Ok(d);
+        }
+        FullModelWithRelationsIds::create_from_note_response(d, server, profile_id, pool).await
     }
 }

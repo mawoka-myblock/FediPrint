@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, username, server_id, display_name, summary, inbox, outbox, follower_count, following_count, message_count, public_key, registered_at, updated_at, linked_printables_profile, instance\n        FROM profile WHERE server_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "summary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "inbox",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "outbox",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "follower_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "following_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "message_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "public_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "registered_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "linked_printables_profile",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "instance",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "680e8a97e7bf25e92b171d6167ca9500ce8febd04fd5afcc0ee601af6ac7e0c4"
+}
