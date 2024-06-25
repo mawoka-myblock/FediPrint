@@ -44,8 +44,8 @@ pub async fn post_note(
     .create(state.pool.clone())
     .await?;
     let s_id = format!(
-        "{}/api/v1/notes/{}/{}",
-        state.env.public_url, claims.username, &unfinished_note.id
+        "{}api/v1/statuses/{}",
+        state.env.public_url, &unfinished_note.id
     );
     let note =
         UserFacingNote::set_server_id(&unfinished_note.id, &s_id, state.pool.clone()).await?;
