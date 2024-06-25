@@ -50,8 +50,8 @@ pub async fn create_model(
     .create(state.pool.clone())
     .await?;
     let s_id = format!(
-        "{}/api/v1/models/{}/{}",
-        state.env.public_url, claims.username, &res.id
+        "{}/api/v1/statuses/{}",
+        state.env.public_url, &res.id
     );
     let model = FullModel::update_server_id_and_return(&res.id, &s_id, state.pool.clone()).await?;
     Ok(Response::builder()
