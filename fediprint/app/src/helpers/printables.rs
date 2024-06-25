@@ -16,7 +16,7 @@ use tokio_util::io::StreamReader;
 use tracing::debug;
 use uuid::Uuid;
 
-const PROFILE_QUERY: &str = r#"{"query":"query UserProfileSocial($id: ID) {\tuser(id: $id) { id publicUsername avatarFilePath handle handle publicUsername email makesCount dateCreated bio socialLinks { id socialType url } printers { id name }\t}}","variables":{"id":"@_USERNAME_"}}"#;
+const PROFILE_QUERY: &str = r#"{"query":"query UserProfileSocial($id: ID) {\tuser(id: $id) { id publicUsername avatarFilePath handle handle publicUsername makesCount dateCreated bio socialLinks { id socialType url } printers { id name }\t}}","variables":{"id":"@_USERNAME_"}}"#;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -25,7 +25,6 @@ pub struct User {
     pub public_username: String,
     pub avatar_file_path: String,
     pub handle: String,
-    pub email: String,
     pub makes_count: i64,
     pub date_created: String,
     pub bio: String,
@@ -73,7 +72,8 @@ pub async fn get_printables_profile(
         Some(d) => d.get("user").unwrap(),
         None => return Ok(None),
     };
-    Ok(serde_json::from_value::<User>(data.clone()).ok())
+    let serde_res = serde_json::from_value::<User>(data.clone()).unwrap();
+    Ok(Some(serde_res))
 }
 
 pub async fn check_printables_profile(
