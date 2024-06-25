@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\nSELECT p.server_id  AS \"profile_server_id!: String\",\n       p.id         AS \"profile_id!: Uuid\",\n       n.id         AS note_id,\n       NULL         AS model_id,\n       n.hashtags   AS \"hashtags!: Vec<String>\",\n       n.content    AS \"content!: String\",\n       NULL         AS summary,\n       n.server_id  AS server_id,\n       NULL         AS \"license!: Option<ModelLicense>\",\n       n.created_at AS \"created_at!: DateTime<Utc>\",\n       n.updated_at AS \"updated_at!: DateTime<Utc>\",\n       r.server_id  AS \"first_reply_server_id!: Option<String>\"\nFROM profile AS p\n         LEFT JOIN note AS n ON p.id = n.actor_id\n         LEFT JOIN note AS r ON n.id = r.in_reply_to_note_id\nWHERE p.id = $1\n  AND n.id IS NOT NULL\n  AND n.audience = 'PUBLIC'\n\nUNION ALL\nSELECT p.server_id   AS \"profile_server_id!: String\",\n       p.id          AS \"profile_id!: Uuid\",\n       NULL          AS note_id,\n       m.id          AS model_id,\n       m.tags        AS \"hashtags!: Vec<String>\",\n       m.description AS \"content!: String\",\n       m.summary     AS summary,\n       m.server_id   AS server_id,\n       m.license     AS \"license!: Option<ModelLicense>\",\n       m.created_at  AS \"created_at!: DateTime<Utc>\",\n       m.updated_at  AS \"updated_at!: DateTime<Utc>\",\n       r.server_id   AS \"first_reply_server_id!: Option<String>\"\nFROM profile AS p\n         LEFT JOIN model AS m ON p.id = m.profile_id\n         LEFT JOIN note AS r ON m.id = r.in_reply_to_model_id\n         LEFT JOIN file AS f ON f.image_for_model_id = m.id\nWHERE p.id = $1\n  AND m.id IS NOT NULL\nORDER BY \"created_at!: DateTime<Utc>\"\nLIMIT 15;\n       ",
+  "query": "\nSELECT p.server_id  AS \"profile_server_id!: String\",\n       p.id         AS \"profile_id!: Uuid\",\n       n.id         AS note_id,\n       NULL         AS model_id,\n       n.hashtags   AS \"hashtags!: Vec<String>\",\n       n.content    AS \"content!: String\",\n       NULL         AS summary,\n       n.server_id  AS server_id,\n       NULL         AS \"license!: Option<ModelLicense>\",\n       n.created_at AS \"created_at!: DateTime<Utc>\",\n       n.updated_at AS \"updated_at!: DateTime<Utc>\",\n       r.server_id  AS \"first_reply_server_id!: Option<String>\",\n       NULL         AS \"title\"\nFROM profile AS p\n         LEFT JOIN note AS n ON p.id = n.actor_id\n         LEFT JOIN note AS r ON n.id = r.in_reply_to_note_id\nWHERE n.id = $1\n\nUNION ALL\nSELECT p.server_id   AS \"profile_server_id!: String\",\n       p.id          AS \"profile_id!: Uuid\",\n       NULL          AS note_id,\n       m.id          AS model_id,\n       m.tags        AS \"hashtags!: Vec<String>\",\n       m.description AS \"content!: String\",\n       m.summary     AS summary,\n       m.server_id   AS server_id,\n       m.license     AS \"license!: Option<ModelLicense>\",\n       m.created_at  AS \"created_at!: DateTime<Utc>\",\n       m.updated_at  AS \"updated_at!: DateTime<Utc>\",\n       r.server_id   AS \"first_reply_server_id!: Option<String>\",\n       m.title          AS \"title\"\nFROM profile AS p\n         LEFT JOIN model AS m ON p.id = m.profile_id\n         LEFT JOIN note AS r ON m.id = r.in_reply_to_model_id\n         LEFT JOIN file AS f ON f.image_for_model_id = m.id\nWHERE m.id = $1\nORDER BY \"created_at!: DateTime<Utc>\"\n       ",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,11 @@
         "ordinal": 11,
         "name": "first_reply_server_id!: Option<String>",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "title",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -101,8 +106,9 @@
       null,
       null,
       null,
+      null,
       null
     ]
   },
-  "hash": "f0d00273be6dae747d1c44f2794156859a74c48be1b3594560eb9f5e19eaf601"
+  "hash": "46fb20f63f6692bb1599b5495e82a1b87f6894bf099c4b4496364ce0800770a6"
 }
