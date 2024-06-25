@@ -80,7 +80,7 @@ pub async fn get_remote_activity(
             .map_err(|_| GetRemoteActivtyErrors::UserQueryFailed)?;
     if data.context.1.contains_key("3dModel") {
         Ok(ModelOrNote::Model(
-            FullModelWithRelationsIds::create_from_note_response(
+            FullModelWithRelationsIds::create_or_get_from_note_response(
                 data,
                 instance_host.to_string(),
                 profile.id,

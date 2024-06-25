@@ -499,6 +499,7 @@ pub struct ActivityPubModel {
     #[serde(rename = "type")]
     pub type_field: String,
     pub url: String,
+    pub license: Option<ModelLicense>
 }
 
 impl ActivityPubModel {
@@ -537,6 +538,7 @@ impl ActivityPubModel {
             "ostatus": "http://ostatus.org#",
             "sensitive": "as:sensitive",
             "toot": "http://joinmastodon.org/ns#",
+            "3dModel": "https://3dmodel.mawoka.eu"
         });
         Ok(ActivityPubModel {
             context: (
@@ -576,6 +578,7 @@ impl ActivityPubModel {
             to: vec!["https://www.w3.org/ns/activitystreams#Public".to_string()],
             type_field: "Note".to_string(),
             url: format!("{}/api/v1/model/{}", public_url, &id),
+            license: status.license
         })
     }
 }
