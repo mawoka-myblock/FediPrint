@@ -373,7 +373,7 @@ pub struct NoteJoinedModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub first_reply_server_id: Option<String>,
-    pub title: Option<String>
+    pub title: Option<String>,
 }
 
 impl NoteJoinedModel {
@@ -505,7 +505,7 @@ pub struct ActivityPubModel {
     pub type_field: String,
     pub url: String,
     pub license: Option<ModelLicense>,
-    pub name: Option<String>
+    pub name: Option<String>,
 }
 
 impl ActivityPubModel {
@@ -585,7 +585,7 @@ impl ActivityPubModel {
             type_field: "Note".to_string(),
             url: format!("{}/api/v1/model/{}", public_url, &id),
             license: status.license,
-            name: status.title
+            name: status.title,
         })
     }
 }

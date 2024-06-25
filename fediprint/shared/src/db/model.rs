@@ -2,8 +2,8 @@ use crate::{db::ModelLicense, models::activitypub::note::NoteResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
-use tracing::trace;
 use std::{collections::HashSet, str::FromStr};
+use tracing::trace;
 use uuid::Uuid;
 
 #[derive(Serialize, Debug, PartialEq, Deserialize)]
