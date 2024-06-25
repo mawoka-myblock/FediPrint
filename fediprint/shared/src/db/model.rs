@@ -2,6 +2,7 @@ use crate::{db::ModelLicense, models::activitypub::note::NoteResponse};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
+use tracing::trace;
 use std::{collections::HashSet, str::FromStr};
 use uuid::Uuid;
 
@@ -313,6 +314,7 @@ impl FullModelWithRelationsIds {
         // TODO get rid of unwrap
         let date: DateTime<Utc> = DateTime::parse_from_rfc3339(&d.published).unwrap().into();
         let id = Uuid::now_v7();
+        trace!("{:?}", &d);
         let model = FullModel {
             description: d.content,
             server_id: Some(d.id),

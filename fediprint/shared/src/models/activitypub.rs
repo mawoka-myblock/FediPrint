@@ -373,6 +373,7 @@ pub struct NoteJoinedModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub first_reply_server_id: Option<String>,
+    pub title: Option<String>
 }
 
 impl NoteJoinedModel {
@@ -394,7 +395,8 @@ SELECT p.server_id  AS "profile_server_id!: String",
        NULL         AS "license!: Option<ModelLicense>",
        n.created_at AS "created_at!: DateTime<Utc>",
        n.updated_at AS "updated_at!: DateTime<Utc>",
-       r.server_id  AS "first_reply_server_id!: Option<String>"
+       r.server_id  AS "first_reply_server_id!: Option<String>",
+       NULL         AS "title"
 FROM profile AS p
          LEFT JOIN note AS n ON p.id = n.actor_id
          LEFT JOIN note AS r ON n.id = r.in_reply_to_note_id
@@ -414,7 +416,8 @@ SELECT p.server_id   AS "profile_server_id!: String",
        m.license     AS "license!: Option<ModelLicense>",
        m.created_at  AS "created_at!: DateTime<Utc>",
        m.updated_at  AS "updated_at!: DateTime<Utc>",
-       r.server_id   AS "first_reply_server_id!: Option<String>"
+       r.server_id   AS "first_reply_server_id!: Option<String>",
+       m.title          AS "title"
 FROM profile AS p
          LEFT JOIN model AS m ON p.id = m.profile_id
          LEFT JOIN note AS r ON m.id = r.in_reply_to_model_id
@@ -447,7 +450,8 @@ SELECT p.server_id  AS "profile_server_id!: String",
        NULL         AS "license!: Option<ModelLicense>",
        n.created_at AS "created_at!: DateTime<Utc>",
        n.updated_at AS "updated_at!: DateTime<Utc>",
-       r.server_id  AS "first_reply_server_id!: Option<String>"
+       r.server_id  AS "first_reply_server_id!: Option<String>",
+       NULL         AS "title"
 FROM profile AS p
          LEFT JOIN note AS n ON p.id = n.actor_id
          LEFT JOIN note AS r ON n.id = r.in_reply_to_note_id
@@ -465,7 +469,8 @@ SELECT p.server_id   AS "profile_server_id!: String",
        m.license     AS "license!: Option<ModelLicense>",
        m.created_at  AS "created_at!: DateTime<Utc>",
        m.updated_at  AS "updated_at!: DateTime<Utc>",
-       r.server_id   AS "first_reply_server_id!: Option<String>"
+       r.server_id   AS "first_reply_server_id!: Option<String>",
+       m.title          AS "title"
 FROM profile AS p
          LEFT JOIN model AS m ON p.id = m.profile_id
          LEFT JOIN note AS r ON m.id = r.in_reply_to_model_id
@@ -499,7 +504,8 @@ pub struct ActivityPubModel {
     #[serde(rename = "type")]
     pub type_field: String,
     pub url: String,
-    pub license: Option<ModelLicense>
+    pub license: Option<ModelLicense>,
+    pub name: Option<String>
 }
 
 impl ActivityPubModel {
@@ -578,7 +584,8 @@ impl ActivityPubModel {
             to: vec!["https://www.w3.org/ns/activitystreams#Public".to_string()],
             type_field: "Note".to_string(),
             url: format!("{}/api/v1/model/{}", public_url, &id),
-            license: status.license
+            license: status.license,
+            name: status.title
         })
     }
 }
