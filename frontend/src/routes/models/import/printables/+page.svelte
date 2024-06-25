@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import BrownButton from '$lib/components/button/brown.svelte';
+	import { user } from '$lib/stores';
+	import { onMount } from 'svelte';
 
 	let loading = $state(false);
 	let import_id: undefined | number = $state(undefined);
@@ -54,15 +57,20 @@
 		}
 		loading = false;
 	};
+
+	onMount(() => {
+		const temp_import_id = parseInt($page.url.searchParams.get("id") ?? "0")
+		import_id = temp_import_id === 0 ? undefined : temp_import_id
+	})
 </script>
 
 <div class="w-screen h-screen flex">
 	<div class="m-auto w-1/2 flex flex-col rounded-lg p-2 border-c-blue border-2 h-fit">
 		<h1 class="mx-auto text-3xl">Import from Printables</h1>
-		<div class="grid grid-cols-2">
+		<div class="grid grid-cols-2 gap-4">
 			<div class="flex flex-col">
 				<h2 class="mx-auto text-xl">Import All Models</h2>
-				<BrownButton type="submit" disabled={loading}
+				<BrownButton type="submit" disabled={loading} on:click={import_all}
 					>{#if loading}Loading...{:else}Submit!{/if}</BrownButton
 				>
 			</div>
