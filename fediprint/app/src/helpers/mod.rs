@@ -128,6 +128,5 @@ pub fn is_ap_header(headers: &HeaderMap) -> Result<bool, Response> {
                 .unwrap());
         }
     };
-    Ok(accept_h.contains("application/activity+json"))
-    // TODO allow "application/ld+json; profile="https://www.w3.org/ns/activitystreams"" as well
+    Ok(accept_h.contains("application/activity+json") || accept_h.contains(r#"application/ld+json; profile="https://www.w3.org/ns/activitystreams""#))
 }
