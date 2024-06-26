@@ -1,6 +1,5 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -9,6 +8,7 @@ use axum::{debug_handler, Extension, Json};
 use shared::db::printer::CreatePrinter as DbCreatePrinter;
 use shared::db::printer::FullPrinter;
 use shared::models::printers::{CreatePrinter, UpdatePrinter};
+use shared::AppState;
 use std::sync::Arc;
 
 #[debug_handler]

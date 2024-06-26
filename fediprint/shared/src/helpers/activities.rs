@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
 use reqwest::StatusCode;
-use sqlx::PgPool;
 use tracing::error;
 use url::Url;
 
 use crate::{
     db::{model::FullModelWithRelationsIds, note::FullNote, profile::FullProfile},
     models::activitypub::note::NoteResponse,
+    AppState,
 };
 
 use super::instances::get_instance_by_base_url;
@@ -29,7 +31,7 @@ pub enum GetRemoteActivtyErrors {
 
 pub async fn get_remote_activity(
     url: String,
-    pool: PgPool,
+    state: Arc<AppState>,
 ) -> Result<ModelOrNote, GetRemoteActivtyErrors> {
     let parsed_url = match Url::parse(&url) {
         Ok(d) => d,
@@ -40,7 +42,9 @@ pub async fn get_remote_activity(
         None => return Err(GetRemoteActivtyErrors::CouldNotExtractHost),
     };
     let instance =
-        match get_instance_by_base_url(&format!("https://{instance_host}"), pool.clone()).await {
+        match get_instance_by_base_url(&format!("https://{instance_host}"), state.pool.clone())
+            .await
+        {
             Ok(d) => d,
             Err(e) => return Err(GetRemoteActivtyErrors::FailedToFetchInstance(e.to_string())),
         };
@@ -74,24 +78,27 @@ pub async fn get_remote_activity(
         Ok(d) => d,
         Err(e) => return Err(GetRemoteActivtyErrors::JsonParsingFailed(e.to_string())),
     };
-    let profile =
-        FullProfile::get_by_server_id_or_create(&data.attributed_to, instance.id, pool.clone())
-            .await
-            .map_err(|_| GetRemoteActivtyErrors::UserQueryFailed)?;
+    let profile = FullProfile::get_by_server_id_or_create(
+        &data.attributed_to,
+        instance.id,
+        state.pool.clone(),
+    )
+    .await
+    .map_err(|_| GetRemoteActivtyErrors::UserQueryFailed)?;
     if data.context.1.contains_key("3dModel") {
         Ok(ModelOrNote::Model(
             FullModelWithRelationsIds::create_or_get_from_note_response(
                 data,
                 instance_host.to_string(),
                 profile.id,
-                pool,
+                state.clone(),
             )
             .await
             .map_err(|_| GetRemoteActivtyErrors::ModelCreationFailed)?,
         ))
     } else {
         Ok(ModelOrNote::Note(
-            FullNote::create_or_get_from_note_response(data, profile.id, pool)
+            FullNote::create_or_get_from_note_response(data, profile.id, state.pool.clone())
                 .await
                 .map_err(|e| {
                     error!(e = %e);

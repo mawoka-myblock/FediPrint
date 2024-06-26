@@ -1,7 +1,7 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::interactions::follow_user;
 use crate::helpers::AppResult;
-use crate::AppState;
+use shared::AppState;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;

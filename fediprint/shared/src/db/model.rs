@@ -1,8 +1,11 @@
-use crate::{db::ModelLicense, models::activitypub::note::NoteResponse};
+use crate::{
+    db::ModelLicense, helpers::media::handle_media, models::activitypub::note::NoteResponse,
+    AppState,
+};
 use chrono::{DateTime, Utc};
 use serde_derive::{Deserialize, Serialize};
 use sqlx::{Error, FromRow, PgPool};
-use std::{collections::HashSet, str::FromStr};
+use std::{collections::HashSet, str::FromStr, sync::Arc};
 use tracing::trace;
 use uuid::Uuid;
 
@@ -284,6 +287,7 @@ impl FullModelWithRelationsIds {
         server_id: &str,
         pool: PgPool,
     ) -> Result<FullModelWithRelationsIds, Error> {
+        trace!(server_id = %server_id);
         let mut model = sqlx::query_as!(
             FullModelWithRelationsIds,
             r#"
@@ -337,11 +341,29 @@ impl FullModelWithRelationsIds {
         d: NoteResponse,
         server: String,
         profile_id: Uuid,
-        pool: PgPool,
-    ) -> Result<FullModelWithRelationsIds, Error> {
-        if let Ok(d) = FullModelWithRelationsIds::get_by_server_id(&d.id, pool.clone()).await {
-            return Ok(d);
-        }
-        FullModelWithRelationsIds::create_from_note_response(d, server, profile_id, pool).await
+        state: Arc<AppState>,
+    ) -> anyhow::Result<FullModelWithRelationsIds> {
+        trace!(
+            "db res: {:?}",
+            FullModelWithRelationsIds::get_by_server_id(&d.id, state.pool.clone()).await
+        );
+        // if let Ok(d) = FullModelWithRelationsIds::get_by_server_id(&d.id, pool.clone()).await {
+        //     return Ok(d);
+        // }
+        let unfinished_model = FullModelWithRelationsIds::create_from_note_response(
+            d.clone(),
+            server,
+            profile_id,
+            state.pool.clone(),
+        )
+        .await?;
+        handle_media(
+            d.attachment.iter().filter_map(|v| v.as_str()).collect(),
+            unfinished_model.id,
+            profile_id,
+            state.clone(),
+        )
+        .await?;
+        Ok(FullModelWithRelationsIds::get_by_id(&unfinished_model.id, state.pool.clone()).await?)
     }
 }

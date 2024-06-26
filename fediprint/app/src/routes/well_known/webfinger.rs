@@ -1,5 +1,4 @@
 use crate::helpers::AppResult;
-use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Query, State};
@@ -9,6 +8,7 @@ use regex::Regex;
 use serde::Deserialize;
 use shared::db::profile::FullProfile;
 use shared::models::data::{Webfinger, WebfingerLink};
+use shared::AppState;
 use std::sync::Arc;
 use uuid::uuid;
 

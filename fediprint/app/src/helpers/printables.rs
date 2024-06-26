@@ -1,4 +1,3 @@
-use crate::AppState;
 use anyhow::bail;
 use chrono::{DateTime, Utc};
 use futures::TryStreamExt;
@@ -10,6 +9,7 @@ use shared::db::file::{CreateFile, FullFile};
 use shared::db::model::FullModel;
 use shared::db::profile::FullProfile;
 use shared::db::ModelLicense;
+use shared::AppState;
 use std::io;
 use std::sync::Arc;
 use tokio_util::io::StreamReader;

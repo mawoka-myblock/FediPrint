@@ -3,7 +3,6 @@ use crate::helpers::activitypub::inbox_activities::{
     handle_like, handle_reject, handle_remove, handle_undo, handle_update,
 };
 use crate::helpers::{ensure_ap_header, AppResult};
-use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -17,6 +16,7 @@ use shared::models::activitypub::{
     OrderedCollection, OrderedItem, OutboxContext, OutboxDataPage, Tag,
 };
 use shared::models::inbox::InboxEvent;
+use shared::AppState;
 use std::sync::Arc;
 use tracing::{debug, error};
 use uuid::{uuid, Uuid};

@@ -1,5 +1,4 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Path, Query, State};
@@ -12,6 +11,7 @@ use shared::models::activitypub::{
     AlsoKnownAs, Claim, Context, Endpoints, FingerprintKey, IdentityKey, OrderedCollection,
     PeopleDataPage, PublicKey,
 };
+use shared::AppState;
 use std::sync::Arc;
 use uuid::uuid;
 

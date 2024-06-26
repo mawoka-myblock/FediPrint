@@ -1,6 +1,5 @@
 use crate::helpers::auth::UserState;
 use crate::helpers::AppResult;
-use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Multipart, Path, Query, State};
 use axum::http::HeaderMap;
@@ -8,29 +7,16 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{debug_handler, Extension, Json};
 use futures::TryStreamExt;
-use s3::Bucket;
 use serde_derive::Deserialize;
 use shared::db::file::{CreateFile, FullFile, UpdateFile};
+use shared::helpers::media::put_file;
 use shared::models::storage::UpdateImageMetadata;
+use shared::AppState;
+use std::io;
 use std::sync::Arc;
-use std::{io, pin::Pin};
-use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
 use tracing::debug;
 use uuid::Uuid;
-
-pub async fn put_file(
-    bucket: &Bucket,
-    filename: &str,
-    content_type: &str,
-    mut reader: Pin<&mut (dyn AsyncRead + Send)>,
-) -> Result<(), ()> {
-    bucket
-        .put_object_stream_with_content_type(&mut reader, filename, content_type)
-        .await
-        .unwrap();
-    Ok(())
-}
 
 #[debug_handler]
 pub async fn upload_file(

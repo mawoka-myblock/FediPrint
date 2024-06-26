@@ -4,7 +4,6 @@ use crate::helpers::printables::{
     ImportModelResponse,
 };
 use crate::helpers::AppResult;
-use crate::AppState;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -13,6 +12,7 @@ use axum::{debug_handler, Extension, Json};
 use serde_derive::Deserialize;
 use shared::db::model::FullModel;
 use shared::db::profile::FullProfile;
+use shared::AppState;
 use std::sync::Arc;
 use tracing::debug;
 

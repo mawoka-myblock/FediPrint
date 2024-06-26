@@ -1,6 +1,7 @@
 use dotenvy::dotenv;
 use shared::db::instances::CreateInstance;
 use shared::helpers::config::Config;
+use shared::AppState;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -26,13 +27,6 @@ use uuid::{uuid, Uuid};
 
 pub mod helpers;
 pub mod routes;
-
-pub struct AppState {
-    env: Config,
-    s3: Bucket,
-    pool: PgPool,
-    ms: meilisearch_sdk::Index,
-}
 
 #[cfg(test)]
 pub static TEST_ACCOUNT_UUID: Uuid = uuid!("018e7b20-51e5-79c2-878e-02d01f941165");

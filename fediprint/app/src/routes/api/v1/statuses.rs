@@ -1,5 +1,4 @@
 use crate::helpers::{ensure_ap_header, AppResult};
-use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Path, Query, State};
@@ -8,6 +7,7 @@ use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use shared::helpers::activities::{get_remote_activity, ModelOrNote};
 use shared::models::activitypub::ActivityPubModel;
+use shared::AppState;
 use std::sync::Arc;
 use tracing::{debug, error};
 use uuid::Uuid;
@@ -42,7 +42,7 @@ pub async fn get_remote_status(
     Query(data): Query<GetRemoteStatusQuery>,
     State(state): State<Arc<AppState>>,
 ) -> AppResult<impl IntoResponse> {
-    let res = get_remote_activity(data.link, state.pool.clone()).await;
+    let res = get_remote_activity(data.link, state.clone()).await;
     match res {
         Ok(d) => {
             let body = match d {

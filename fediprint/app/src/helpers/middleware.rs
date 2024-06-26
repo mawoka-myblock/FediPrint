@@ -8,9 +8,9 @@ use axum::{
 };
 use std::sync::Arc;
 
-use crate::AppState;
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Serialize;
+use shared::AppState;
 
 use crate::helpers::auth::{
     check_if_token_was_valid, generate_jwt, read_jwt, InputClaims, UserState,

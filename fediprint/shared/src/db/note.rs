@@ -56,8 +56,8 @@ impl FullNote {
 
     pub async fn get_by_server_id(server_id: &str, pool: PgPool) -> Result<FullNote, Error> {
         sqlx::query_as!(FullNote, r#"SELECT id, created_at, updated_at, server_id, content, hashtags, audience AS "audience!: EventAudience", in_reply_to_comment_id, in_reply_to_note_id, actor_id, comment_of_model_id
-                FROM note WHERE server_id = $1"#,
-                server_id
+                FROM note WHERE server_id = $1 LIMIT 1"#,
+                Some(server_id)
         ).fetch_one(&pool).await
     }
 

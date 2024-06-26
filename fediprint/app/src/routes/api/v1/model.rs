@@ -2,7 +2,6 @@ use crate::helpers::auth::UserState;
 use crate::helpers::search::{index_model, search};
 use crate::helpers::AppResult;
 use crate::routes::api::v1::storage::PaginationQuery;
-use crate::AppState;
 use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -11,6 +10,7 @@ use axum::{debug_handler, Extension, Json};
 use serde_derive::{Deserialize, Serialize};
 use shared::db::model::{CreateModel as DbCreateModel, FullModel, FullModelWithRelationsIds};
 use shared::models::model::CreateModel;
+use shared::AppState;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -49,10 +49,7 @@ pub async fn create_model(
     }
     .create(state.pool.clone())
     .await?;
-    let s_id = format!(
-        "{}/api/v1/statuses/{}",
-        state.env.public_url, &res.id
-    );
+    let s_id = format!("{}/api/v1/statuses/{}", state.env.public_url, &res.id);
     let model = FullModel::update_server_id_and_return(&res.id, &s_id, state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::CREATED)

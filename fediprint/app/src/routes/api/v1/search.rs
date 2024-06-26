@@ -1,5 +1,4 @@
 use crate::helpers::AppResult;
-use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::{Query, State};
@@ -11,6 +10,7 @@ use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use shared::db::profile::FullProfile;
 use shared::helpers::instances::get_instance_by_base_url;
+use shared::AppState;
 use std::sync::Arc;
 use tracing::{debug, error};
 

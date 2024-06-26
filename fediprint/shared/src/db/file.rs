@@ -72,6 +72,16 @@ pub struct FullFile {
 }
 
 impl FullFile {
+    pub async fn create_no_return(&self, pool: PgPool) -> Result<(), Error> {
+        sqlx::query_as!(FullFile, r#"INSERT INTO file (id, created_at, updated_at, mime_type, size, file_name, description, alt_text, thumbhash, preview_file_id, to_be_deleted_at, profile_id,
+            file_for_model_id, image_for_model_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)"#,
+        self.id, self.created_at, self.updated_at, self.mime_type, self.size, self.file_name, self.description, self.alt_text, self.thumbhash, self.preview_file_id, self.to_be_deleted_at,self.profile_id,
+        self.file_for_model_id, self.image_for_model_id
+        ).fetch_one(&pool).await?;
+        Ok(())
+    }
+
     pub async fn get_newest_files_by_profile_paginated(
         profile_id: &Uuid,
         limit: &i64,

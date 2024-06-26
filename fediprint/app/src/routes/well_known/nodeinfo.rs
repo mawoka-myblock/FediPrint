@@ -1,11 +1,11 @@
 use crate::helpers::AppResult;
-use crate::AppState;
 use axum::body::Body;
 use axum::debug_handler;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
+use shared::AppState;
 use std::sync::Arc;
 
 #[debug_handler]
