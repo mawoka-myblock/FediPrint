@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '@fontsource/marck-script/index.css';
 	import { user } from '$lib/stores';
 	import { browser } from '$app/environment';
 	import { beforeNavigate } from '$app/navigation';
