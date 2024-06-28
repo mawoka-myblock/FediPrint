@@ -17,6 +17,7 @@ pub struct Config {
     pub meilisearch_key: String,
     pub registration_disabled: bool,
     pub smtp: SmtpData,
+    pub stripe_key: Option<String>
 }
 
 #[derive(Debug, Clone)]
@@ -59,6 +60,7 @@ impl Config {
                 .to_string(),
             email: smtp_uri.path()[1..].to_string(),
         };
+        let stripe_key = std::env::var("STRIPE_KEY").ok();
         Config {
             database_url,
             jwt_secret,
@@ -73,6 +75,7 @@ impl Config {
             meilisearch_key,
             registration_disabled,
             smtp,
+            stripe_key
         }
     }
 }

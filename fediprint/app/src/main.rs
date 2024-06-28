@@ -41,6 +41,11 @@ pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
         region: config.s3_region.clone(),
         endpoint: config.s3_base_url.clone(),
     };
+
+    let mut stripe_client = None;
+    if let Some(k) = config.stripe_key {
+        stripe_client = Some(stripe::Client::new(k))
+    }
     let s3_creds = Credentials::new(
         Some(&config.s3_username),
         Some(&config.s3_password),
@@ -111,6 +116,7 @@ pub async fn get_state(pool: Option<PgPool>) -> Arc<AppState> {
         s3: bucket,
         pool: sqlx_pool,
         ms: client.index("fedi_print"),
+        stripe: stripe_client
     })
 }
 

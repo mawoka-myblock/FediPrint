@@ -45,6 +45,7 @@ email_address = "0.2"
 meilisearch-sdk = "0.25.0"
 shared = {path = "../shared"}
 
+async-stripe = { version = "0.37", features = ["runtime-tokio-hyper"] }
 
 [dev-dependencies]
 tower = { version = "0.4", features = ["util"] }

@@ -10,4 +10,5 @@ pub struct AppState {
     pub s3: Bucket,
     pub pool: PgPool,
     pub ms: meilisearch_sdk::Index,
+    pub stripe: Option<stripe::Client>
 }
