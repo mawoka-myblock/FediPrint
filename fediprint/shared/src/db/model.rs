@@ -22,14 +22,16 @@ pub struct CreateModel {
     pub license: ModelLicense,
     pub files: Vec<Uuid>,
     pub images: Vec<Uuid>,
+    pub cost: i16,
+    pub currency: stripe::Currency,
 }
 
 impl CreateModel {
     pub async fn create(self, pool: PgPool) -> Result<FullModel, Error> {
-        let ret_data = sqlx::query_as!(FullModel, r#"INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        let ret_data = sqlx::query_as!(FullModel, r#"INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license, cost, currency)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency"#,
-            self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _
+            self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _, self.cost, self.currency.to_string()
         ).fetch_one(&pool).await?;
         sqlx::query!(
             r#"UPDATE file SET file_for_model_id = $1 WHERE id = ANY($2);"#,

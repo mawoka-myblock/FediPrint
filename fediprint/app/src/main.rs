@@ -298,7 +298,7 @@ pub async fn get_server() -> Router {
         )
         .route(
             "/api/v1/payments/stripe/onboard",
-            post(routes::api::v1::payments::onboard).route_layer(middleware::from_fn_with_state(
+            get(routes::api::v1::payments::onboard).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),
@@ -309,6 +309,12 @@ pub async fn get_server() -> Router {
                 state.clone(),
                 auth_middleware,
             )),
+        )
+        .route(
+            "/api/v1/payments/stripe/dashboard",
+            get(routes::api::v1::payments::open_dashboard).route_layer(
+                middleware::from_fn_with_state(state.clone(), auth_middleware),
+            ),
         )
         .route(
             "/api/v1/payments/stripe/webhook",

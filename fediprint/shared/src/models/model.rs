@@ -11,4 +11,6 @@ pub struct CreateModel {
     pub images: Vec<Uuid>,
     pub files: Vec<Uuid>,
     pub license: ModelLicense,
+    pub cost: i16,
+    pub currency: stripe::Currency,
 }

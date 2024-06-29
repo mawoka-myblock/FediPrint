@@ -25,6 +25,10 @@ pub async fn onboard(
         Some(d) => d,
         None => return Ok((StatusCode::NOT_IMPLEMENTED, "Payments not available").into_response()),
     };
+    let db_account = FullAccount::get_by_id(&claims.sub, state.pool.clone()).await?;
+    if db_account.stripe_id.is_some() {
+        return Ok(Redirect::temporary("/api/v1/payments/stripe/dashboard").into_response());
+    }
     let account = stripe::Account::create(
         stripe_client,
         stripe::CreateAccount {
@@ -44,10 +48,13 @@ pub async fn onboard(
         stripe::CreateAccountLink {
             account: account.id,
             type_: stripe::AccountLinkType::AccountOnboarding,
-            refresh_url: Some(&format!("/api/v1/payments/onboard/{}", claims.sub)),
+            refresh_url: Some(&format!(
+                "{}/api/v1/payments/onboard/{}",
+                state.env.public_url, claims.sub
+            )),
             return_url: Some(&format!(
-                "/account/payments/onboarding/complete/{}",
-                claims.sub
+                "{}/account/payments/onboarding/complete/{}",
+                state.env.public_url, claims.sub
             )),
             collect: None,
             collection_options: None,
@@ -57,6 +64,14 @@ pub async fn onboard(
     .await?;
     Ok(Redirect::temporary(&account_link.url).into_response())
     // Ok(StatusCode::OK.into_response())
+}
+
+#[debug_handler]
+pub async fn open_dashboard(
+    Extension(_claims): Extension<UserState>,
+    State(_state): State<Arc<AppState>>,
+) -> AppResult<impl IntoResponse> {
+    Ok(Redirect::temporary("https://dashboard.stripe.com").into_response())
 }
 
 #[debug_handler]

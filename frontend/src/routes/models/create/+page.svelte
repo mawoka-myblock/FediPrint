@@ -39,6 +39,8 @@
 		description: string;
 		tags: string[];
 		license: Licenses;
+		cost: number;
+		currency: string
 	} = $state({
 		images: [],
 		files: [],
@@ -46,7 +48,9 @@
 		summary: '',
 		description: '',
 		tags: [],
-		license: Licenses.CcAttr
+		license: Licenses.CcAttr,
+		cost: 0,
+		currency: "usd"
 	});
 	tags.subscribe((d) => {
 		data.tags = [];
@@ -299,6 +303,30 @@
 							<option value={license.value}>{license.name}</option>
 						{/each}
 					</select>
+				</div>
+			</div>
+			<div class="p-4 rounded-lg shadow-2xl my-4">
+				<label for="license" class="block">Currency</label>
+				<div class="mt-2 w-full">
+					<select
+						id="currency"
+						bind:value={data.currency}
+						class="p-2 rounded-lg transition-all focus:border-c-dgreen border-2 w-full"
+					>
+						<option value="usd">$ - USD</option>
+						<option value="eur">€ - Euro</option>
+					</select>
+				</div>
+			</div>
+			<div class="p-4 rounded-lg shadow-2xl my-4">
+				<label for="license" class="block">Currency (in cents)</label>
+				<div class="mt-2 w-full">
+					<input
+						id="cost"
+						bind:value={data.cost}
+						class="p-2 rounded-lg transition-all focus:border-c-dgreen border-2 w-full"
+					>
+					<span></span>
 				</div>
 			</div>
 			<div class="p-4 rounded-lg shadow-2xl my-4 flex">
