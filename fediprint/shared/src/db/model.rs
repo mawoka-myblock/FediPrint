@@ -64,7 +64,7 @@ pub struct FullModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub printables_url: Option<String>,
-    pub cost: Option<f32>,
+    pub cost: Option<i16>,
     pub currency: Option<String>,
 }
 

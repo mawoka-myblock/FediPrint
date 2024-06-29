@@ -296,6 +296,24 @@ pub async fn get_server() -> Router {
             "/api/v1/statuses/remote",
             get(routes::api::v1::statuses::get_remote_status),
         )
+        .route(
+            "/api/v1/payments/stripe/onboard",
+            post(routes::api::v1::payments::onboard).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/payments/stripe/pay",
+            post(routes::api::v1::payments::pay).route_layer(middleware::from_fn_with_state(
+                state.clone(),
+                auth_middleware,
+            )),
+        )
+        .route(
+            "/api/v1/payments/stripe/webhook",
+            post(routes::api::v1::payments::handle_webhook),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http())
 }

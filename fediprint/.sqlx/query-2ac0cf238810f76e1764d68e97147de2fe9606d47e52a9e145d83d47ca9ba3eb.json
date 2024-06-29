@@ -91,7 +91,7 @@
       {
         "ordinal": 13,
         "name": "cost",
-        "type_info": "Float4"
+        "type_info": "Int2"
       },
       {
         "ordinal": 14,

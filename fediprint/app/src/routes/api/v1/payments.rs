@@ -5,13 +5,12 @@ use axum::extract::{FromRef, FromRequest, Path, Request, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::{async_trait, debug_handler, Extension};
-use serde_derive::Deserialize;
-use serde_derive::Serialize;
-use serde_json::{json, Value};
 use shared::db::account::FullAccount;
 use shared::db::model::FullModel;
+use shared::db::profile::FullProfile;
 use shared::db::transactions::{CreateTransaction, FullTransaction};
 use shared::AppState;
+use std::str::FromStr;
 use std::sync::Arc;
 use stripe::Object;
 use tracing::{debug, error};
@@ -45,17 +44,14 @@ pub async fn onboard(
         stripe::CreateAccountLink {
             account: account.id,
             type_: stripe::AccountLinkType::AccountOnboarding,
-            refresh_url: Some(&format!(
-                "/api/v1/payments/onboard/{}",
-                claims.sub.to_string()
-            )),
+            refresh_url: Some(&format!("/api/v1/payments/onboard/{}", claims.sub)),
             return_url: Some(&format!(
                 "/account/payments/onboarding/complete/{}",
-                claims.sub.to_string()
+                claims.sub
             )),
             collect: None,
             collection_options: None,
-            expand: &vec![],
+            expand: &[],
         },
     )
     .await?;
@@ -74,19 +70,36 @@ pub async fn pay(
         None => return Ok((StatusCode::NOT_IMPLEMENTED, "Payments not available").into_response()),
     };
     let model = FullModel::get_by_id_and_public_and_paid(&model_id, state.pool.clone()).await?;
-    let cost: i64 = 10_00;
-    let application_percent: i64 = 10;
-    let fee: i64 = cost * application_percent;
+    if model.cost.is_none() {
+        return Ok((StatusCode::NOT_FOUND, "Model isn't available for purchase").into_response());
+    }
+    if model.currency.is_none() {
+        return Ok((StatusCode::NOT_FOUND, "Model isn't available for purchase").into_response());
+    }
+    let cost: i64 = model.cost.unwrap().into();
+    let currency = match stripe::Currency::from_str(&model.currency.unwrap()) {
+        Ok(d) => d,
+        Err(_) => {
+            error!("Model currency couldn't be loaded (Model-id: {}", &model.id);
+            return Ok((
+                StatusCode::NOT_FOUND,
+                "Currency for model couldn't be loaded",
+            )
+                .into_response());
+        }
+    };
+    let fee: i64 = cost * i64::from(state.env.stripe.as_ref().unwrap().platform_fee_percent); // Unwrap is fine, as the client at the beginning only exists when stripe is configured
     let session = stripe::CheckoutSession::create(
         stripe_client,
         stripe::CreateCheckoutSession {
             line_items: Some(vec![stripe::CreateCheckoutSessionLineItems {
                 price_data: Some(stripe::CreateCheckoutSessionLineItemsPriceData {
-                    currency: stripe::Currency::EUR,
+                    currency,
                     unit_amount: Some(cost),
                     product_data: Some(
                         stripe::CreateCheckoutSessionLineItemsPriceDataProductData {
-                            name: "Product Name".to_string(),
+                            name: model.title,
+                            description: Some(model.summary),
                             ..Default::default()
                         },
                     ),
@@ -114,12 +127,23 @@ pub async fn pay(
         },
     )
     .await?;
+    let seller_profile = FullProfile::get_by_id(&model.profile_id, state.pool.clone()).await?;
+
+    CreateTransaction {
+        buyer_account: claims.profile_id,
+        buyer_profile: claims.sub,
+        model_id: model.id,
+        seller_profile: seller_profile.id,
+        stripe_id: session.id().to_string(),
+    }
+    .create(state.pool.clone())
+    .await?;
 
     Ok(Redirect::temporary(&session.url.unwrap()).into_response())
 }
 
 // Adapted from https://github.com/arlyon/async-stripe/blob/master/examples/webhook-axum.rs
-struct StripeEvent(stripe::Event);
+pub struct StripeEvent(stripe::Event);
 
 #[async_trait]
 impl<S> FromRequest<S> for StripeEvent
@@ -146,14 +170,14 @@ where
             .map_err(IntoResponse::into_response)?;
 
         Ok(Self(
-            stripe::Webhook::construct_event(&payload, signature.to_str().unwrap(), &stripe_sig)
+            stripe::Webhook::construct_event(&payload, signature.to_str().unwrap(), stripe_sig)
                 .map_err(|_| StatusCode::BAD_REQUEST.into_response())?,
         ))
     }
 }
 
 #[axum::debug_handler]
-async fn handle_webhook(
+pub async fn handle_webhook(
     State(state): State<Arc<AppState>>,
     StripeEvent(event): StripeEvent,
 ) -> AppResult<impl IntoResponse> {

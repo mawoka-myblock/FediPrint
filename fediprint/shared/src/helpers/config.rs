@@ -70,13 +70,9 @@ impl Config {
         let stripe_key = std::env::var("STRIPE__KEY").ok();
         let stripe_webhook_key = std::env::var("STRIPE__WEBHOOK_KEY").ok();
         let stripe_platform_fee_percent: Option<i32> =
-            std::env::var("STRIPE__PLATFORM_FEE_PERCENT")
-                .ok()
-                .and_then(|d| {
-                    Some(
-                        i32::from_str(&d).expect("STRIPE__PLATFORM_FEE_PERCENT not a valid number"),
-                    )
-                });
+            std::env::var("STRIPE__PLATFORM_FEE_PERCENT").ok().map(|d| {
+                i32::from_str(&d).expect("STRIPE__PLATFORM_FEE_PERCENT not a valid number")
+            });
         let mut stripe: Option<StripeData> = None;
         if stripe_key.is_some() {
             stripe = Some(StripeData {

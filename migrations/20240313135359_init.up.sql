@@ -111,7 +111,7 @@ CREATE TABLE model
     "created_at"   timestamptz   DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
     "updated_at"   timestamptz   DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
     printables_url text          DEFAULT NULL UNIQUE                                           ,
-    cost           real          DEFAULT NULL,
+    cost           smallint      DEFAULT NULL,
     currency       text          DEFAULT NULL
 );
 

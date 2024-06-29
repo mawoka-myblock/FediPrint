@@ -1,9 +1,7 @@
-use anyhow::bail;
 use chrono::{DateTime, Utc};
 use serde_derive::Serialize;
 use sqlx::{Error, PgPool};
-use tracing::debug;
-use uuid::{uuid, Uuid};
+use uuid::Uuid;
 
 #[derive(Serialize, Debug, PartialEq)]
 pub struct CreateTransaction {
