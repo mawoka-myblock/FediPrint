@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE model SET server_id = $1 WHERE id = $2\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url",
+  "query": "INSERT INTO model (id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, printables_url, cost, currency)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency",
   "describe": {
     "columns": [
       {
@@ -87,12 +87,55 @@
         "ordinal": 12,
         "name": "printables_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Text",
-        "Uuid"
+        "Text",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        {
+          "Custom": {
+            "name": "model_license",
+            "kind": {
+              "Enum": [
+                "CC_PD",
+                "CC_ATTR",
+                "CC_ATTR_SA",
+                "CC_ATTR_ND",
+                "CC_ATTR_NC",
+                "CC_ATTR_NC_SA",
+                "CC_ATTR_NC_ND",
+                "GPL2",
+                "GPL3",
+                "GNU_LESSER",
+                "BSD",
+                "SDFL"
+              ]
+            }
+          }
+        },
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Float4",
+        "Text"
       ]
     },
     "nullable": [
@@ -108,8 +151,10 @@
       false,
       false,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "c6ab98a1007893ae8e0184824a5d2f214b821c05ba00ee3b0124c1a0edac4672"
+  "hash": "81f5b355fd4497604b62db3017b27aab23c243a2ae58ca1f84e0eb1d93b4cdac"
 }

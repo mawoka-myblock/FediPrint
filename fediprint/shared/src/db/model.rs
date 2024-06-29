@@ -28,7 +28,7 @@ impl CreateModel {
     pub async fn create(self, pool: PgPool) -> Result<FullModel, Error> {
         let ret_data = sqlx::query_as!(FullModel, r#"INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency"#,
             self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _
         ).fetch_one(&pool).await?;
         sqlx::query!(
@@ -64,6 +64,8 @@ pub struct FullModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub printables_url: Option<String>,
+    pub cost: Option<f32>,
+    pub currency: Option<String>,
 }
 
 impl FullModel {
@@ -73,7 +75,7 @@ impl FullModel {
         pool: PgPool,
     ) -> Result<FullModel, Error> {
         sqlx::query_as!(FullModel, r#"UPDATE model SET server_id = $1 WHERE id = $2
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency"#,
             server_id, id
         ).fetch_one(&pool).await
     }
@@ -85,7 +87,7 @@ impl FullModel {
         pool: PgPool,
     ) -> Result<FullModel, Error> {
         sqlx::query_as!(FullModel, r#"UPDATE model SET published = $1 WHERE id = $2 AND profile_id = $3
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency"#,
             published, id, profile_id
         ).fetch_one(&pool).await
     }
@@ -94,17 +96,26 @@ impl FullModel {
         offset: &i64,
         pool: PgPool,
     ) -> Result<Vec<FullModel>, Error> {
-        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url FROM model
+        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency FROM model
             WHERE published = true ORDER BY created_at DESC OFFSET $1 LIMIT $2
             "#,
             offset, limit
         ).fetch_all(&pool).await
     }
     pub async fn create(self, pool: PgPool) -> Result<FullModel, Error> {
-        sqlx::query_as!(FullModel, r#"INSERT INTO model (id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, printables_url)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url"#,
-            self.id, self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _, self.created_at, self.updated_at, self.printables_url
+        sqlx::query_as!(FullModel, r#"INSERT INTO model (id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, printables_url, cost, currency)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency"#,
+            self.id, self.server, self.server_id, self.profile_id, self.published, self.title, self.summary, self.description, &self.tags, self.license as _, self.created_at, self.updated_at, self.printables_url, self.cost, self.currency
+        ).fetch_one(&pool).await
+    }
+    pub async fn get_by_id_and_public_and_paid(
+        id: &Uuid,
+        pool: PgPool,
+    ) -> Result<FullModel, Error> {
+        sqlx::query_as!(FullModel, r#"SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS "license!: ModelLicense", created_at, updated_at, printables_url, cost, currency FROM model
+            WHERE id = $1 AND cost IS NOT NULL AND currency IS NOT NULL
+            "#,id
         ).fetch_one(&pool).await
     }
 }
@@ -333,6 +344,8 @@ impl FullModelWithRelationsIds {
             tags: d.tag.into_iter().map(|v| v.name).collect(),
             title: d.name.unwrap(),
             updated_at: date,
+            cost: None,
+            currency: None,
         };
         model.create(pool.clone()).await?;
         FullModelWithRelationsIds::get_by_id(&id, pool).await

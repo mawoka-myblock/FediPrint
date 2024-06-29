@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url FROM model\n            WHERE published = true ORDER BY created_at DESC OFFSET $1 LIMIT $2\n            ",
+  "query": "SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency FROM model\n            WHERE id = $1 AND cost IS NOT NULL AND currency IS NOT NULL\n            ",
   "describe": {
     "columns": [
       {
@@ -87,12 +87,21 @@
         "ordinal": 12,
         "name": "printables_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8",
-        "Int8"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -108,8 +117,10 @@
       false,
       false,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "f6ed54c32670fb1b0acd05eb82465c963796587bc111187d820a20811bd5c933"
+  "hash": "2ac0cf238810f76e1764d68e97147de2fe9606d47e52a9e145d83d47ca9ba3eb"
 }

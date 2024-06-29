@@ -19,7 +19,7 @@ use reqwest::Error;
 use s3::error::S3Error;
 use sqlx::Error as SqlxError;
 use std::borrow::Cow;
-use tracing::debug;
+use tracing::{debug, error};
 
 pub type AppJsonResult<T> = AppResult<Json<T>>;
 
@@ -31,6 +31,7 @@ pub enum AppError {
     MeiliSearchError(ms_error),
     NotFound,
     InternalServerError,
+    HttpConflict,
 }
 
 pub fn internal_app_error<E>(_: E) -> AppError
@@ -74,6 +75,19 @@ impl From<reqwest::Error> for AppError {
     }
 }
 
+impl From<stripe::StripeError> for AppError {
+    fn from(e: stripe::StripeError) -> Self {
+        error!("Stripe Error: {:?}", &e);
+        match e {
+            stripe::StripeError::Stripe(s) => match s.http_status {
+                409 => AppError::HttpConflict,
+                _ => AppError::InternalServerError,
+            },
+            _ => AppError::InternalServerError,
+        }
+    }
+}
+
 // This centralizes all different errors from our app in one place
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
@@ -96,6 +110,7 @@ impl IntoResponse for AppError {
             AppError::ToStrError(_) => StatusCode::BAD_REQUEST,
             AppError::S3Error(_) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::HttpConflict => StatusCode::CONFLICT,
         };
 
         status.into_response()

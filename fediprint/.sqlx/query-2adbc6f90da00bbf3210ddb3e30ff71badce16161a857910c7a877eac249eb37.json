@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE transactions SET completed = true WHERE stripe_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2adbc6f90da00bbf3210ddb3e30ff71badce16161a857910c7a877eac249eb37"
+}

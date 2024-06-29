@@ -36,7 +36,7 @@ http-body-util = "0.1"
 mime = "0.3.17"
 lazy_static = "1"
 # new db
-sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros", "migrate" ] }
+sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres", "uuid", "chrono", "json", "macros", "migrate"] }
 # email
 lettre = "0.11"
 lettre_email = "0.9"
@@ -46,6 +46,7 @@ meilisearch-sdk = "0.25.0"
 shared = {path = "../shared"}
 
 async-stripe = { version = "0.37", features = ["runtime-tokio-hyper"] }
+bigdecimal = "0.4"
 
 [dev-dependencies]
 tower = { version = "0.4", features = ["util"] }

@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO transactions (model_id, buyer_profile, buyer_account, seller_profile, stripe_id)\n            VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, model_id, buyer_profile, buyer_account, seller_profile, stripe_id, payment_success, completed\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "model_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "buyer_profile",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "buyer_account",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "seller_profile",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "stripe_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "payment_success",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "completed",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "7eb66bd903f30f14f796719c544394381fdbdf6feec8eef5ab003f9c42eeff7d"
+}

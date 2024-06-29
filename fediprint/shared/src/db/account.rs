@@ -30,17 +30,29 @@ pub struct FullAccount {
     pub verified: Option<String>,
     pub profile_id: Uuid,
     pub private_key: String,
+    pub stripe_id: Option<String>,
 }
 
 impl FullAccount {
     pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullAccount, Error> {
         sqlx::query_as!(FullAccount,
-            r#"SELECT id, registered_at, updated_at, password, email, verified, profile_id, private_key FROM account where id = $1"#,
+            r#"SELECT id, registered_at, updated_at, password, email, verified, profile_id, private_key, stripe_id FROM account where id = $1"#,
             id).fetch_one(&pool).await
     }
     pub async fn get_by_email(email: &str, pool: PgPool) -> Result<FullAccount, Error> {
         sqlx::query_as!(FullAccount,
-            "SELECT id, registered_at, updated_at, password, email, verified, profile_id, private_key FROM account where email = $1",
+            "SELECT id, registered_at, updated_at, password, email, verified, profile_id, private_key, stripe_id FROM account where email = $1",
             email).fetch_one(&pool).await
+    }
+    pub async fn link_stripe_id(
+        account_id: &Uuid,
+        stripe_id: &str,
+        pool: PgPool,
+    ) -> Result<FullAccount, Error> {
+        sqlx::query_as!(FullAccount,
+            r#"UPDATE account SET stripe_id = $1 WHERE id = $2 RETURNING
+            id, registered_at, updated_at, password, email, verified, profile_id, private_key, stripe_id
+            "#, stripe_id, account_id
+        ).fetch_one(&pool).await
     }
 }

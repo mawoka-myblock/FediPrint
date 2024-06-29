@@ -1,6 +1,7 @@
 -- This file should undo anything in `up.sql`
 DROP FUNCTION IF EXISTS manage_updated_at;
 DROP FUNCTION IF EXISTS set_updated_at;
+DROP TABLE transactions;
 DROP TABLE likes;
 DROP TABLE boosts;
 DROP TABLE _mentions;

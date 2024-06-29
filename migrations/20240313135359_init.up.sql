@@ -92,24 +92,27 @@ CREATE TABLE account
     email           text                                                              NOT NULL UNIQUE,
     verified        text        DEFAULT uuid_generate_v7(),
     "profile_id"    uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL UNIQUE,
-    "private_key"   text                                                              NOT NULL
+    "private_key"   text                                                              NOT NULL,
+    stripe_id       text        DEFAULT NULL
 );
 
 CREATE TABLE model
 (
-    id             uuid        DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
-    server         text                                                              NOT NULL,
+    id             uuid          DEFAULT uuid_generate_v7()                            NOT NULL PRIMARY KEY,
+    server         text                                                                NOT NULL,
     "server_id"    text UNIQUE,
-    "profile_id"   uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT NOT NULL,
-    published      boolean     DEFAULT false                                         NOT NULL,
-    title          text                                                              NOT NULL,
-    summary        text                                                              NOT NULL,
-    description    text                                                              NOT NULL,
-    tags           text[]                                                            NOT NULL DEFAULT '{}',
-    license        model_license                                                     NOT NULL,
-    "created_at"   timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
-    "updated_at"   timestamptz DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
-    printables_url text        DEFAULT NULL UNIQUE
+    "profile_id"   uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE RESTRICT   NOT NULL,
+    published      boolean       DEFAULT false                                         NOT NULL,
+    title          text                                                                NOT NULL,
+    summary        text                                                                NOT NULL,
+    description    text                                                                NOT NULL,
+    tags           text[]        DEFAULT '{}'                                          NOT NULL,
+    license        model_license                                                       NOT NULL,
+    "created_at"   timestamptz   DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    "updated_at"   timestamptz   DEFAULT CURRENT_TIMESTAMP                             NOT NULL,
+    printables_url text          DEFAULT NULL UNIQUE                                           ,
+    cost           real          DEFAULT NULL,
+    currency       text          DEFAULT NULL
 );
 
 
@@ -178,6 +181,19 @@ CREATE TABLE likes
     note_id    uuid REFERENCES note (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+
+
+CREATE TABLE transactions (
+    id uuid DEFAULT uuid_generate_v7() NOT NULL PRIMARY KEY,
+    created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    model_id   uuid REFERENCES model (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    buyer_profile uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,
+    buyer_account uuid REFERENCES account (id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,
+    seller_profile uuid REFERENCES profile (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    stripe_id text UNIQUE NOT NULL,
+    payment_success boolean DEFAULT NULL,
+    completed boolean DEFAULT false NOT NULL
+);
 
 
 

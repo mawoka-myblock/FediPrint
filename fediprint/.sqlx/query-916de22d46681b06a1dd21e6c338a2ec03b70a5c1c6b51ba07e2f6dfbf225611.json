@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, created_at, updated_at, server_id, content, hashtags, audience AS \"audience!: EventAudience\", in_reply_to_comment_id, in_reply_to_note_id, actor_id, comment_of_model_id\n                FROM note WHERE server_id = $1",
+  "query": "SELECT id, created_at, updated_at, server_id, content, hashtags, audience AS \"audience!: EventAudience\", in_reply_to_comment_id, in_reply_to_note_id, actor_id, comment_of_model_id\n                FROM note WHERE server_id = $1 LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -90,5 +90,5 @@
       true
     ]
   },
-  "hash": "a7b1fafcafd034ab3d522fe3fdcd87b4c08d964a4f46368333989bef66edca0e"
+  "hash": "916de22d46681b06a1dd21e6c338a2ec03b70a5c1c6b51ba07e2f6dfbf225611"
 }

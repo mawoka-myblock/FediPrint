@@ -350,6 +350,8 @@ async fn create_single_model(
             "https://www.printables.com/model/{}-{}",
             model.id, model.slug
         )),
+        cost: None,
+        currency: None,
     }
     .create(state.pool.clone())
     .await?;

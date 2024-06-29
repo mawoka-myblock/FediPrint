@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE model SET published = $1 WHERE id = $2 AND profile_id = $3\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url",
+  "query": "UPDATE model SET published = $1 WHERE id = $2 AND profile_id = $3\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency",
   "describe": {
     "columns": [
       {
@@ -87,6 +87,16 @@
         "ordinal": 12,
         "name": "printables_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -109,8 +119,10 @@
       false,
       false,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "abf17a0ff1585008ee5b34de548ce3ef7dd6d35278febacb7a132b58fc518efe"
+  "hash": "a53d99bb8c711ce9a9471eb7b194c385ae7ac6ab80ce64813afa03ad1059874c"
 }

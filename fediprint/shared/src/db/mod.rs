@@ -8,6 +8,7 @@ pub mod model;
 pub mod note;
 pub mod printer;
 pub mod profile;
+pub mod transactions;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, sqlx::Type, Clone)]
 #[sqlx(type_name = "modified_scale", rename_all = "SCREAMING_SNAKE_CASE")]

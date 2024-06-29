@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url",
+  "query": "SELECT id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency FROM model\n            WHERE published = true ORDER BY created_at DESC OFFSET $1 LIMIT $2\n            ",
   "describe": {
     "columns": [
       {
@@ -87,39 +87,22 @@
         "ordinal": 12,
         "name": "printables_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
-        "Text",
-        "Uuid",
-        "Bool",
-        "Text",
-        "Text",
-        "Text",
-        "TextArray",
-        {
-          "Custom": {
-            "name": "model_license",
-            "kind": {
-              "Enum": [
-                "CC_PD",
-                "CC_ATTR",
-                "CC_ATTR_SA",
-                "CC_ATTR_ND",
-                "CC_ATTR_NC",
-                "CC_ATTR_NC_SA",
-                "CC_ATTR_NC_ND",
-                "GPL2",
-                "GPL3",
-                "GNU_LESSER",
-                "BSD",
-                "SDFL"
-              ]
-            }
-          }
-        }
+        "Int8",
+        "Int8"
       ]
     },
     "nullable": [
@@ -135,8 +118,10 @@
       false,
       false,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "6ac68241b1e860f7d465afde8075ed1ca6b207b0a3cb4e6f8ec335aea5b21a6f"
+  "hash": "a950ba3dffd3fb8d34ef26271e15226db192d0449296f7c3e6d6cce2184b0c78"
 }

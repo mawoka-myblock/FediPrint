@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO model (id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, printables_url)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url",
+  "query": "UPDATE model SET server_id = $1 WHERE id = $2\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency",
   "describe": {
     "columns": [
       {
@@ -87,43 +87,22 @@
         "ordinal": 12,
         "name": "printables_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
         "Text",
-        "Text",
-        "Uuid",
-        "Bool",
-        "Text",
-        "Text",
-        "Text",
-        "TextArray",
-        {
-          "Custom": {
-            "name": "model_license",
-            "kind": {
-              "Enum": [
-                "CC_PD",
-                "CC_ATTR",
-                "CC_ATTR_SA",
-                "CC_ATTR_ND",
-                "CC_ATTR_NC",
-                "CC_ATTR_NC_SA",
-                "CC_ATTR_NC_ND",
-                "GPL2",
-                "GPL3",
-                "GNU_LESSER",
-                "BSD",
-                "SDFL"
-              ]
-            }
-          }
-        },
-        "Timestamptz",
-        "Timestamptz",
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -139,8 +118,10 @@
       false,
       false,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "5da1747c6aeee4db396cd6720213ce6058c0cc7223a26d995f8c06ef3b0b7b43"
+  "hash": "85f557b46df207543d88216d891a0394508acf2a4cc698e8fdb6dd2a20b55e40"
 }

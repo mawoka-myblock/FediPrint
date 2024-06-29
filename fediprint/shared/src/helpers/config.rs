@@ -17,7 +17,7 @@ pub struct Config {
     pub meilisearch_key: String,
     pub registration_disabled: bool,
     pub smtp: SmtpData,
-    pub stripe_key: Option<String>
+    pub stripe: Option<StripeData>,
 }
 
 #[derive(Debug, Clone)]
@@ -27,6 +27,13 @@ pub struct SmtpData {
     pub password: String,
     pub port: i32,
     pub email: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct StripeData {
+    pub key: String,
+    pub webhook_key: String,
+    pub platform_fee_percent: i32,
 }
 
 impl Config {
@@ -60,7 +67,26 @@ impl Config {
                 .to_string(),
             email: smtp_uri.path()[1..].to_string(),
         };
-        let stripe_key = std::env::var("STRIPE_KEY").ok();
+        let stripe_key = std::env::var("STRIPE__KEY").ok();
+        let stripe_webhook_key = std::env::var("STRIPE__WEBHOOK_KEY").ok();
+        let stripe_platform_fee_percent: Option<i32> =
+            std::env::var("STRIPE__PLATFORM_FEE_PERCENT")
+                .ok()
+                .and_then(|d| {
+                    Some(
+                        i32::from_str(&d).expect("STRIPE__PLATFORM_FEE_PERCENT not a valid number"),
+                    )
+                });
+        let mut stripe: Option<StripeData> = None;
+        if stripe_key.is_some() {
+            stripe = Some(StripeData {
+                key: stripe_key.expect("STRIPE__KEY must be set when Stripe is enabled"),
+                webhook_key: stripe_webhook_key
+                    .expect("STRIPE__WEBHOOK_KEY must be set when Stripe is enabled"),
+                platform_fee_percent: stripe_platform_fee_percent
+                    .expect("STRIPE__PLATFORM_FEE_PERCENT must be set when Stripe is enabled, 0 is recommended"),
+            })
+        };
         Config {
             database_url,
             jwt_secret,
@@ -75,7 +101,7 @@ impl Config {
             meilisearch_key,
             registration_disabled,
             smtp,
-            stripe_key
+            stripe,
         }
     }
 }
