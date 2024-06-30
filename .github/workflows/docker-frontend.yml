@@ -1,4 +1,4 @@
-name: "[CI] Backend / Build"
+name: "[CI] Frontend / Build"
 
 on:
   workflow_dispatch:
