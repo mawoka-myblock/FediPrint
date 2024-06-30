@@ -5,6 +5,7 @@ use axum::extract::{FromRef, FromRequest, Path, Request, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::{async_trait, debug_handler, Extension};
+use reqwest::Client;
 use shared::db::account::FullAccount;
 use shared::db::model::FullModel;
 use shared::db::profile::FullProfile;
@@ -80,10 +81,11 @@ pub async fn pay(
     State(state): State<Arc<AppState>>,
     Path(model_id): Path<Uuid>,
 ) -> AppResult<impl IntoResponse> {
-    let stripe_client = match &state.stripe {
-        Some(d) => d,
+    let mut stripe_client = match &state.stripe {
+        Some(d) => d.clone(),
         None => return Ok((StatusCode::NOT_IMPLEMENTED, "Payments not available").into_response()),
     };
+
     let model = FullModel::get_by_id_and_public_and_paid(&model_id, state.pool.clone()).await?;
     if model.cost.is_none() {
         return Ok((StatusCode::NOT_FOUND, "Model isn't available for purchase").into_response());
@@ -91,6 +93,12 @@ pub async fn pay(
     if model.currency.is_none() {
         return Ok((StatusCode::NOT_FOUND, "Model isn't available for purchase").into_response());
     }
+    let seller_profile = FullProfile::get_by_id(&model.profile_id, state.pool.clone()).await?;
+    let seller_account =
+        FullAccount::get_by_profile_id(&seller_profile.id, state.pool.clone()).await?;
+    stripe_client = stripe_client.with_stripe_account(
+        stripe::AccountId::from_str(&seller_account.stripe_id.unwrap()).unwrap(),
+    );
     let cost: i64 = model.cost.unwrap().into();
     let currency = match stripe::Currency::from_str(&model.currency.unwrap()) {
         Ok(d) => d,
@@ -103,9 +111,10 @@ pub async fn pay(
                 .into_response());
         }
     };
+    let stripe_account_id = &state.env.stripe.as_ref().unwrap().account_id;
     let fee: i64 = cost * i64::from(state.env.stripe.as_ref().unwrap().platform_fee_percent); // Unwrap is fine, as the client at the beginning only exists when stripe is configured
     let session = stripe::CheckoutSession::create(
-        stripe_client,
+        &stripe_client,
         stripe::CreateCheckoutSession {
             line_items: Some(vec![stripe::CreateCheckoutSessionLineItems {
                 price_data: Some(stripe::CreateCheckoutSessionLineItemsPriceData {
@@ -137,16 +146,18 @@ pub async fn pay(
                 ..Default::default()
             }),
             mode: Some(stripe::CheckoutSessionMode::Payment),
-            success_url: Some("/payments/complete/{CHECKOUT_SESSION_ID}"),
+            success_url: Some(&format!(
+                "{}/payments/complete/{{CHECKOUT_SESSION_ID}}",
+                state.env.public_url
+            )),
             ..Default::default()
         },
     )
     .await?;
-    let seller_profile = FullProfile::get_by_id(&model.profile_id, state.pool.clone()).await?;
 
     CreateTransaction {
-        buyer_account: claims.profile_id,
-        buyer_profile: claims.sub,
+        buyer_account: claims.sub,
+        buyer_profile: claims.profile_id,
         model_id: model.id,
         seller_profile: seller_profile.id,
         stripe_id: session.id().to_string(),
@@ -205,6 +216,13 @@ pub async fn handle_webhook(
                 );
                 FullTransaction::mark_completed_true(session.id().as_str(), state.pool.clone())
                     .await?;
+                if session.payment_status == stripe::CheckoutSessionPaymentStatus::Paid {
+                    FullTransaction::mark_payment_success_true(
+                        session.id().as_str(),
+                        state.pool.clone(),
+                    )
+                    .await?;
+                }
             }
         }
         // stripe::EventType::AccountUpdated => {

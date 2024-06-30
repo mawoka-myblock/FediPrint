@@ -173,14 +173,22 @@ pub struct FullModelWithRelationsIds {
     pub updated_at: DateTime<Utc>,
     pub files: Option<Vec<Uuid>>,
     pub images: Option<Vec<Uuid>>,
+    pub cost: Option<i16>,
+    pub currency: Option<String>,
 }
 
 impl FullModelWithRelationsIds {
-    pub async fn get_by_id(id: &Uuid, pool: PgPool) -> Result<FullModelWithRelationsIds, Error> {
+    pub async fn get_by_id(
+        id: &Uuid,
+        include_files_if_paid: bool,
+        pool: PgPool,
+    ) -> Result<FullModelWithRelationsIds, Error> {
         let model_query = sqlx::query_as!(
             FullModelWithRelationsIds,
             r#"
-        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,m.cost,m.currency,
+        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $2) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,
+        array_agg(i.id) AS images
         FROM
             model AS m
         LEFT JOIN
@@ -192,7 +200,8 @@ impl FullModelWithRelationsIds {
         GROUP BY
             m.id;
         "#,
-            id
+            id,
+            include_files_if_paid
         );
 
         let mut model_with_relations: FullModelWithRelationsIds =
@@ -203,9 +212,12 @@ impl FullModelWithRelationsIds {
     pub async fn get_newest_published_models_paginated(
         limit: &i64,
         offset: &i64,
+        include_files_if_paid: bool,
         pool: PgPool,
     ) -> Result<Vec<FullModelWithRelationsIds>, Error> {
-        let mut res = sqlx::query_as!(FullModelWithRelationsIds, r#"SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        let mut res = sqlx::query_as!(FullModelWithRelationsIds, r#"SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,m.cost,m.currency,
+        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $3) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,
+        array_agg(i.id) AS images
         FROM
             model AS m
         LEFT JOIN
@@ -218,7 +230,7 @@ impl FullModelWithRelationsIds {
             m.id
         ORDER BY created_at DESC OFFSET $1 LIMIT $2;
             "#,
-            offset, limit
+            offset, limit, include_files_if_paid
         ).fetch_all(&pool).await?;
         remove_duplicates_from_list_of_models(&mut res);
         Ok(res)
@@ -228,9 +240,12 @@ impl FullModelWithRelationsIds {
         profile_id: &Uuid,
         limit: &i64,
         offset: &i64,
+        include_files_if_paid: bool,
         pool: PgPool,
     ) -> Result<Vec<FullModelWithRelationsIds>, Error> {
-        sqlx::query_as!(FullModelWithRelationsIds, r#"SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        sqlx::query_as!(FullModelWithRelationsIds, r#"SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,m.cost,m.currency,
+        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $4) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,
+        array_agg(i.id) AS images
         FROM
             model AS m
         LEFT JOIN
@@ -243,20 +258,21 @@ impl FullModelWithRelationsIds {
             m.id
         ORDER BY created_at DESC OFFSET $1 LIMIT $2;
             "#,
-            offset, limit, profile_id
+            offset, limit, profile_id, include_files_if_paid
         ).fetch_all(&pool).await
     }
     pub async fn change_visibility_with_id_and_profile_id(
         published: &bool,
         id: &Uuid,
         profile_id: &Uuid,
+        include_files_if_paid: bool,
         pool: PgPool,
     ) -> Result<FullModelWithRelationsIds, Error> {
         sqlx::query_as!(FullModelWithRelationsIds, r#"WITH updated_model AS (
             UPDATE model
             SET published = $1
             WHERE id = $2 AND profile_id = $3
-            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at
+            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, cost, currency
         )
         SELECT
             m.id,
@@ -271,7 +287,9 @@ impl FullModelWithRelationsIds {
             m.license AS "license!: ModelLicense",
             m.created_at,
             m.updated_at,
-            array_agg(DISTINCT f.id) AS files,
+            m.currency,
+            m.cost,
+            CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $4) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,
             array_agg(DISTINCT i.id) AS images
         FROM
             updated_model AS m
@@ -291,20 +309,25 @@ impl FullModelWithRelationsIds {
             m.tags,
             m.license,
             m.created_at,
+            m.currency,
+            m.cost,
             m.updated_at;"#r,
-            published, id, profile_id
+            published, id, profile_id, include_files_if_paid
         ).fetch_one(&pool).await
     }
 
     pub async fn get_by_server_id(
         server_id: &str,
+        include_files_if_paid: bool,
         pool: PgPool,
     ) -> Result<FullModelWithRelationsIds, Error> {
         trace!(server_id = %server_id);
         let mut model = sqlx::query_as!(
             FullModelWithRelationsIds,
             r#"
-        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images
+        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS "license!: ModelLicense",m.created_at,m.updated_at,m.cost,m.currency,
+        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $2) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,
+        array_agg(i.id) AS images
         FROM
             model AS m
         LEFT JOIN
@@ -316,7 +339,7 @@ impl FullModelWithRelationsIds {
         GROUP BY
             m.id;
         "#,
-            server_id
+            server_id, include_files_if_paid
         ).fetch_one(&pool).await?;
         remove_duplicates(&mut model);
         Ok(model)
@@ -350,7 +373,7 @@ impl FullModelWithRelationsIds {
             currency: None,
         };
         model.create(pool.clone()).await?;
-        FullModelWithRelationsIds::get_by_id(&id, pool).await
+        FullModelWithRelationsIds::get_by_id(&id, false, pool).await
     }
     pub async fn create_or_get_from_note_response(
         d: NoteResponse,
@@ -360,7 +383,7 @@ impl FullModelWithRelationsIds {
     ) -> anyhow::Result<FullModelWithRelationsIds> {
         trace!(
             "db res: {:?}",
-            FullModelWithRelationsIds::get_by_server_id(&d.id, state.pool.clone()).await
+            FullModelWithRelationsIds::get_by_server_id(&d.id, false, state.pool.clone()).await
         );
         // if let Ok(d) = FullModelWithRelationsIds::get_by_server_id(&d.id, pool.clone()).await {
         //     return Ok(d);
@@ -379,6 +402,9 @@ impl FullModelWithRelationsIds {
             state.clone(),
         )
         .await?;
-        Ok(FullModelWithRelationsIds::get_by_id(&unfinished_model.id, state.pool.clone()).await?)
+        Ok(
+            FullModelWithRelationsIds::get_by_id(&unfinished_model.id, false, state.pool.clone())
+                .await?,
+        )
     }
 }

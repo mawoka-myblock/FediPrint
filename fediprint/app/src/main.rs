@@ -304,8 +304,8 @@ pub async fn get_server() -> Router {
             )),
         )
         .route(
-            "/api/v1/payments/stripe/pay",
-            post(routes::api::v1::payments::pay).route_layer(middleware::from_fn_with_state(
+            "/api/v1/payments/stripe/pay/:model_id",
+            get(routes::api::v1::payments::pay).route_layer(middleware::from_fn_with_state(
                 state.clone(),
                 auth_middleware,
             )),

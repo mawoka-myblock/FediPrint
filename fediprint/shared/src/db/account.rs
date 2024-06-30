@@ -44,6 +44,11 @@ impl FullAccount {
             "SELECT id, registered_at, updated_at, password, email, verified, profile_id, private_key, stripe_id FROM account where email = $1",
             email).fetch_one(&pool).await
     }
+    pub async fn get_by_profile_id(id: &Uuid, pool: PgPool) -> Result<FullAccount, Error> {
+        sqlx::query_as!(FullAccount,
+            r#"SELECT id, registered_at, updated_at, password, email, verified, profile_id, private_key, stripe_id FROM account WHERE profile_id = $1"#, id
+            ).fetch_one(&pool).await
+    }
     pub async fn link_stripe_id(
         account_id: &Uuid,
         stripe_id: &str,

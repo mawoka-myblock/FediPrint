@@ -47,4 +47,11 @@
 			<p>{model.description}</p>
 		{/if}
 	</div>
+	<section class="flex flex-col">
+		<h2>Files</h2>
+		{#if model.cost != 0}
+			<p>This model is paid.</p>
+			<a href="/api/v1/payments/stripe/pay/{model.id}">But it now for {(model.cost / 100).toFixed(2)} ct!</a>
+		{/if}
+	</section>
 </div>

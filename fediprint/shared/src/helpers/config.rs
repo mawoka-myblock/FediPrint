@@ -34,6 +34,7 @@ pub struct StripeData {
     pub key: String,
     pub webhook_key: String,
     pub platform_fee_percent: i32,
+    pub account_id: String,
 }
 
 impl Config {
@@ -69,6 +70,7 @@ impl Config {
         };
         let stripe_key = std::env::var("STRIPE__KEY").ok();
         let stripe_webhook_key = std::env::var("STRIPE__WEBHOOK_KEY").ok();
+        let stripe_account_id = std::env::var("STRIPE__ACCOUNT_ID").ok();
         let stripe_platform_fee_percent: Option<i32> =
             std::env::var("STRIPE__PLATFORM_FEE_PERCENT").ok().map(|d| {
                 i32::from_str(&d).expect("STRIPE__PLATFORM_FEE_PERCENT not a valid number")
@@ -81,6 +83,7 @@ impl Config {
                     .expect("STRIPE__WEBHOOK_KEY must be set when Stripe is enabled"),
                 platform_fee_percent: stripe_platform_fee_percent
                     .expect("STRIPE__PLATFORM_FEE_PERCENT must be set when Stripe is enabled, 0 is recommended"),
+                    account_id: stripe_account_id.expect("STRIPE__ACCOUNT_ID must be set when Stripe is enabled")
             })
         };
         Config {

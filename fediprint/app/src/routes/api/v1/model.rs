@@ -76,6 +76,7 @@ pub async fn list_own_models(
         &claims.profile_id,
         &20i64,
         &((&query.page * 20) as i64),
+        true,
         state.pool.clone(),
     )
     .await?;
@@ -102,6 +103,7 @@ pub async fn change_model_visibility(
         &input.public,
         &input.model_id,
         &claims.profile_id,
+        true,
         state.pool.clone(),
     )
     .await?;
@@ -127,6 +129,7 @@ pub async fn get_newest_models(
     let models = FullModelWithRelationsIds::get_newest_published_models_paginated(
         &20i64,
         &((&query.page * 20) as i64),
+        false,
         state.pool.clone(),
     )
     .await?;
@@ -147,7 +150,7 @@ pub async fn get_model(
     State(state): State<Arc<AppState>>,
     Path(id): Path<Uuid>,
 ) -> AppResult<impl IntoResponse> {
-    let model = FullModelWithRelationsIds::get_by_id(&id, state.pool.clone()).await?;
+    let model = FullModelWithRelationsIds::get_by_id(&id, false, state.pool.clone()).await?;
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "application/json")

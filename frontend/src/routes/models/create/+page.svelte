@@ -39,7 +39,7 @@
 		description: string;
 		tags: string[];
 		license: Licenses;
-		cost: number;
+		cost: string;
 		currency: string
 	} = $state({
 		images: [],
@@ -49,7 +49,7 @@
 		description: '',
 		tags: [],
 		license: Licenses.CcAttr,
-		cost: 0,
+		cost: "0",
 		currency: "usd"
 	});
 	tags.subscribe((d) => {
@@ -82,7 +82,7 @@
 				'Content-Type': 'application/json'
 			},
 
-			body: JSON.stringify(data)
+			body: JSON.stringify({...data, "cost": parseInt(data.cost)})
 		});
 		if (res.ok) {
 			const d = await res.json();
