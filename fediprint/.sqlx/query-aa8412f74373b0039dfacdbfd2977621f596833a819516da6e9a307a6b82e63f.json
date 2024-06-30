@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency",
+  "query": "\n        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS \"license!: ModelLicense\",m.created_at,m.updated_at,m.cost,m.currency,\n        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $2) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,\n        array_agg(i.id) AS images\n        FROM\n            model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        WHERE\n            m.server_id = $1\n        GROUP BY\n            m.id;\n        ",
   "describe": {
     "columns": [
       {
@@ -85,51 +85,29 @@
       },
       {
         "ordinal": 12,
-        "name": "printables_url",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 13,
         "name": "cost",
         "type_info": "Int2"
       },
       {
-        "ordinal": 14,
+        "ordinal": 13,
         "name": "currency",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "files",
+        "type_info": "UuidArray"
+      },
+      {
+        "ordinal": 15,
+        "name": "images",
+        "type_info": "UuidArray"
       }
     ],
     "parameters": {
       "Left": [
         "Text",
-        "Text",
-        "Uuid",
-        "Bool",
-        "Text",
-        "Text",
-        "Text",
-        "TextArray",
-        {
-          "Custom": {
-            "name": "model_license",
-            "kind": {
-              "Enum": [
-                "CC_PD",
-                "CC_ATTR",
-                "CC_ATTR_SA",
-                "CC_ATTR_ND",
-                "CC_ATTR_NC",
-                "CC_ATTR_NC_SA",
-                "CC_ATTR_NC_ND",
-                "GPL2",
-                "GPL3",
-                "GNU_LESSER",
-                "BSD",
-                "SDFL"
-              ]
-            }
-          }
-        }
+        "Bool"
       ]
     },
     "nullable": [
@@ -147,8 +125,9 @@
       false,
       true,
       true,
-      true
+      null,
+      null
     ]
   },
-  "hash": "f4a7bb7ec9b337f45478bf4253cbd581717b31a4ade2ab02fc81e0ca168b32e3"
+  "hash": "aa8412f74373b0039dfacdbfd2977621f596833a819516da6e9a307a6b82e63f"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated_model AS (\n            UPDATE model\n            SET published = $1\n            WHERE id = $2 AND profile_id = $3\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at\n        )\n        SELECT\n            m.id,\n            m.server,\n            m.server_id,\n            m.profile_id,\n            m.published,\n            m.title,\n            m.summary,\n            m.description,\n            m.tags,\n            m.license AS \"license!: ModelLicense\",\n            m.created_at,\n            m.updated_at,\n            array_agg(DISTINCT f.id) AS files,\n            array_agg(DISTINCT i.id) AS images\n        FROM\n            updated_model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        GROUP BY\n            m.id,\n            m.server,\n            m.server_id,\n            m.profile_id,\n            m.published,\n            m.title,\n            m.summary,\n            m.description,\n            m.tags,\n            m.license,\n            m.created_at,\n            m.updated_at;",
+  "query": "INSERT INTO model (server, server_id, profile_id, published, title, summary, description, tags, license, cost, currency)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license AS \"license!: ModelLicense\", created_at, updated_at, printables_url, cost, currency",
   "describe": {
     "columns": [
       {
@@ -85,20 +85,53 @@
       },
       {
         "ordinal": 12,
-        "name": "files",
-        "type_info": "UuidArray"
+        "name": "printables_url",
+        "type_info": "Text"
       },
       {
         "ordinal": 13,
-        "name": "images",
-        "type_info": "UuidArray"
+        "name": "cost",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 14,
+        "name": "currency",
+        "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Bool",
+        "Text",
+        "Text",
         "Uuid",
-        "Uuid"
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        {
+          "Custom": {
+            "name": "model_license",
+            "kind": {
+              "Enum": [
+                "CC_PD",
+                "CC_ATTR",
+                "CC_ATTR_SA",
+                "CC_ATTR_ND",
+                "CC_ATTR_NC",
+                "CC_ATTR_NC_SA",
+                "CC_ATTR_NC_ND",
+                "GPL2",
+                "GPL3",
+                "GNU_LESSER",
+                "BSD",
+                "SDFL"
+              ]
+            }
+          }
+        },
+        "Int2",
+        "Text"
       ]
     },
     "nullable": [
@@ -114,9 +147,10 @@
       false,
       false,
       false,
-      null,
-      null
+      true,
+      true,
+      true
     ]
   },
-  "hash": "7ca2dc2c9296c2770931147243ecb0cd04713b7b0483e74764f15c1d0d1975e6"
+  "hash": "facb0e87e04790dc06dbc7dddb2b3ca1647a18dfcb6e0e33f1a2d1a65e772c24"
 }

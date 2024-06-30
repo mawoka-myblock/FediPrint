@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS \"license!: ModelLicense\",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images\n        FROM\n            model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        WHERE\n            m.server_id = $1\n        GROUP BY\n            m.id;\n        ",
+  "query": "\n        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS \"license!: ModelLicense\",m.created_at,m.updated_at,m.cost,m.currency,\n        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $2) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,\n        array_agg(i.id) AS images\n        FROM\n            model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        WHERE\n            m.id = $1\n        GROUP BY\n            m.id;\n        ",
   "describe": {
     "columns": [
       {
@@ -85,18 +85,29 @@
       },
       {
         "ordinal": 12,
+        "name": "cost",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 13,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
         "name": "files",
         "type_info": "UuidArray"
       },
       {
-        "ordinal": 13,
+        "ordinal": 15,
         "name": "images",
         "type_info": "UuidArray"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid",
+        "Bool"
       ]
     },
     "nullable": [
@@ -112,9 +123,11 @@
       false,
       false,
       false,
+      true,
+      true,
       null,
       null
     ]
   },
-  "hash": "e95bd01d7d8394fdc79c276a1f157acc773d1a956f17ef5792e67bc164ee192b"
+  "hash": "b12b8deaa9648ed6fbb5181dd94ac0ac2fec983825ead37f18474885cf295fdf"
 }

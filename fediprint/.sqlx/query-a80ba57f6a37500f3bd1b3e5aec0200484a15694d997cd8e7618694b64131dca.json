@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS \"license!: ModelLicense\",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images\n        FROM\n            model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        WHERE\n            m.published = true\n        GROUP BY\n            m.id\n        ORDER BY created_at DESC OFFSET $1 LIMIT $2;\n            ",
+  "query": "WITH updated_model AS (\n            UPDATE model\n            SET published = $1\n            WHERE id = $2 AND profile_id = $3\n            RETURNING id, server, server_id, profile_id, published, title, summary, description, tags, license, created_at, updated_at, cost, currency\n        )\n        SELECT\n            m.id,\n            m.server,\n            m.server_id,\n            m.profile_id,\n            m.published,\n            m.title,\n            m.summary,\n            m.description,\n            m.tags,\n            m.license AS \"license!: ModelLicense\",\n            m.created_at,\n            m.updated_at,\n            m.currency,\n            m.cost,\n            CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $4) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,\n            array_agg(DISTINCT i.id) AS images\n        FROM\n            updated_model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        GROUP BY\n            m.id,\n            m.server,\n            m.server_id,\n            m.profile_id,\n            m.published,\n            m.title,\n            m.summary,\n            m.description,\n            m.tags,\n            m.license,\n            m.created_at,\n            m.currency,\n            m.cost,\n            m.updated_at;",
   "describe": {
     "columns": [
       {
@@ -85,19 +85,31 @@
       },
       {
         "ordinal": 12,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "cost",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 14,
         "name": "files",
         "type_info": "UuidArray"
       },
       {
-        "ordinal": 13,
+        "ordinal": 15,
         "name": "images",
         "type_info": "UuidArray"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8",
-        "Int8"
+        "Bool",
+        "Uuid",
+        "Uuid",
+        "Bool"
       ]
     },
     "nullable": [
@@ -113,9 +125,11 @@
       false,
       false,
       false,
+      true,
+      true,
       null,
       null
     ]
   },
-  "hash": "b6c26ffc3bee691257aa6433e1b43a836185dcbcfae65f6f8ea25604f6529d66"
+  "hash": "a80ba57f6a37500f3bd1b3e5aec0200484a15694d997cd8e7618694b64131dca"
 }

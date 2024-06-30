@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS \"license!: ModelLicense\",m.created_at,m.updated_at,array_agg(f.id) AS files,array_agg(i.id) AS images\n        FROM\n            model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        WHERE\n            m.id = $1\n        GROUP BY\n            m.id;\n        ",
+  "query": "SELECT m.id,m.server,m.server_id,m.profile_id,m.published,m.title,m.summary,m.description,m.tags,m.license AS \"license!: ModelLicense\",m.created_at,m.updated_at,m.cost,m.currency,\n        CASE WHEN (m.cost = 0 OR m.cost IS NULL OR $3) THEN array_agg(f.id) ELSE '{}'::uuid[] END AS files,\n        array_agg(i.id) AS images\n        FROM\n            model AS m\n        LEFT JOIN\n            file AS f ON m.id = f.file_for_model_id\n        LEFT JOIN\n            file AS i ON m.id = i.image_for_model_id\n        WHERE\n            m.published = true\n        GROUP BY\n            m.id\n        ORDER BY created_at DESC OFFSET $1 LIMIT $2;\n            ",
   "describe": {
     "columns": [
       {
@@ -85,18 +85,30 @@
       },
       {
         "ordinal": 12,
+        "name": "cost",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 13,
+        "name": "currency",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
         "name": "files",
         "type_info": "UuidArray"
       },
       {
-        "ordinal": 13,
+        "ordinal": 15,
         "name": "images",
         "type_info": "UuidArray"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Int8",
+        "Int8",
+        "Bool"
       ]
     },
     "nullable": [
@@ -112,9 +124,11 @@
       false,
       false,
       false,
+      true,
+      true,
       null,
       null
     ]
   },
-  "hash": "27b0c3c8aadc64e413eeff2e78c669385d957f35659b3d425c1848d8d89e96ec"
+  "hash": "ea59a693b7a49810500b0732f6a722897892bbf0364524dd1297919aaacb079c"
 }
