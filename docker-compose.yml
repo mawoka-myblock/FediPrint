@@ -5,10 +5,8 @@ services:
       dockerfile: ./docker/backend.Dockerfile
       target: server
     environment: &env
+      ## DO NOT CHANGE FROM HERE
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/fedi_print"
-      JWT_SECRET: "HALLO_WELT"
-      PUBLIC_URL: "http://localhost:8080"
-      BASE_DOMAIN: "localhost.local"
       S3_BASE_URL: "http://minio:9000"
       S3_REGION: "eu-central-1"
       S3_USERNAME: "fediprint"
@@ -16,6 +14,20 @@ services:
       S3_BUCKET_NAME: "fediprint"
       MEILISEARCH_URL: "http://meilisearch:7700"
       MEILISEARCH_KEY: "MAIN_KEY"
+      ## UP TO HERE
+
+      ## CONFIGURE BELOW (REQUIRED)
+      PUBLIC_URL: "http://localhost:8080" # The public url (with https ofc) (NO TRAILING "/"!!!)
+      BASE_DOMAIN: "localhost.local" # The base domain of your server, should be nearly the same as the PUBLIC_URL, but without the tpps and the slashes.
+      JWT_SECRET: "SECRET" # This should be unique! Run `sed -i "s/SECRET/$(openssl rand -hex 32)/g" docker-compose.yml`
+      SMTP_URI: "smtp://mymail@gmail.com:PASSWORD@smtp.gmail.com:25/mymail@gmail.com" # Configure your mail server here
+
+      ## STRIPE (OPTIONAL)
+      ## For that read the guide in `docs/stripe-setup.md`, uncomment the vars here and populate them!
+     # STRIPE__KEY: "sk_test_xxx"
+     # STRIPE__WEBHOOK_KEY: "whsec_xxx"
+     # STRIPE__PLATFORM_FEE_PERCENT: "0"
+     # STRIPE__ACCOUNT_ID: "acct_xxx"
     depends_on:
       - db
     restart: unless-stopped
@@ -46,8 +58,17 @@ services:
     image: caddy:alpine
     volumes:
       - ./docker/prod.Caddyfile:/etc/caddy/Caddyfile
+    ## UNCOMMENT BELOW FOR CUSTOM CADDY SETUP
+    # - ./caddy-data:/data
+   # ports:
+   # - 80:80
+   # - 443:443
+    ## UNCOMMENT UP TO HERE
+    # ---------------------------------- #
+    ## COMMENT OUT BELOW IF CUSTOM SETUP
     ports:
       - 8080:8080
+    ## UP TO HERE, ONLY THE "ports"-block!
     restart: unless-stopped
   minio:
     image: bitnami/minio

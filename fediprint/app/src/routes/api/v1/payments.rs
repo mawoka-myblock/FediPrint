@@ -5,7 +5,6 @@ use axum::extract::{FromRef, FromRequest, Path, Request, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::{async_trait, debug_handler, Extension};
-use reqwest::Client;
 use shared::db::account::FullAccount;
 use shared::db::model::FullModel;
 use shared::db::profile::FullProfile;
@@ -111,7 +110,6 @@ pub async fn pay(
                 .into_response());
         }
     };
-    let stripe_account_id = &state.env.stripe.as_ref().unwrap().account_id;
     let fee: i64 = cost * i64::from(state.env.stripe.as_ref().unwrap().platform_fee_percent); // Unwrap is fine, as the client at the beginning only exists when stripe is configured
     let session = stripe::CheckoutSession::create(
         &stripe_client,
