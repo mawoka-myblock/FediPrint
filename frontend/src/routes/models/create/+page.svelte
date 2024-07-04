@@ -10,6 +10,7 @@
 	import '@fontsource/marck-script';
 	import { name_to_license, Licenses } from '$lib/helpers/licenses';
 	import { createTagsInput, melt } from '@melt-ui/svelte';
+	import { slide } from 'svelte/transition';
 
 	const {
 		elements: { root, input, tag, deleteTrigger, edit },
@@ -23,6 +24,8 @@
 		},
 		addOnPaste: true
 	});
+
+	let paid_accordion_open = $state(false);
 
 	registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 	let pond = $state();
@@ -40,7 +43,7 @@
 		tags: string[];
 		license: Licenses;
 		cost: string;
-		currency: string
+		currency: string;
 	} = $state({
 		images: [],
 		files: [],
@@ -49,8 +52,8 @@
 		description: '',
 		tags: [],
 		license: Licenses.CcAttr,
-		cost: "0",
-		currency: "usd"
+		cost: '0',
+		currency: 'usd'
 	});
 	tags.subscribe((d) => {
 		data.tags = [];
@@ -75,14 +78,20 @@
 
 	const submit = async () => {
 		if (!valid) return;
-		console.log(data);
+		let body: any = data;
+		if (paid_accordion_open) {
+			body.cost = parseInt(data.cost);
+		} else {
+			body.cost = undefined
+			body.currency = undefined
+		}
 		const res = await fetch('/api/v1/model/create', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 
-			body: JSON.stringify({...data, "cost": parseInt(data.cost)})
+			body: JSON.stringify(body)
 		});
 		if (res.ok) {
 			const d = await res.json();
@@ -305,30 +314,57 @@
 					</select>
 				</div>
 			</div>
-			<div class="p-4 rounded-lg shadow-2xl my-4">
-				<label for="license" class="block">Currency</label>
-				<div class="mt-2 w-full">
-					<select
-						id="currency"
-						bind:value={data.currency}
-						class="p-2 rounded-lg transition-all focus:border-c-dgreen border-2 w-full"
-					>
-						<option value="usd">$ - USD</option>
-						<option value="eur">€ - Euro</option>
-					</select>
+			<div class="p-4 rounded-lg shadow-2xl my-4 flex flex-col">
+				<div class="header">
+					<div class="text">
+						<slot name="head"></slot>
+					</div>
+					<button
+						type="button"
+						class="w-full p-2 transition-all rounded-lg bg-c-brown hover:border-c-dgreen border-2 border-white disabled:opacity-50 mx-auto"
+						on:click={() => {
+							paid_accordion_open = !paid_accordion_open;
+						}}
+						>{#if paid_accordion_open}
+							Make free
+						{:else}
+							Make paid
+						{/if}
+					</button>
 				</div>
+
+				{#if paid_accordion_open}
+					<div class="details" transition:slide>
+						<slot name="details">
+							<div class="p-4 rounded-lg shadow-2xl my-4">
+								<label for="license" class="block">Currency</label>
+								<div class="mt-2 w-full">
+									<select
+										id="currency"
+										bind:value={data.currency}
+										class="p-2 rounded-lg transition-all focus:border-c-dgreen border-2 w-full"
+									>
+										<option value="usd">$ - USD</option>
+										<option value="eur">€ - Euro</option>
+									</select>
+								</div>
+							</div>
+							<div class="p-4 rounded-lg shadow-2xl my-4">
+								<label for="license" class="block">Currency (in cents)</label>
+								<div class="mt-2 w-full">
+									<input
+										id="cost"
+										bind:value={data.cost}
+										class="p-2 rounded-lg transition-all focus:border-c-dgreen border-2 w-full"
+									/>
+									<span></span>
+								</div>
+							</div>
+						</slot>
+					</div>
+				{/if}
 			</div>
-			<div class="p-4 rounded-lg shadow-2xl my-4">
-				<label for="license" class="block">Currency (in cents)</label>
-				<div class="mt-2 w-full">
-					<input
-						id="cost"
-						bind:value={data.cost}
-						class="p-2 rounded-lg transition-all focus:border-c-dgreen border-2 w-full"
-					>
-					<span></span>
-				</div>
-			</div>
+
 			<div class="p-4 rounded-lg shadow-2xl my-4 flex">
 				<button
 					type="submit"
